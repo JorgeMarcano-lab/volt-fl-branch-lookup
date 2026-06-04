@@ -1568,7 +1568,7 @@ const ZIP_JURIS={
   "33141":["Miami-dade","municipal","City of Miami Beach Building Department"],
   "33142":["Miami-dade","municipal","City of Miami Building Department"],
   "33143":["Miami-dade","municipal","City of Miami Building Department"],
-  "33144":["Miami-dade","municipal","City of Miami Building Department"],
+  "33144":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33145":["Miami-dade","municipal","City of Miami Building Department"],
   "33146":["Miami-dade","municipal","City of Miami Building Department"],
   "33147":["Miami-dade","municipal","City of Miami Building Department"],
@@ -1576,44 +1576,44 @@ const ZIP_JURIS={
   "33150":["Miami-dade","municipal","City of Miami Building Department"],
   "33154":["Miami-dade","municipal","City of Miami Beach Building Department"],
   "33154":["Miami-dade","municipal","City of Miami Beach Building Department"],
-  "33155":["Miami-dade","municipal","City of Miami Building Department"],
+  "33155":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33156":["Miami-dade","municipal","City of Miami Building Department"],
   "33157":["Miami-dade","municipal","City of Miami Building Department"],
   "33158":["Miami-dade","municipal","City of Miami Building Department"],
   "33160":["Miami-dade","municipal","City of North Miami Beach Building Department"],
   "33161":["Miami-dade","municipal","City of Miami Building Department"],
   "33162":["Miami-dade","municipal","City of Miami Building Department"],
-  "33165":["Miami-dade","municipal","City of Miami Building Department"],
+  "33165":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33166":["Miami-dade","municipal","City of Miami Building Department"],
   "33167":["Miami-dade","municipal","City of Miami Building Department"],
-  "33168":["Miami-dade","municipal","City of Miami Building Department"],
+  "33168":["Miami-dade","mixed","City of Miami Building Department"],
   "33169":["Miami-dade","municipal","City of Miami Building Department"],
   "33170":["Miami-dade","municipal","City of Miami Building Department"],
   "33172":["Miami-dade","municipal","City of Miami Building Department"],
   "33173":["Miami-dade","municipal","City of Miami Building Department"],
-  "33174":["Miami-dade","municipal","City of Miami Building Department"],
-  "33175":["Miami-dade","municipal","City of Miami Building Department"],
-  "33176":["Miami-dade","municipal","City of Miami Building Department"],
+  "33174":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33175":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33176":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33177":["Miami-dade","municipal","City of Miami Building Department"],
   "33178":["Miami-dade","municipal","City of Miami Building Department"],
   "33179":["Miami-dade","municipal","City of Miami Building Department"],
   "33180":["Miami-dade","municipal","City of Miami Building Department"],
   "33181":["Miami-dade","municipal","City of Miami Building Department"],
   "33182":["Miami-dade","municipal","City of Miami Building Department"],
-  "33183":["Miami-dade","municipal","City of Miami Building Department"],
-  "33184":["Miami-dade","municipal","City of Miami Building Department"],
-  "33185":["Miami-dade","municipal","City of Miami Building Department"],
-  "33186":["Miami-dade","municipal","City of Miami Building Department"],
-  "33187":["Miami-dade","municipal","City of Miami Building Department"],
+  "33183":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33184":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33185":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33186":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33187":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33188":["Miami-dade","municipal","City of Miami Building Department"],
-  "33189":["Miami-dade","municipal","City of Miami Building Department"],
-  "33190":["Miami-dade","municipal","City of Miami Building Department"],
+  "33189":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33190":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33191":["Miami-dade","municipal","City of Miami Building Department"],
   "33192":["Miami-dade","municipal","City of Miami Building Department"],
-  "33193":["Miami-dade","municipal","City of Miami Building Department"],
+  "33193":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33194":["Miami-dade","municipal","City of Miami Building Department"],
   "33195":["Miami-dade","municipal","City of Miami Building Department"],
-  "33196":["Miami-dade","municipal","City of Miami Building Department"],
+  "33196":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
   "33198":["Miami-dade","municipal","City of Miami Building Department"],
   "33199":["Miami-dade","municipal","City of Miami Building Department"],
   "33206":["Miami-dade","municipal","City of Miami Building Department"],
@@ -2102,7 +2102,7 @@ DATA.forEach(function(r){byZip[r[0]]={zip:r[0],city:r[1],county:r[2],branch:r[3]
 var EXT='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function extractZip(t){var m=t.match(/\b(3[0-9]{4})\b/);return m?m[1]:null;}
+function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 function doSearch(){
   var raw=document.getElementById("addr").value.trim();
@@ -2157,7 +2157,7 @@ function askClaude(raw, zip, rec, out, btn){
     + " 6228 Imperial Dr Panama City FL 32404 -> City of Callaway (Callaway city limits, not Panama City)"
     + " 32404 also covers: Springfield, Parker, and unincorporated Bay County"
     + " 34746 Kissimmee: most addresses are City of Kissimmee; Poinciana area is Osceola County unincorporated"
-    + " 34747 Kissimmee: Celebration is Osceola County unincorporated (not City of Kissimmee). 34758 Kissimmee/Poinciana: straddles Polk and Osceola counties. Skyline Loop and Polk County portion = Polk County Building Division (unincorporated). Osceola portion = Osceola County Building Department (unincorporated). Neither is City of Kissimmee."
+    + " 34747 Kissimmee: Celebration is Osceola County unincorporated (not City of Kissimmee). 33168 Miami-Dade: covers North Miami, Miami Gardens, unincorporated. NE 132nd St = City of North Miami Building Department. NW near 183rd St = City of Miami Gardens Building Department. + 34758 Kissimmee/Poinciana: straddles Polk and Osceola counties. Skyline Loop and Polk County portion = Polk County Building Division (unincorporated). Osceola portion = Osceola County Building Department (unincorporated). Neither is City of Kissimmee."
     + " 34758 Kissimmee: Poinciana is Osceola County unincorporated"
     + " 32835 Orlando: MetroWest is Orange County unincorporated (not City of Orlando)"
     + " 34786 Windermere area: most is Orange County unincorporated"
