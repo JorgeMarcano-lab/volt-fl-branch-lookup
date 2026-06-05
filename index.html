@@ -2165,7 +2165,7 @@ function askClaude(raw, zip, rec, out, btn){
     + " 34472 Ocala/Marion: Hemlock Trail and Silver Springs Shores area = Marion County Building Department (unincorporated). Streets inside Ocala city limits = City of Ocala Building Department."
     + " 33853 Lake Wales/Polk: Lake View Rd and areas outside Lake Wales city limits = Polk County Building Division (unincorporated). Streets inside Lake Wales city limits = City of Lake Wales Building Department."
     + " 33851 Polk County: June Lake Loop and Lake Hamilton area = Town of Lake Hamilton Building Department. Lake Alfred area = City of Lake Alfred Building Department."
-    + " 33311 Fort Lauderdale/Broward: NW 21st St and Wilton Manors area = City of Wilton Manors Building Department. Fort Lauderdale proper = City of Fort Lauderdale Building Department. Unincorporated pockets = Broward County Permitting."
+    + " 33311 IMPORTANT: This ZIP is primarily City of Wilton Manors. Any address with city name Wilton Manors = City of Wilton Manors Building Department. Do NOT return Fort Lauderdale for Wilton Manors addresses. Fort Lauderdale proper = City of Fort Lauderdale Building Department. Unincorporated pockets = Broward County Permitting."
     + " 34997 Stuart/Martin: Chesapeake Bay Dr and areas outside Stuart city limits = Martin County Building Department (unincorporated). Streets inside Stuart city limits = City of Stuart Building Department."
     + " 33023 Hollywood/Broward: Sunshine Blvd and west areas = City of Miramar Building Department. Eastern areas = City of Hollywood Building Department."
     + " 32720 DeLand/Volusia: Pelham Park Dr and areas outside DeLand city limits = Volusia County Building & Zoning (unincorporated). Streets inside DeLand city limits = City of DeLand Building Department."
@@ -2196,6 +2196,18 @@ function askClaude(raw, zip, rec, out, btn){
     var ai=JSON.parse(m[0]);
     // Use AI-determined county if different from DB (e.g. cross-county ZIPs like 34758)
     var resolvedCounty = (ai.county && ai.county !== rec.county) ? ai.county : rec.county;
+    // Hardcoded city overrides for known mismatches
+    var cityOverrides = {
+      "Wilton Manors":"City of Wilton Manors Building Department",
+      "Coral Gables":"City of Coral Gables Building Department",
+      "Miami Springs":"City of Miami Springs Building Department",
+      "Cutler Bay":"Town of Cutler Bay Building Department",
+      "Palmetto Bay":"Village of Palmetto Bay Building Department",
+      "Callaway":"City of Callaway Building Department",
+      "Miramar":"City of Miramar Building Department",
+      "Haines City":"City of Haines City Building Department"
+    };
+    if(ai.city && cityOverrides[ai.city]) ai.ahj = cityOverrides[ai.city];
     // Get correct PA link for resolved county
     var countyPaMap = {
       "Alachua":"https://www.acpafl.org","Baker":"https://www.bakercountypa.com",
