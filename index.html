@@ -2384,8 +2384,20 @@ function renderCard(d){
     :d.source==="ai"
     ?'<span class="src-badge src-ai">Claude AI</span>'
     :'<span class="src-badge" style="background:rgba(251,146,60,0.1);color:var(--sfl);border:1px solid rgba(251,146,60,0.2)">DB Fallback - Verify</span>';
-  // ETA field
-  var etaVal = AHJ_ETA.hasOwnProperty(d.ahj) ? AHJ_ETA[d.ahj] : null;
+  // ETA field - try exact match first, then partial match
+  var etaVal = null;
+  if(AHJ_ETA.hasOwnProperty(d.ahj)){
+    etaVal = AHJ_ETA[d.ahj];
+  } else {
+    // Try partial match - normalize and compare
+    var ahjLower = d.ahj.toLowerCase();
+    for(var k in AHJ_ETA){
+      if(k.toLowerCase()===ahjLower || ahjLower.indexOf(k.toLowerCase())>=0 || k.toLowerCase().indexOf(ahjLower)>=0){
+        etaVal = AHJ_ETA[k];
+        break;
+      }
+    }
+  }
   var etaF='';
   if(etaVal !== null){
     var etaLabel = etaVal===0
