@@ -2264,7 +2264,51 @@ function doSearch(){
   });
 }
 
+// Street-level AHJ overrides for known problem streets in mixed ZIPs
+const STREET_OVERRIDES = {
+  // 33844 - Polk County mixed ZIP
+  'cumberland trail': {ahj:'Town of Lake Hamilton Building Department', ahj_type:'municipal', city:'Lake Hamilton', note:'Cumberland Trail area is within Lake Hamilton town limits'},
+  'bates rd': {ahj:'Polk County Building Division', ahj_type:'county-unincorporated', city:'Polk County', note:'Bates Rd is unincorporated Polk County'},
+  // 33837 - Davenport mixed ZIP  
+  'snowfall': {ahj:'City of Haines City Building Department', ahj_type:'municipal', city:'Haines City', note:'Providence community is within Haines City limits'},
+  'rising trail': {ahj:'City of Haines City Building Department', ahj_type:'municipal', city:'Haines City', note:'Providence community is within Haines City limits'},
+  'partington': {ahj:'City of Haines City Building Department', ahj_type:'municipal', city:'Haines City', note:'Providence community is within Haines City limits'},
+  // 32835 - MetroWest Orlando
+  'hiawassee': {ahj:'City of Orlando Building and Permitting', ahj_type:'municipal', city:'Orlando', note:'S Hiawassee Rd corridor is within Orlando city limits'},
+  // 33311 - Wilton Manors
+  'wilton manors': {ahj:'City of Wilton Manors Building Department', ahj_type:'municipal', city:'Wilton Manors', note:'Inside Wilton Manors city limits'},
+  // 34786 - Windermere area
+  'zori': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Zori Ln is in unincorporated Orange County'},
+  // 33619 - Tampa east
+  '67th st': {ahj:'Hillsborough County Development Services', ahj_type:'county-unincorporated', city:'Hillsborough County', note:'S 67th St is outside Tampa city limits'},
+  // 33166 - Miami Springs
+  'corydon': {ahj:'City of Miami Springs Building Department', ahj_type:'municipal', city:'Miami Springs', note:'Corydon Dr is within Miami Springs city limits'},
+};
+
+function checkStreetOverride(address, zip){
+  var addrLower = address.toLowerCase();
+  for(var street in STREET_OVERRIDES){
+    if(addrLower.indexOf(street) >= 0){
+      return STREET_OVERRIDES[street];
+    }
+  }
+  return null;
+}
+
 function askClaude(raw, zip, rec, out, btn){
+  // Check street override first
+  var override = checkStreetOverride(raw, zip);
+  if(override){
+    renderCard({
+      raw:raw, zip:zip, city:override.city, county:rec.county,
+      branch:rec.branch, pa:rec.pa,
+      ahj:override.ahj, ahj_type:override.ahj_type,
+      source:'db', note:override.note
+    });
+    btn.disabled=false; btn.textContent='Search';
+    return;
+  }
+
   var systemPrompt = "You are a Florida building permit jurisdiction expert for Volt Staffing."
     + " Given a Florida street address, determine the EXACT Authority Having Jurisdiction (AHJ)."
     + " Many Florida addresses use a nearby city name as the mailing address but are actually"
