@@ -2244,7 +2244,25 @@ function doSearch(){
   // type: 'municipal', 'county-unincorporated', 'mixed'
 
   if(!entry || entry[1]==="mixed"){
-    // Needs Claude AI to determine exact jurisdiction from street address
+    // Check street override FIRST before calling AI
+    var streetOv = checkStreetOverride(raw, zip);
+    if(streetOv){
+      var ovCounty = rec ? rec.county : '';
+      var ovPa = rec ? rec.pa : '';
+      var ovBranch = rec ? rec.branch : '?';
+      // Get correct PA if county changed
+      if(streetOv.county && streetOv.county !== ovCounty){
+        var countyPaMap={'Polk':'https://www.polkflpa.gov/CamaSearch.aspx','Osceola':'https://www.property-appraiser.org','Orange':'https://ocpaweb.ocpafl.org/parcelsearch','Hillsborough':'https://www.hcpafl.org','Miami-dade':'https://www.miamidade.gov/pa','Broward':'https://www.bcpa.net','Palm Beach':'https://www.pbcgov.org/papa','Pinellas':'https://www.pcpao.gov','Manatee':'https://www.manateepao.gov','Sarasota':'https://www.sc-pa.com','Lee':'https://www.leepa.org','Collier':'https://www.collierappraiser.com'};
+        ovCounty = streetOv.county;
+        ovPa = countyPaMap[ovCounty] || ovPa;
+      }
+      renderCard({raw:raw, zip:zip, city:streetOv.city, county:ovCounty,
+        branch:ovBranch, pa:ovPa,
+        ahj:streetOv.ahj, ahj_type:streetOv.ahj_type,
+        source:'db', note:streetOv.note});
+      return;
+    }
+    // No street override - call Claude AI
     btn.disabled=true; btn.textContent="Analyzing...";
     out.innerHTML='<div class="loading-wrap"><div class="spinner"></div>Claude AI is determining the exact jurisdiction for this address...</div>';
     askClaude(raw, zip, rec, out, btn);
