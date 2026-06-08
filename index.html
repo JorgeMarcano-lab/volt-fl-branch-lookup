@@ -2252,7 +2252,7 @@ function doSearch(){
     var streetOv = checkStreetOverride(raw, zip);
     if(streetOv){
       var ovCounty = rec ? rec.county : '';
-      var ovPa = rec ? rec.pa : '';
+      var ovPa = streetOv.pa || (rec ? rec.pa : '');
       var ovBranch = rec ? rec.branch : '?';
       // Get correct PA if county changed
       if(streetOv.county && streetOv.county !== ovCounty){
