@@ -1470,7 +1470,7 @@ const ZIP_JURIS={
   "32899":["Brevard","municipal","City of Orlando Building and Permitting"],
   "32901":["Brevard","municipal","City of Melbourne Building Department"],
   "32903":["Brevard","municipal","Town of Indialantic Building Department"],
-  "32904":["Brevard","municipal","City of Melbourne Building Department"],
+  "32904":["Brevard","mixed","City of Melbourne Building Department"],
   "32905":["Brevard","municipal","City of Palm Bay Building Department"],
   "32907":["Brevard","municipal","City of Palm Bay Building Department"],
   "32908":["Brevard","municipal","City of Palm Bay Building Department"],
@@ -1865,7 +1865,7 @@ const ZIP_JURIS={
   "33875":["Highlands","municipal","City of Sebring Building Department"],
   "33876":["Highlands","municipal","City of Sebring Building Department"],
   "33880":["Polk","municipal","City of Winter Haven Building Department"],
-  "33881":["Polk","county-unincorporated","Polk County Building Division"],
+  "33881":["Polk","mixed","Polk County Building Division"],
   "33884":["Polk","county-unincorporated","Polk County Building Division"],
   "33888":["Polk","municipal","City of Winter Haven Building Department"],
   "33890":["Hardee","municipal","Town of Zolfo Springs Building Department"],
@@ -2488,6 +2488,8 @@ const STREET_OVERRIDES = {
   // 33166 - Miami Springs
   'corydon': {ahj:'City of Miami Springs Building Department', ahj_type:'municipal', city:'Miami Springs', note:'Corydon Dr is within Miami Springs city limits'},
   // 32822 - Orlando vs Orange County unincorporated
+  'andrew st': {ahj:'City of Winter Haven Building Department', ahj_type:'municipal', city:'Winter Haven', note:'Andrew St is inside Winter Haven city limits'},
+  'dairy rd': {ahj:'Brevard County Building Department', ahj_type:'county-unincorporated', city:'Brevard County', note:'Dairy Rd is outside Melbourne city limits - Brevard County unincorporated'},
   'dharma cir': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', note:'Dharma Cir is outside Kissimmee city limits - Osceola County unincorporated'},
   'woodlands village': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Woodlands Village Dr is outside Orlando city limits - Orange County unincorporated'},
   'colton dr': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Colton Dr is outside Orlando city limits - Orange County unincorporated'},
@@ -2782,42 +2784,5 @@ document.addEventListener('keydown',function(e){
   }
 });
 </script>
-<script>
-/* Volt - Branch Lookup -> Sales Breakdown handoff (auto-generado) */
-(function(){
-  var SALES_URL='sales-breakdown.html';
-  var btn=document.createElement('button');
-  btn.id='proceedBtn';
-  btn.textContent='Proceder con el Proyecto \u2192';
-  btn.style.cssText='display:none;margin:18px auto 0;padding:13px 22px;background:#e8b000;color:#0d0f14;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;';
-  btn.onmouseover=function(){this.style.background='#ffc82e';};
-  btn.onmouseout=function(){this.style.background='#e8b000';};
-  btn.onclick=function(){
-    var raw=(document.getElementById('addr')||{}).value||'';
-    var m=raw.match(/\b(3[0-9]{4})\b/g); var zip=m?m[m.length-1]:'';
-    var rec=(typeof byZip!=='undefined'&&zip)?byZip[zip]:null;
-    var code=rec?rec.branch:'';
-    var FULL={CFL:'Central Florida',NFL:'North Florida',SFL:'South Florida'};
-    var eta=(typeof AHJ_ETA!=='undefined'&&rec&&AHJ_ETA[rec.ahj]!==undefined)?AHJ_ETA[rec.ahj]:'';
-    var proj={address:raw,zip:zip||'',city:rec?rec.city:'',county:rec?rec.county:'',regionCode:code,branch:FULL[code]||code||'',ahj:rec?rec.ahj:'',pa:rec?rec.pa:'',permitEta:eta};
-    try{sessionStorage.setItem('voltProject',JSON.stringify(proj));}catch(e){}
-    window.location.href=SALES_URL;
-  };
-  function init(){
-    var out=document.getElementById('out');
-    if(out&&out.parentNode)out.parentNode.insertBefore(btn,out.nextSibling);
-    else (document.querySelector('.wrap')||document.body).appendChild(btn);
-    if(!out)return;
-    new MutationObserver(function(){
-      var t=out.textContent.trim();
-      var ok=t.length>0 && !out.querySelector('.err-box') && !/Analyzing|determining|loading/i.test(t);
-      btn.style.display=ok?'block':'none';
-    }).observe(out,{childList:true,subtree:true});
-  }
-  if(document.readyState!=='loading')init();
-  else document.addEventListener('DOMContentLoaded',init);
-})();
-</script>
-
 </body>
 </html>
