@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260606185424 -->
+<!-- v20260620202457 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1470,7 +1470,7 @@ const ZIP_JURIS={
   "32899":["Brevard","municipal","City of Orlando Building and Permitting"],
   "32901":["Brevard","municipal","City of Melbourne Building Department"],
   "32903":["Brevard","municipal","Town of Indialantic Building Department"],
-  "32904":["Brevard","municipal","City of Melbourne Building Department"],
+  "32904":["Brevard","mixed","City of Melbourne Building Department"],
   "32905":["Brevard","municipal","City of Palm Bay Building Department"],
   "32907":["Brevard","municipal","City of Palm Bay Building Department"],
   "32908":["Brevard","municipal","City of Palm Bay Building Department"],
@@ -1865,7 +1865,7 @@ const ZIP_JURIS={
   "33875":["Highlands","municipal","City of Sebring Building Department"],
   "33876":["Highlands","municipal","City of Sebring Building Department"],
   "33880":["Polk","municipal","City of Winter Haven Building Department"],
-  "33881":["Polk","county-unincorporated","Polk County Building Division"],
+  "33881":["Polk","mixed","Polk County Building Division"],
   "33884":["Polk","county-unincorporated","Polk County Building Division"],
   "33888":["Polk","municipal","City of Winter Haven Building Department"],
   "33890":["Hardee","municipal","Town of Zolfo Springs Building Department"],
@@ -2227,68 +2227,6 @@ var EXT='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="cur
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
-function doSearch(){
-  var raw=document.getElementById("addr").value.trim();
-  var out=document.getElementById("out");
-  var btn=document.getElementById("sbtn");
-  if(!raw)return;
-
-  var zip=extractZip(raw);
-  var rec=zip?byZip[zip]:null;
-
-  if(!zip){
-    out.innerHTML='<div class="err-box">No Florida ZIP code found in the address.<br>Please include the ZIP code for accurate results (e.g. "6228 Imperial Dr, Panama City FL <b>32404</b>").</div>';
-    return;
-  }
-  if(!rec){
-    out.innerHTML='<div class="err-box">ZIP code <b>'+esc(zip)+'</b> is not in Volt Florida database. Please verify it is a valid Florida ZIP.</div>';
-    return;
-  }
-
-  var entry=ZIP_JURIS[zip];
-  // entry format: [county, type, ahj]
-  // type: 'municipal', 'county-unincorporated', 'mixed'
-
-  if(!entry || entry[1]==="mixed"){
-    // Check street override FIRST before calling AI
-    var streetOv = checkStreetOverride(raw, zip);
-    if(streetOv){
-      var ovCounty = rec ? rec.county : '';
-      var ovPa = streetOv.pa || (rec ? rec.pa : '');
-      var ovBranch = rec ? rec.branch : '?';
-      // Get correct PA if county changed
-      if(streetOv.county && streetOv.county !== ovCounty){
-        var countyPaMap={'Polk':'https://www.polkflpa.gov/CamaSearch.aspx','Osceola':'https://www.property-appraiser.org','Orange':'https://ocpaweb.ocpafl.org/parcelsearch','Hillsborough':'https://www.hcpafl.org','Miami-dade':'https://www.miamidade.gov/pa','Broward':'https://www.bcpa.net','Palm Beach':'https://www.pbcgov.org/papa','Pinellas':'https://www.pcpao.gov','Manatee':'https://www.manateepao.gov','Sarasota':'https://www.sc-pa.com','Lee':'https://www.leepa.org','Collier':'https://www.collierappraiser.com'};
-        ovCounty = streetOv.county;
-        ovPa = countyPaMap[ovCounty] || ovPa;
-      }
-      renderCard({raw:raw, zip:zip, city:streetOv.city, county:ovCounty,
-        branch:ovBranch, pa:ovPa,
-        ahj:streetOv.ahj, ahj_type:streetOv.ahj_type,
-        source:'db', note:streetOv.note});
-      return;
-    }
-    // No street override - call Claude AI
-    btn.disabled=true; btn.textContent="Analyzing...";
-    out.innerHTML='<div class="loading-wrap"><div class="spinner"></div>Claude AI is determining the exact jurisdiction for this address...</div>';
-    askClaude(raw, zip, rec, out, btn);
-    return;
-  }
-
-  // Instant result from database - no API call needed
-  var isUnincorp = entry[1]==="county-unincorporated";
-  renderCard({
-    raw:raw, zip:zip, city:rec.city, county:rec.county, branch:rec.branch, pa:rec.pa,
-    ahj:entry[2],
-    ahj_type:entry[1],
-    source:"db",
-    note: isUnincorp
-      ? "Unincorporated "+rec.county+" County area (Volt ZIP database)"
-      : "Incorporated municipality — "+rec.city+" (Volt ZIP database)"
-  });
-}
-
-// Street-level AHJ overrides for known problem streets in mixed ZIPs
 const STREET_OVERRIDES = {
   // 33844 - Polk County mixed ZIP
   'cumberland trail': {ahj:'Town of Lake Hamilton Building Department', ahj_type:'municipal', city:'Lake Hamilton', note:'Cumberland Trail area is within Lake Hamilton town limits'},
@@ -2488,6 +2426,8 @@ const STREET_OVERRIDES = {
   // 33166 - Miami Springs
   'corydon': {ahj:'City of Miami Springs Building Department', ahj_type:'municipal', city:'Miami Springs', note:'Corydon Dr is within Miami Springs city limits'},
   // 32822 - Orlando vs Orange County unincorporated
+  'andrew st': {ahj:'City of Winter Haven Building Department', ahj_type:'municipal', city:'Winter Haven', note:'Andrew St is inside Winter Haven city limits'},
+  'dairy rd': {ahj:'Brevard County Building Department', ahj_type:'county-unincorporated', city:'Brevard County', note:'Dairy Rd is outside Melbourne city limits - Brevard County unincorporated'},
   'dharma cir': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', note:'Dharma Cir is outside Kissimmee city limits - Osceola County unincorporated'},
   'woodlands village': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Woodlands Village Dr is outside Orlando city limits - Orange County unincorporated'},
   'colton dr': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Colton Dr is outside Orlando city limits - Orange County unincorporated'},
@@ -2505,6 +2445,70 @@ function checkStreetOverride(address, zip){
   }
   return null;
 }
+
+function doSearch(){
+  var raw=document.getElementById("addr").value.trim();
+  var out=document.getElementById("out");
+  var btn=document.getElementById("sbtn");
+  if(!raw)return;
+
+  var zip=extractZip(raw);
+  var rec=zip?byZip[zip]:null;
+
+  if(!zip){
+    out.innerHTML='<div class="err-box">No Florida ZIP code found in the address.<br>Please include the ZIP code for accurate results (e.g. "6228 Imperial Dr, Panama City FL <b>32404</b>").</div>';
+    return;
+  }
+  if(!rec){
+    out.innerHTML='<div class="err-box">ZIP code <b>'+esc(zip)+'</b> is not in Volt Florida database. Please verify it is a valid Florida ZIP.</div>';
+    return;
+  }
+
+  var entry=ZIP_JURIS[zip];
+  // entry format: [county, type, ahj]
+  // type: 'municipal', 'county-unincorporated', 'mixed'
+
+  if(!entry || entry[1]==="mixed"){
+    // Check street override FIRST before calling AI
+    var streetOv = checkStreetOverride(raw, zip);
+    if(streetOv){
+      var ovCounty = rec ? rec.county : '';
+      var ovPa = streetOv.pa || (rec ? rec.pa : '');
+      var ovBranch = rec ? rec.branch : '?';
+      // Get correct PA if county changed
+      if(streetOv.county && streetOv.county !== ovCounty){
+        var countyPaMap={'Polk':'https://www.polkflpa.gov/CamaSearch.aspx','Osceola':'https://www.property-appraiser.org','Orange':'https://ocpaweb.ocpafl.org/parcelsearch','Hillsborough':'https://www.hcpafl.org','Miami-dade':'https://www.miamidade.gov/pa','Broward':'https://www.bcpa.net','Palm Beach':'https://www.pbcgov.org/papa','Pinellas':'https://www.pcpao.gov','Manatee':'https://www.manateepao.gov','Sarasota':'https://www.sc-pa.com','Lee':'https://www.leepa.org','Collier':'https://www.collierappraiser.com'};
+        ovCounty = streetOv.county;
+        ovPa = countyPaMap[ovCounty] || ovPa;
+      }
+      renderCard({raw:raw, zip:zip, city:streetOv.city, county:ovCounty,
+        branch:ovBranch, pa:ovPa,
+        ahj:streetOv.ahj, ahj_type:streetOv.ahj_type,
+        source:'db', note:streetOv.note});
+      return;
+    }
+    // No street override - call Claude AI
+    btn.disabled=true; btn.textContent="Analyzing...";
+    out.innerHTML='<div class="loading-wrap"><div class="spinner"></div>Claude AI is determining the exact jurisdiction for this address...</div>';
+    askClaude(raw, zip, rec, out, btn);
+    return;
+  }
+
+  // Instant result from database - no API call needed
+  var isUnincorp = entry[1]==="county-unincorporated";
+  renderCard({
+    raw:raw, zip:zip, city:rec.city, county:rec.county, branch:rec.branch, pa:rec.pa,
+    ahj:entry[2],
+    ahj_type:entry[1],
+    source:"db",
+    note: isUnincorp
+      ? "Unincorporated "+rec.county+" County area (Volt ZIP database)"
+      : "Incorporated municipality — "+rec.city+" (Volt ZIP database)"
+  });
+}
+
+// Street-level AHJ overrides for known problem streets in mixed ZIPs
+
 
 function askClaude(raw, zip, rec, out, btn){
   // Check street override first
@@ -2782,75 +2786,5 @@ document.addEventListener('keydown',function(e){
   }
 });
 </script>
-<script>
-/* Volt - Branch Lookup -> Sales Breakdown handoff v2 */
-(function(){
-  var SALES_URL = 'sales-breakdown.html';
-
-  var btn = document.createElement('button');
-  btn.id = 'proceedBtn';
-  btn.textContent = 'Proceder con el Proyecto \u2192';
-  btn.style.cssText = 'display:none;margin:18px auto 0;padding:13px 22px;background:#e8b000;color:#0d0f14;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;';
-  btn.onmouseover = function(){ this.style.background = '#ffc82e'; };
-  btn.onmouseout  = function(){ this.style.background = '#e8b000'; };
-
-  btn.onclick = function(){
-    var out = document.getElementById('out');
-    var raw = (document.getElementById('addr') || {}).value || '';
-
-    // --- AHJ: read from rendered card DOM (.fv.ahj) ---
-    var ahjEl = out ? out.querySelector('.fv.ahj') : null;
-    var ahj = ahjEl ? ahjEl.textContent.trim() : '';
-
-    // --- Permit ETA: read the number from the rendered ETA block ---
-    var permitEta = '';
-    if(out){
-      // "~3 days" or "Same Day"
-      var etaEl = out.querySelector('.fv[style*="font-size:1rem"], .fv[style*="font-size: 1rem"]');
-      if(etaEl){
-        var etaTxt = etaEl.textContent.trim(); // "~3 days" | "Same Day"
-        if(/same.?day/i.test(etaTxt)){ permitEta = '0'; }
-        else { var nm = etaTxt.match(/\d+/); if(nm) permitEta = nm[0]; }
-      }
-    }
-
-    // --- Branch / region from card ---
-    var m = raw.match(/\b(3[0-9]{4})\b/g); var zip = m ? m[m.length-1] : '';
-    var rec = (typeof byZip !== 'undefined' && zip) ? byZip[zip] : null;
-    var code = rec ? rec.branch : '';
-    var FULL = {CFL:'Central Florida', NFL:'North Florida', SFL:'South Florida'};
-
-    var proj = {
-      address  : raw,
-      zip      : zip || '',
-      city     : rec ? rec.city   : '',
-      county   : rec ? rec.county : '',
-      regionCode: code,
-      branch   : FULL[code] || code || '',
-      ahj      : ahj,
-      pa       : rec ? rec.pa : '',
-      permitEta: permitEta
-    };
-    try{ sessionStorage.setItem('voltProject', JSON.stringify(proj)); }catch(e){}
-    window.location.href = SALES_URL;
-  };
-
-  function init(){
-    var out = document.getElementById('out');
-    if(out && out.parentNode) out.parentNode.insertBefore(btn, out.nextSibling);
-    else (document.querySelector('.wrap') || document.body).appendChild(btn);
-    if(!out) return;
-    new MutationObserver(function(){
-      var t = out.textContent.trim();
-      var ok = t.length > 0 && !out.querySelector('.err-box') && !/Analyzing|determining|loading/i.test(t);
-      btn.style.display = ok ? 'block' : 'none';
-    }).observe(out, {childList:true, subtree:true});
-  }
-
-  if(document.readyState !== 'loading') init();
-  else document.addEventListener('DOMContentLoaded', init);
-})();
-</script>
-
 </body>
 </html>
