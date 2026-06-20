@@ -86,6 +86,8 @@ Comisión solar (J27) = (Lender − Redline)×W − adders solares (÷23,370 loa
 </div>
 
 <script>
+const VOLT_LOGO='data:image/jpeg;base64,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';
+const LOGO_W=Math.round(56*1.184004),LOGO_H=56;
 const REGIONS={SFL:{lightreach:2.15,enfin:2.15,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:2.05,enfin:2.05,tesla:2.10,teslapw3:2.00,affordable:1.80}};
 const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Compra'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Compra'},{k:'affordable',n:'Affordable Solar',t:'Compra'}];
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Almika'];
@@ -94,18 +96,19 @@ const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
-const VOLT_LOGO='data:image/jpeg;base64,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';
-const LOGO_W=Math.round(56*1.184004),LOGO_H=56;
 const CARVE_LOAN=23370;
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
-let region='SFL';let lastRes={},lastBest=null;
-const selected={lightreach:true,enfin:true,tesla:true,teslapw3:true,affordable:true};
+
+let region='SFL';
+// instances: array of {id, k} — id is unique, k is the option key
+let instances=[];
+let instCounter=0;
+let lastRes={},lastBest=null;
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
 function basePanelName(k){if(k==='lightreach'||k==='enfin')return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
-
 function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
 function panelRate(k,p){if(p==='base')return{r:0,ok:true};const lease=(k==='lightreach'||k==='enfin');
   if(p==='qtron')return{r:0.05,ok:true};
@@ -116,259 +119,362 @@ function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='t
 function sizeAdder(k,W){const incl=(k==='tesla'||k==='teslapw3');if(W>11760)return{rate:0,fixed:incl?0:1250};if(W>=6000&&W<=8000)return{rate:incl?0:0.20,fixed:0};if(W<6000&&W>0)return{rate:0.90,fixed:0};return{rate:0,fixed:0};}
 function sizeAdderInfo(k,W){const incl=(k==='tesla'||k==='teslapw3');
   if(W>11760)return{label:'Tier 2',amt:incl?0:1250,incl};
-  if(W>=6000&&W<=8000)return{label:'Small (6–8 kW)',amt:incl?0:0.20*W,incl};
+  if(W>=6000&&W<=8000)return{label:'Small (6-8 kW)',amt:incl?0:0.20*W,incl};
   if(W<6000&&W>0)return{label:'Tiny (<6 kW)',amt:0.90*W,incl:false};
   return{label:'—',amt:0,incl:false};}
 
-function detailFields(p,s){
-  const sel=(name,opts,val)=>`<select id="${p}${name}${s}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
+function detailFields(id){
+  const sel=(name,opts,val)=>`<select id="${name}-${id}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
   return `
   <div class="vlt-grid">
-    <div class="vlt-fld"><label class="vlt-lbl">Tamaño (kW)</label><input class="vlt-num" type="number" id="${p}size${s}" value="11.61" step="0.01" min="0"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="${p}offset${s}" step="1" placeholder="ej. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido (según región)'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Tamaño (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="ej. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Montaje</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
-    <div class="vlt-fld" id="${p}surfWrap${s}"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle (incluido)'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+    <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
   </div>
-  <div id="${p}gmWrap${s}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+  <div id="gmWrap-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Ground Mount — $0.55/W + trenching</div>
     <div class="vlt-grid">
-      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies) ×$25</label><input class="vlt-num" type="number" id="${p}dirt${s}" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies) ×$40</label><input class="vlt-num" type="number" id="${p}hard${s}" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="${p}septic${s}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies) x$25</label><input class="vlt-num" type="number" id="dirt-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies) x$40</label><input class="vlt-num" type="number" id="hard-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="septic-${id}" value="0" min="0"></div>
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Batería</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Bateria</div>
     <div class="vlt-grid">
       <div class="vlt-fld"><label class="vlt-lbl">Tipo</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
       <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
-      <div class="vlt-fld"><label class="vlt-lbl">Precio/batería ($)</label><input class="vlt-num" type="number" id="${p}battPrice${s}" value="15000" step="100" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="${p}rebate${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Precio/bateria ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Adders no solares (÷ tamaño, completos)</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Adders no solares</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
-      <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="${p}ns_hvac${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><span style="font-size:12px">Fence</span><input class="vlt-num" type="number" id="${p}ns_fence${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><span style="font-size:12px">Gutters</span><input class="vlt-num" type="number" id="${p}ns_gutters${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><span style="font-size:12px">Water Filter</span><input class="vlt-num" type="number" id="${p}ns_water${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><span style="font-size:12px">Doors &amp; Windows</span><input class="vlt-num" type="number" id="${p}ns_doors${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><span style="font-size:12px">Roof</span><input class="vlt-num" type="number" id="${p}ns_roof${s}" value="0" step="50" min="0"></div>
-      <div class="vlt-row"><input type="text" id="${p}ns_otherlbl${s}" placeholder="Other..." style="font-size:12px"><input class="vlt-num" type="number" id="${p}ns_otherval${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="ns_hvac-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Fence</span><input class="vlt-num" type="number" id="ns_fence-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Gutters</span><input class="vlt-num" type="number" id="ns_gutters-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Water Filter</span><input class="vlt-num" type="number" id="ns_water-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Doors &amp; Windows</span><input class="vlt-num" type="number" id="ns_doors-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Roof</span><input class="vlt-num" type="number" id="ns_roof-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><input type="text" id="ns_otherlbl-${id}" placeholder="Other..." style="font-size:12px"><input class="vlt-num" type="number" id="ns_otherval-${id}" value="0" step="50" min="0"></div>
     </div>
-  </div>`;
+  </div>`;}
+
+function buildCard(inst){
+  const {id,k}=inst;
+  const o=OPTIONS.find(x=>x.k===k);
+  const loan=(o.t==='Compra');
+  const card=document.createElement('div');
+  card.className='vlt-card';card.id='card-'+id;
+  card.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Comision total</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
+        <button onclick="removeInst('${id}')" title="Eliminar" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
+      </span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
+      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" value="${REGIONS[region][k]}"></div>
+      <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
+      ${loan?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div>`
+            :`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
+      <div><span class="vlt-lbl">TOTAL / ${loan?'Cash':'Precio Cash'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
+      ${loan?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
+      <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
+      ${loan?`<div id="p1w-${id}"><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Pago mes 37+ (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
+            :`<div><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`}
+    </div>
+    <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Detalles del proyecto</button>
+    <div id="det-${id}" style="display:none">${detailFields(id)}</div>
+    <div id="bw-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Bateria <span id="bname-${id}"></span> — redline editable</div>
+      <div class="vlt-rep">
+        <div><label class="vlt-lbl">Redline 1ra ($)</label><input type="number" step="100" id="br1-${id}" class="vlt-num"></div>
+        <div><label class="vlt-lbl">Redline adic. ($)</label><input type="number" step="100" id="brA-${id}" class="vlt-num"></div>
+        <div><span class="vlt-lbl">Com. bateria (J28)</span><span id="bt-${id}" style="font-size:14px;font-weight:500">$0</span></div>
+      </div>
+    </div>
+    <div id="note-${id}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>`;
+  $('opts').appendChild(card);
+  card.querySelector('#dtbtn-'+id).addEventListener('click',function(){const d=$('det-'+id);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
+  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
+  card.addEventListener('input',onChange);card.addEventListener('change',onChange);
 }
 
-function readOptCfg(k){
-  const g=n=>$(n+'-'+k);
-  const kw=parseFloat(g('size').value)||0;
-  const cfg={kw,W:kw*1000,offset:g('offset').value,panel:g('panel').value,mount:g('mount').value,surface:g('surface').value,
-    dirt:parseFloat(g('dirt').value)||0,hard:parseFloat(g('hard').value)||0,septic:parseFloat(g('septic').value)||0,
-    battType:g('battType').value,battQty:parseInt(g('battQty').value)||0,battPrice:parseFloat(g('battPrice').value)||0,
-    rebate:parseFloat(g('rebate').value)||0};
+function addInst(k){
+  const id=k+'-'+(++instCounter);
+  instances.push({id,k});
+  buildCard({id,k});
+  calc();
+}
+
+function removeInst(id){
+  if(instances.length<=1)return;
+  instances=instances.filter(x=>x.id!==id);
+  const c=$('card-'+id); if(c)c.remove();
+  delete lastRes[id];
+  calc();
+}
+
+function buildRows(){
+  $('opts').innerHTML='';
+  instances.forEach(inst=>buildCard(inst));
+}
+
+function buildChips(){
+  const c=$('chips');c.innerHTML='';
+  // Separator label
+  const lbl=document.createElement('span');
+  lbl.style.cssText='font-size:11px;color:var(--color-text-tertiary);align-self:center;margin-right:4px';
+  lbl.textContent='Agregar opcion:';c.appendChild(lbl);
+  OPTIONS.forEach(o=>{
+    const b=document.createElement('button');b.className='vlt-chip';
+    b.innerHTML=`<i class="ti ti-plus" aria-hidden="true"></i>${o.n}`;
+    b.title=`Agregar ${o.n}`;
+    b.addEventListener('click',()=>addInst(o.k));
+    c.appendChild(b);
+  });}
+
+function fillBattRedline(id){
+  const k=instances.find(x=>x.id===id)?.k;if(!k)return;
+  const t=$('battType-'+id)?.value;const d=battDefault(k,t);
+  const r1=$('br1-'+id),rA=$('brA-'+id);if(!r1)return;
+  $('bname-'+id).textContent=BATT_NAME[t];
+  if(d===null){r1.value='';rA.value='';}
+  else{r1.value=d[0]==null?'':d[0];rA.value=d[1]==null?'':d[1];}
+}
+function syncOptMount(id){const g=$('mount-'+id);if(!g)return;const sh=g.value==='ground';$('gmWrap-'+id).style.display=sh?'block':'none';$('surfWrap-'+id).style.display=sh?'none':'block';}
+function syncOptBatt(id){const g=$('battQty-'+id);if(!g)return;$('bw-'+id).style.display=(parseInt(g.value)||0)>0?'block':'none';}
+
+function readOptCfg(id){
+  const g=n=>$(n+'-'+id);
+  const kw=parseFloat(g('size')?.value)||0;
+  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',
+    dirt:parseFloat(g('dirt')?.value)||0,hard:parseFloat(g('hard')?.value)||0,septic:parseFloat(g('septic')?.value)||0,
+    battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
+    rebate:parseFloat(g('rebate')?.value)||0};
   const ns=[['ns_hvac','HVAC'],['ns_fence','Fence'],['ns_gutters','Gutters'],['ns_water','Water Filter'],['ns_doors','Doors & Windows'],['ns_roof','Roof']];
   let noSolar=0;const nsItems=[];
-  ns.forEach(([id,lbl])=>{const v=parseFloat(g(id).value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
-  const ov=parseFloat(g('ns_otherval').value)||0;if(ov>0){noSolar+=ov;nsItems.push((g('ns_otherlbl').value.trim()||'Other')+' '+money(ov));}
+  ns.forEach(([fid,lbl])=>{const v=parseFloat(g(fid)?.value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
+  const ov=parseFloat(g('ns_otherval')?.value)||0;if(ov>0){noSolar+=ov;nsItems.push((g('ns_otherlbl')?.value?.trim()||'Other')+' '+money(ov));}
   cfg.noSolar=noSolar;cfg.nsItems=nsItems;return cfg;
 }
 
-const optInputs={};
-function buildRows(){const c=$('opts');c.innerHTML='';
-  OPTIONS.forEach(o=>{const loan=(o.t==='Compra');
-    const card=document.createElement('div');card.className='vlt-card';card.id='card-'+o.k;
-    card.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-        <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
-        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Comisión total</span><span id="comm-${o.k}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${o.k}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
-        <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${o.k}" class="vlt-num"></div>
-        <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${o.k}" class="vlt-num" value="3.50"></div>
-        ${loan?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${o.k}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${o.k}" class="vlt-num" value="0"></div>`
-              :`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${o.k}" class="vlt-num" value="2.99"></div>`}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
-        <div><span class="vlt-lbl">TOTAL / ${loan?'Cash':'Precio Cash'}</span><span id="cash-${o.k}" style="font-size:14px">$0</span></div>
-        ${loan?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${o.k}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
-        <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${o.k}" style="font-size:14px">—</span></div>
-        ${loan?`<div id="p1w-${o.k}"><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${o.k}" class="vlt-num" value="0"></div><div id="p2w-${o.k}" style="display:none"><label class="vlt-lbl">Pago mes 37+ (ref.)</label><input type="number" step="0.01" id="pay2-${o.k}" class="vlt-num" value="0"></div>`
-              :`<div><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${o.k}" class="vlt-num" value="0"></div>`}
-      </div>
-      <button id="dtbtn-${o.k}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Detalles del proyecto (esta opción)</button>
-      <div id="det-${o.k}" style="display:none">${detailFields('','-'+o.k)}</div>
-      <div id="bw-${o.k}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px">
-        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Batería <span id="bname-${o.k}"></span> — redline editable</div>
-        <div class="vlt-rep">
-          <div><label class="vlt-lbl">Redline 1ra ($)</label><input type="number" step="100" id="br1-${o.k}" class="vlt-num"></div>
-          <div><label class="vlt-lbl">Redline adic. ($)</label><input type="number" step="100" id="brA-${o.k}" class="vlt-num"></div>
-          <div><span class="vlt-lbl">Com. batería (J28)</span><span id="bt-${o.k}" style="font-size:14px;font-weight:500">$0</span></div>
-        </div>
-      </div>
-      <div id="note-${o.k}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>`;
-    c.appendChild(card);
-    optInputs[o.k]={rl:card.querySelector('#rl-'+o.k),ct:card.querySelector('#ct-'+o.k),df:card.querySelector('#df-'+o.k),loan};
-    card.querySelector('#dtbtn-'+o.k).addEventListener('click',function(){const d=$('det-'+o.k);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
-  });}
-
-function fillBattRedline(k){const t=$('battType-'+k).value;const d=battDefault(k,t);const r1=$('br1-'+k),rA=$('brA-'+k);if(!r1)return;$('bname-'+k).textContent=BATT_NAME[t];if(d===null){r1.value='';rA.value='';}else{r1.value=d[0]==null?'':d[0];rA.value=d[1]==null?'':d[1];}}
-function syncOptMount(k){const g=$('mount-'+k);if(!g)return;const sh=g.value==='ground';$('gmWrap-'+k).style.display=sh?'block':'none';$('surfWrap-'+k).style.display=sh?'none':'block';}
-function syncOptBatt(k){const g=$('battQty-'+k);if(!g)return;$('bw-'+k).style.display=(parseInt(g.value)||0)>0?'block':'none';}
+function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (incluido)'):(r.sizeLabel+' - '+money(r.sizeAmt));}
 
 function calc(){
-  let best=-1e15,bestK=null;const res={};
-  OPTIONS.forEach(o=>{
-    const I=optInputs[o.k];const cfg=readOptCfg(o.k);const W=cfg.W;
-    if(I.rl.value===''||I.rl.dataset.region!==region){I.rl.value=REGIONS[region][o.k];I.rl.dataset.region=region;}
-    const redline=parseFloat(I.rl.value)||0,contract=parseFloat(I.ct.value)||0;
-    const notes=[];const pr=panelRate(o.k,cfg.panel);if(!pr.ok)notes.push('Panel N/A para esta opción (se calcula con base)');
-    const rr=roofRate(o.k,cfg.mount==='rooftop'?cfg.surface:'shingle');const sz=sizeAdder(o.k,W);const szI=sizeAdderInfo(o.k,W);
+  let best=-1e15,bestId=null;const res={};
+  instances.forEach(inst=>{
+    const {id,k}=inst;
+    const o=OPTIONS.find(x=>x.k===k);
+    const loan=(o.t==='Compra');
+    const cfg=readOptCfg(id);const W=cfg.W;
+    const redline=parseFloat($('rl-'+id)?.value)||0;
+    const contract=parseFloat($('ct-'+id)?.value)||0;
+    const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A para esta opcion');
+    const rr=roofRate(k,cfg.mount==='rooftop'?cfg.surface:'shingle');
+    const sz=sizeAdder(k,W);const szI=sizeAdderInfo(k,W);
     let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
     const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
-    const adderDiv=I.loan?CARVE_LOAN:(W>0?W:CARVE_LOAN);
+    const adderDiv=loan?CARVE_LOAN:(W>0?W:CARVE_LOAN);
     const adderCarve=(W>0)?adder23*(W/adderDiv):adder23;
     const adderResidual=adder23-adderCarve;
     let battPriceThis=0,battComm=0,battTxt='$0';
-    if(cfg.battQty>0){const d=battDefault(o.k,cfg.battType);
-      if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Batería PW3 N/A para esta opción');}
-      else{battPriceThis=cfg.battQty*cfg.battPrice;const r1=parseFloat($('br1-'+o.k).value),rA=parseFloat($('brA-'+o.k).value);
-        if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de batería'+(cfg.battType==='enphase'?' (Enphase: TBC en el sheet)':''));}
-        else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);notes.push('Batería: precio '+money(battPriceThis)+' resta a J27; margen (− redline '+money(redlineTot)+') = '+money(battComm)+' a J28');}}}
-    if($('bt-'+o.k))$('bt-'+o.k).textContent=battTxt;
+    if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
+      if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Bateria PW3 N/A para esta opcion');}
+      else{battPriceThis=cfg.battQty*cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
+        if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
+        else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
+    if($('bt-'+id))$('bt-'+id).textContent=battTxt;
     const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
     const comm=solarComm+battComm;
     const cash=contract*W+adderResidual;
     let financed=cash,df=0;
-    if(I.loan){df=parseFloat(I.df.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+o.k))$('fin-'+o.k).textContent=money(financed);}
-    if($('cash-'+o.k))$('cash-'+o.k).textContent=money(cash);
+    if(loan){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);}
+    if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
-    if($('off-'+o.k))$('off-'+o.k).textContent=offTxt;
-    res[o.k]={cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed};
-    if(selected[o.k]&&comm>best){best=comm;bestK=o.k;}
+    if($('off-'+id))$('off-'+id).textContent=offTxt;
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan};
+    if(comm>best){best=comm;bestId=id;}
   });
-  OPTIONS.forEach(o=>{const r=res[o.k];const card=$('card-'+o.k);
-    card.style.display=selected[o.k]?'block':'none';
-    $('comm-'+o.k).textContent=money(r.comm);
-    $('cbrk-'+o.k).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
-    $('note-'+o.k).textContent=r.notes.join(' · ');
-    card.style.border=(o.k===bestK)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
-    $('comm-'+o.k).style.color=(o.k===bestK)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
+  instances.forEach(inst=>{const {id}=inst;const r=res[id];if(!r)return;
+    const card=$('card-'+id);
+    $('comm-'+id).textContent=money(r.comm);
+    $('cbrk-'+id).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
+    $('note-'+id).textContent=r.notes.join(' · ');
+    card.style.border=(id===bestId)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
+    $('comm-'+id).style.color=(id===bestId)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
   });
-  lastRes=res;lastBest=bestK;renderCmp(res,bestK);
+  lastRes=res;lastBest=bestId;renderCmp(res,bestId);
 }
 
-function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (incluido)'):(r.sizeLabel+' — '+money(r.sizeAmt));}
-
-function renderCmp(res,bestK){
-  const cmp=$('cmp');const sel=OPTIONS.filter(o=>selected[o.k]);
-  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Selecciona al menos una opción.</div>';return;}
-  const fin=k=>$('co-'+k)?$('co-'+k).value:'';
-  const esc=k=>$('esc-'+k)?($('esc-'+k).value+'%'):'';
-  const pay=k=>{const p=$('pay1-'+k);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
+function renderCmp(res,bestId){
+  const cmp=$('cmp');
+  const sel=instances.filter(inst=>res[inst.id]);
+  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Agrega al menos una opcion.</div>';return;}
+  const fin=id=>$('co-'+id)?$('co-'+id).value:'';
+  const esc=id=>$('esc-'+id)?($('esc-'+id).value+'%'):'';
+  const pay=id=>{const p=$('pay1-'+id);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
     {title:'Proyecto',rows:[
-      ['Tipo',(o,r)=>o.t,{a:1}],
-      ['Tamaño (kW)',(o,r)=>r.cfg.kw.toFixed(2),{a:1}],
-      ['Offset',(o,r)=>r.offTxt],
-      ['Panel',(o,r)=>panelDisplay(o.k,r.cfg.panel),{a:1}],
-      ['Montaje',(o,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
-      ['Superficie',(o,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
+      ['Tipo',(inst,r)=>r.o.t,{a:1}],
+      ['Tamano (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
+      ['Offset',(inst,r)=>r.offTxt],
+      ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
+      ['Montaje',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
+      ['Superficie',(inst,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
     ]},
     {title:'Adders solares',rows:[
-      ['Adder de tamaño (auto)',(o,r)=>sizeCell(r)],
-      ['Adder de panel',(o,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' — '+money(r.panelAmt)):'—'],
-      ['Adder de superficie',(o,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof — '+money(r.roofAmt)):'—'],
-      ['Ground mount',(o,r)=>r.gmAmt>0?('$0.55/W — '+money(r.gmAmt)):'—'],
-      ['Trenching / septic',(o,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
-      ['Sales rebate (SR)',(o,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
+      ['Adder de tamano (auto)',(inst,r)=>sizeCell(r)],
+      ['Adder de panel',(inst,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' - '+money(r.panelAmt)):'—'],
+      ['Adder de superficie',(inst,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof - '+money(r.roofAmt)):'—'],
+      ['Ground mount',(inst,r)=>r.gmAmt>0?('$0.55/W - '+money(r.gmAmt)):'—'],
+      ['Trenching / septic',(inst,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
+      ['Sales rebate (SR)',(inst,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
     ]},
-    {title:'Adders no solares',rows:[
-      ['Adders no solares',(o,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']
-    ]},
-    {title:'Batería',rows:[
-      ['Batería',(o,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' ×'+r.cfg.battQty):'—'],
-      ['Precio batería',(o,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
-      ['Com. batería (J28)',(o,r)=>r.cfg.battQty>0?money(r.battComm):'—']
+    {title:'Adders no solares',rows:[['Adders no solares',(inst,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']]},
+    {title:'Bateria',rows:[
+      ['Bateria',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
+      ['Precio bateria',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
+      ['Com. bateria (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
     ]},
     {title:'Resultados',rows:[
-      ['Redline $/W',(o,r)=>'$'+r.redline.toFixed(2),{a:1}],
-      ['Contrato $/W',(o,r)=>'$'+r.contract.toFixed(2),{a:1}],
-      ['Comisión solar (J27)',(o,r)=>money(r.solarComm),{a:1}],
-      ['Comisión total',(o,r)=>money(r.comm),{a:1,bold:1}],
-      ['TOTAL / Cash',(o,r)=>money(r.cash),{a:1}],
-      ['Cash + DF',(o,r)=>(o.t==='Compra'&&r.df>0)?money(r.financed):'—'],
-      ['Financiera / Escalator',(o,r)=>o.t==='Compra'?fin(o.k):esc(o.k)],
-      ['Pago mensual',(o,r)=>pay(o.k)]
+      ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
+      ['Contrato $/W',(inst,r)=>'$'+r.contract.toFixed(2),{a:1}],
+      ['Comision solar (J27)',(inst,r)=>money(r.solarComm),{a:1}],
+      ['Comision total',(inst,r)=>money(r.comm),{a:1,bold:1}],
+      ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
+      ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
+      ['Financiera / Escalator',(inst,r)=>r.loan?fin(inst.id):esc(inst.id)],
+      ['Pago mensual',(inst,r)=>pay(inst.id)]
     ]}
   ];
   const ncol=1+sel.length;
   let html='<table class="vlt-tbl"><thead><tr><th></th>';
-  sel.forEach(o=>{const hi=o.k===bestK;html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+o.n+(hi?' ★':'')+'</th>';});
+  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id):('Escalator '+esc(inst.id)))+'</span></th>';});
   html+='</tr></thead><tbody>';
   blocks.forEach(bk=>{
-    const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(o=>!emptyV(row[1](o,res[o.k]))));
+    const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(inst=>!emptyV(row[1](inst,res[inst.id]))));
     if(!vis.length)return;
     html+='<tr class="vlt-bhdr"><td colspan="'+ncol+'">'+bk.title+'</td></tr>';
     vis.forEach(row=>{const label=row[0],fn=row[1],opt=row[2];html+='<tr><td>'+label+'</td>';
-      sel.forEach(o=>{const r=res[o.k];let v=fn(o,r);let st='';
-        if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(o.k===bestK)st+='color:var(--color-text-info);';}
+      sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
+        if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
   html+='</tbody></table>';cmp.innerHTML=html;
 }
 
-function buildChips(){const c=$('chips');c.innerHTML='';
-  OPTIONS.forEach(o=>{const b=document.createElement('button');b.className='vlt-chip'+(selected[o.k]?' on':'');
-    b.innerHTML='<i class="ti ti-'+(selected[o.k]?'check':'plus')+'" aria-hidden="true"></i>'+o.n;
-    b.addEventListener('click',()=>{selected[o.k]=!selected[o.k];b.classList.toggle('on',selected[o.k]);b.querySelector('i').className='ti ti-'+(selected[o.k]?'check':'plus');calc();});
-    c.appendChild(b);});}
-
-function applyBaseline(){OPTIONS.forEach(o=>{FIELD_NAMES.forEach(n=>{const src=$('b_'+n),dst=$(n+'-'+o.k);if(src&&dst)dst.value=src.value;});syncOptMount(o.k);syncOptBatt(o.k);fillBattRedline(o.k);});calc();}
-
 function onChange(e){const id=e.target.id||'';
-  if(id==='b_mount'){const sh=$('b_mount').value==='ground';$('b_gmWrap').style.display=sh?'block':'none';$('b_surfWrap').style.display=sh?'none':'block';}
-  else if(id.indexOf('mount-')===0){syncOptMount(id.slice(6));}
-  else if(id.indexOf('battQty-')===0){syncOptBatt(id.slice(8));}
-  else if(id.indexOf('battType-')===0){fillBattRedline(id.slice(9));}
-  else if(id.indexOf('co-')===0){const k=id.slice(3);const bs=$('co-'+k).value==='Sungage Brightstart';$('p2w-'+k).style.display=bs?'block':'none';$('p1w-'+k).querySelector('label').textContent=bs?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';}
+  const parts=id.split('-');const suffix=parts.slice(1).join('-');
+  if(parts[0]==='mount'){syncOptMount(suffix);}
+  else if(parts[0]==='battQty'){syncOptBatt(suffix);}
+  else if(parts[0]==='battType'){fillBattRedline(suffix);}
+  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';}
   calc();
 }
+
+function applyBaseline(){
+  instances.forEach(inst=>{const {id}=inst;
+    FIELD_NAMES.forEach(n=>{const src=$('b_'+n),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
+    syncOptMount(id);syncOptBatt(id);fillBattRedline(id);});calc();}
 
 function emitPDF(text){
   if(typeof sendPrompt==='function'){sendPrompt(text);return;}
   try{navigator.clipboard.writeText(text);}catch(e){}
-  console.log(text);
-  alert('Modo autónomo: el JSON del comparativo se copió al portapapeles (y está en la consola). Pégalo en Claude para generar el PDF.');
+  alert('JSON copiado al portapapeles.');
 }
 
-function genPDF(){const sel=OPTIONS.filter(o=>selected[o.k]);if(!sel.length)return;
-  const payload={region,direccion:($('projAddr').value||'').trim(),branch:($('projBranch').value||'').trim(),ahj:($('projAHJ').value||'').trim()||null,permit_eta:($('projEta').value||'').trim()||null,generado:new Date().toISOString().slice(0,10),opciones:sel.map(o=>{const r=lastRes[o.k];const c=r.cfg;return{
-    opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(o.k,c.panel),montaje:MOUNT_NAME[c.mount],
-    superficie:c.mount==='ground'?'N/A':SURF_NAME[c.surface],
-    adder_tamano:sizeCell(r),
-    adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
-    adder_superficie:r.roofAmt>0?(SURF_NAME[c.surface]+' Roof '+money(r.roofAmt)):null,
-    ground_mount:r.gmAmt>0?money(r.gmAmt):null,
-    trenching:r.gmFixed>0?money(r.gmFixed):null,
-    sales_rebate:c.rebate>0?money(c.rebate):null,
-    bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty+' @ $'+c.battPrice):null,
-    com_bateria:c.battQty>0?Math.round(r.battComm):null,
-    adders_no_solares:c.nsItems.join('; ')||null,
-    redline:r.redline,contrato:r.contract,
-    comision_solar:Math.round(r.solarComm),comision_total:Math.round(r.comm),
-    total_cash:Math.round(r.cash),cash_df:(o.t==='Compra'&&r.df>0)?Math.round(r.financed):null,
-    financiera:o.t==='Compra'?($('co-'+o.k)?$('co-'+o.k).value:''):null,
-    escalator:o.t==='Lease'?($('esc-'+o.k)?$('esc-'+o.k).value+'%':''):null,
-    pago_mensual:$('pay1-'+o.k)&&parseFloat($('pay1-'+o.k).value)?$('pay1-'+o.k).value:null};})};
-  const txt='[GENERAR_PDF_COMPARATIVO] Genera el PDF descargable del comparativo. Usa la dirección del proyecto como título del PDF (campo "direccion"); si está vacío usa "Comparativo de Comisiones". Muestra Sucursal y Región en el subtítulo. Omite campos null o "—". Datos exactos:\n```json\n'+JSON.stringify(payload)+'\n```';
-  try{ if(window.jspdf&&window.jspdf.jsPDF){renderClientPDF(payload);return;} }catch(e){console.error(e);}
+function genPDF(){
+  if(!instances.length)return;
+  const payload={region,direccion:($('projAddr').value||'').trim(),branch:($('projBranch').value||'').trim(),
+    ahj:($('projAHJ').value||'').trim()||null,permit_eta:($('projEta').value||'').trim()||null,
+    generado:new Date().toISOString().slice(0,10),
+    opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
+      return{opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
+        superficie:c.mount==='ground'?'N/A':SURF_NAME[c.surface],
+        adder_tamano:sizeCell(r),
+        adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
+        adder_superficie:r.roofAmt>0?(SURF_NAME[c.surface]+' Roof '+money(r.roofAmt)):null,
+        ground_mount:r.gmAmt>0?money(r.gmAmt):null,trenching:r.gmFixed>0?money(r.gmFixed):null,
+        sales_rebate:c.rebate>0?money(c.rebate):null,
+        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty+' @ $'+c.battPrice):null,
+        com_bateria:c.battQty>0?Math.round(r.battComm):null,
+        adders_no_solares:c.nsItems.join('; ')||null,
+        redline:r.redline,contrato:r.contract,
+        comision_solar:Math.round(r.solarComm),comision_total:Math.round(r.comm),
+        total_cash:Math.round(r.cash),
+        cash_df:(r.loan&&r.df>0)?Math.round(r.financed):null,
+        financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
+        escalator:!r.loan?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
+        pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null};}).filter(Boolean)};
+  const txt='[GENERAR_PDF_COMPARATIVO] Genera el PDF descargable del comparativo. Datos exactos:\n```json\n'+JSON.stringify(payload)+'\n```';
+  try{if(window.jspdf&&window.jspdf.jsPDF){renderClientPDF(payload);return;}}catch(e){console.error(e);}
   emitPDF(txt);
 }
+
+// --- INIT ---
+function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));instances.forEach(inst=>{const rl=$('rl-'+inst.id);if(rl){rl.value=REGIONS[region][inst.k];rl.dataset.region=region;}});return true;}
+
+function loadHandoff(){
+  let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
+  if(!raw)return;let p;try{p=JSON.parse(raw);}catch(e){return;}
+  if(p.address)$('projAddr').value=p.address;
+  const br=(p.branch||p.regionCode||'');
+  if(br)$('projBranch').value=br+(p.county?(' - '+p.county+' County'):'');
+  if(p.ahj)$('projAHJ').value=p.ahj;
+  if(p.permitEta!==undefined&&p.permitEta!==null&&String(p.permitEta).trim()!=='')$('projEta').value=p.permitEta;
+  setRegion(p.regionCode);
+  let msg='Proyecto cargado desde Branch Lookup'+(p.address?': '+p.address:'');
+  if(p.regionCode==='NFL')msg+=' - North Florida usa el pricing de Central Florida (CFL).';
+  $('handoffBanner').textContent=msg;$('handoffBanner').style.display='block';
+  calc();
+}
+
+// Build baseline fields
+$('baseFields').innerHTML=(function(){
+  const sel=(name,opts,val)=>`<select id="b_${name}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
+  return `<div class="vlt-grid">
+    <div class="vlt-fld"><label class="vlt-lbl">Tamano (kW)</label><input class="vlt-num" type="number" id="b_size" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="b_offset" step="1" placeholder="ej. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Montaje</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
+    <div class="vlt-fld" id="b_surfWrap"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+  </div>
+  <div id="b_gmWrap" style="display:none;padding-top:8px">
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies)</label><input class="vlt-num" type="number" id="b_dirt" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies)</label><input class="vlt-num" type="number" id="b_hard" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="b_septic" value="0" min="0"></div>
+    </div>
+  </div>
+  <div class="vlt-grid" style="margin-top:8px">
+    <div class="vlt-fld"><label class="vlt-lbl">Tipo bateria</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Cantidad bat.</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Precio/bat. ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="b_rebate" value="0" step="50" min="0"></div>
+  </div>`;
+})();
+
+document.getElementById('b_mount').addEventListener('change',function(){const sh=this.value==='ground';$('b_gmWrap').style.display=sh?'block':'none';$('b_surfWrap').style.display=sh?'none':'block';});
+
+// Seed default instances: all 5 options once
+OPTIONS.forEach(o=>addInst(o.k));
+buildChips();
+
+document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
+document.getElementById('applyAll').addEventListener('click',applyBaseline);
+document.getElementById('pdfBtn').addEventListener('click',genPDF);
+loadHandoff();
 
 function renderClientPDF(p){
   const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
@@ -419,33 +525,6 @@ function renderClientPDF(p){
   const safe=((p.direccion&&p.direccion.trim())?p.direccion.trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,''):'Comparativo_Comisiones_'+(p.region||''))+'_'+today+'.pdf';
   doc.save(safe);
 }
-
-function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));OPTIONS.forEach(o=>{optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});return true;}
-function loadHandoff(){
-  let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
-  if(!raw)return;let p;try{p=JSON.parse(raw);}catch(e){return;}
-  if(p.address)$('projAddr').value=p.address;
-  const br=(p.branch||p.regionCode||'');
-  if(br)$('projBranch').value=br+(p.county?(' · '+p.county+' County'):'');
-  if(p.ahj)$('projAHJ').value=p.ahj;
-  if(p.permitEta!==undefined&&p.permitEta!==null&&String(p.permitEta).trim()!=='')$('projEta').value=p.permitEta;
-  let msg='Proyecto cargado desde Branch Lookup'+(p.address?': '+p.address:'');
-  setRegion(p.regionCode);
-  if(p.regionCode==='NFL')msg+=' — North Florida usa el pricing de Central Florida (CFL).';
-  $('handoffBanner').textContent=msg;$('handoffBanner').style.display='block';
-  calc();
-}
-
-$('baseFields').innerHTML=detailFields('b_','');
-buildChips();buildRows();
-OPTIONS.forEach(o=>{syncOptMount(o.k);syncOptBatt(o.k);fillBattRedline(o.k);optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});
-const root=$('vlt-root');
-root.addEventListener('input',onChange);root.addEventListener('change',onChange);
-$('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{region=b.dataset.r;$('regSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));OPTIONS.forEach(o=>{optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});calc();}));
-$('applyAll').addEventListener('click',applyBaseline);
-$('pdfBtn').addEventListener('click',genPDF);
-calc();
-loadHandoff();
 </script>
 </body>
 </html>
