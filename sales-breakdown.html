@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volt Sales Breakdown Widget</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.5.0/iconfont/tabler-icons.min.css">
+<style>
+:root{
+  --color-text-primary:#1a1d23;--color-text-secondary:#5b6470;--color-text-tertiary:#8a94a0;
+  --color-text-info:#1f6feb;--color-text-danger:#c0392b;
+  --color-background-primary:#ffffff;--color-background-secondary:#f4f6f9;--color-background-info:#e7f0ff;
+  --color-border-tertiary:#e3e7ee;--color-border-secondary:#cfd5de;--color-border-info:#1f6feb;
+  --border-radius-md:8px;--border-radius-lg:14px;
+}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--color-text-primary);background:#eef1f5;margin:0;padding:24px}
+#vlt-root{max-width:1080px;margin:0 auto;background:transparent}
+input,select{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);color:var(--color-text-primary);width:100%}
+select{cursor:pointer}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<div id="vlt-root" style="padding:1rem 0;">
+<h2 class="sr-only">Comparador de comisiones solar Volt — Sales Breakdown.</h2>
+<div id="handoffBanner" style="display:none;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px"></div>
+<style>
+.vlt-lbl{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+.vlt-fld{margin-bottom:12px}
+.vlt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.vlt-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:10px}
+.vlt-num{width:100%;}
+.vlt-seg{display:inline-flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.vlt-seg button{border:none;border-radius:0;padding:6px 14px;background:transparent;font-size:13px;cursor:pointer}
+.vlt-seg button.on{background:var(--color-background-info);color:var(--color-text-info)}
+.vlt-chip{border:0.5px solid var(--color-border-secondary);background:transparent;border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.vlt-chip.on{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.vlt-row{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-bottom:8px}
+.vlt-rep{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end}
+.vlt-btn{border:0.5px solid var(--color-border-info);background:var(--color-background-info);color:var(--color-text-info);border-radius:var(--border-radius-md);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500}
+.vlt-tbl{border-collapse:collapse;font-size:12px;min-width:100%}
+.vlt-tbl th,.vlt-tbl td{border:0.5px solid var(--color-border-tertiary);padding:7px 10px;text-align:left;white-space:nowrap}
+.vlt-tbl th{background:var(--color-background-secondary);font-weight:500}
+.vlt-tbl td:first-child,.vlt-tbl th:first-child{position:sticky;left:0;background:var(--color-background-secondary);font-weight:500;color:var(--color-text-secondary)}
+.vlt-bhdr td{position:static;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;border-top:2px solid var(--color-border-secondary)}
+</style>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <span style="font-size:15px;font-weight:500"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Proyecto</span>
+    <span class="vlt-seg" id="regSeg"><button data-r="SFL" class="on">South FL</button><button data-r="CFL">Central FL</button></span>
+  </div>
+  <div class="vlt-grid" style="margin-bottom:6px">
+    <div class="vlt-fld"><label class="vlt-lbl">Dirección del proyecto</label><input class="vlt-num" type="text" id="projAddr" placeholder="123 Main St, Miami, FL 33101"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Sucursal / Branch</label><input class="vlt-num" type="text" id="projBranch" placeholder="(auto desde Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">AHJ</label><input class="vlt-num" type="text" id="projAHJ" placeholder="(auto desde Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Permit ETA (días hábiles)</label><input class="vlt-num" type="text" id="projEta" placeholder="ej. 21"></div>
+  </div>
+  <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
+  <div id="baseFields"></div>
+  <button id="applyAll" class="vlt-chip" style="margin-top:8px"><i class="ti ti-copy" aria-hidden="true"></i> Aplicar baseline a todas las opciones</button>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+  <span style="font-size:15px;font-weight:500">Opciones a comparar</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary)">Cada opción tiene sus propios detalles</span>
+</div>
+<div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+<div id="opts"></div>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <span style="font-size:15px;font-weight:500"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Resumen comparativo</span>
+    <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generar PDF</button>
+  </div>
+  <div style="overflow-x:auto"><div id="cmp"></div></div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón de PDF genera el documento directamente en el navegador (jsPDF). El título será la dirección del proyecto y la sucursal/región van en el subtítulo. Si la librería no carga (sin conexión), copia el JSON como respaldo.</div>
+</div>
+
+<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
+Comisión solar (J27) = (Lender − Redline)×W − adders solares (÷23,370 loan / ÷tamaño lease) − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W + residual. Paneles base según el Adder Sheet 05272026 por región.
+</div>
+</div>
+
+<script>
+const REGIONS={SFL:{lightreach:2.15,enfin:2.15,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:2.05,enfin:2.05,tesla:2.10,teslapw3:2.00,affordable:1.80}};
+const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Compra'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Compra'},{k:'affordable',n:'Affordable Solar',t:'Compra'}];
+const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Almika'];
+const BATT_PW3={lightreach:[13500,9500],enfin:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500]};
+const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
+const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
+const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
+const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
+const VOLT_LOGO='data:image/jpeg;base64,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';
+const LOGO_W=98,LOGO_H=Math.round(98/4.0924);
+const CARVE_LOAN=23370;
+const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+let region='SFL';let lastRes={},lastBest=null;
+const selected={lightreach:true,enfin:true,tesla:true,teslapw3:true,affordable:true};
+const $=id=>document.getElementById(id);
+const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
+function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
+function basePanelName(k){if(k==='lightreach'||k==='enfin')return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
+function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
+
+function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
+function panelRate(k,p){if(p==='base')return{r:0,ok:true};const lease=(k==='lightreach'||k==='enfin');
+  if(p==='qtron')return{r:0.05,ok:true};
+  if(p==='mission'){if(lease)return{r:0,ok:false};if(k==='tesla'||k==='teslapw3')return{r:0.10,ok:true};return{r:region==='SFL'?0.15:0.10,ok:true};}
+  if(p==='rec'){if(k==='tesla'||k==='teslapw3')return{r:0.45,ok:true};return{r:0,ok:false};}
+  return{r:0,ok:true};}
+function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
+function sizeAdder(k,W){const incl=(k==='tesla'||k==='teslapw3');if(W>11760)return{rate:0,fixed:incl?0:1250};if(W>=6000&&W<=8000)return{rate:incl?0:0.20,fixed:0};if(W<6000&&W>0)return{rate:0.90,fixed:0};return{rate:0,fixed:0};}
+function sizeAdderInfo(k,W){const incl=(k==='tesla'||k==='teslapw3');
+  if(W>11760)return{label:'Tier 2',amt:incl?0:1250,incl};
+  if(W>=6000&&W<=8000)return{label:'Small (6–8 kW)',amt:incl?0:0.20*W,incl};
+  if(W<6000&&W>0)return{label:'Tiny (<6 kW)',amt:0.90*W,incl:false};
+  return{label:'—',amt:0,incl:false};}
+
+function detailFields(p,s){
+  const sel=(name,opts,val)=>`<select id="${p}${name}${s}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
+  return `
+  <div class="vlt-grid">
+    <div class="vlt-fld"><label class="vlt-lbl">Tamaño (kW)</label><input class="vlt-num" type="number" id="${p}size${s}" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="${p}offset${s}" step="1" placeholder="ej. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido (según región)'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Montaje</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
+    <div class="vlt-fld" id="${p}surfWrap${s}"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle (incluido)'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+  </div>
+  <div id="${p}gmWrap${s}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Ground Mount — $0.55/W + trenching</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies) ×$25</label><input class="vlt-num" type="number" id="${p}dirt${s}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies) ×$40</label><input class="vlt-num" type="number" id="${p}hard${s}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="${p}septic${s}" value="0" min="0"></div>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Batería</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Tipo</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
+      <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
+      <div class="vlt-fld"><label class="vlt-lbl">Precio/batería ($)</label><input class="vlt-num" type="number" id="${p}battPrice${s}" value="15000" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="${p}rebate${s}" value="0" step="50" min="0"></div>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Adders no solares (÷ tamaño, completos)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
+      <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="${p}ns_hvac${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Fence</span><input class="vlt-num" type="number" id="${p}ns_fence${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Gutters</span><input class="vlt-num" type="number" id="${p}ns_gutters${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Water Filter</span><input class="vlt-num" type="number" id="${p}ns_water${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Doors &amp; Windows</span><input class="vlt-num" type="number" id="${p}ns_doors${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Roof</span><input class="vlt-num" type="number" id="${p}ns_roof${s}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><input type="text" id="${p}ns_otherlbl${s}" placeholder="Other..." style="font-size:12px"><input class="vlt-num" type="number" id="${p}ns_otherval${s}" value="0" step="50" min="0"></div>
+    </div>
+  </div>`;
+}
+
+function readOptCfg(k){
+  const g=n=>$(n+'-'+k);
+  const kw=parseFloat(g('size').value)||0;
+  const cfg={kw,W:kw*1000,offset:g('offset').value,panel:g('panel').value,mount:g('mount').value,surface:g('surface').value,
+    dirt:parseFloat(g('dirt').value)||0,hard:parseFloat(g('hard').value)||0,septic:parseFloat(g('septic').value)||0,
+    battType:g('battType').value,battQty:parseInt(g('battQty').value)||0,battPrice:parseFloat(g('battPrice').value)||0,
+    rebate:parseFloat(g('rebate').value)||0};
+  const ns=[['ns_hvac','HVAC'],['ns_fence','Fence'],['ns_gutters','Gutters'],['ns_water','Water Filter'],['ns_doors','Doors & Windows'],['ns_roof','Roof']];
+  let noSolar=0;const nsItems=[];
+  ns.forEach(([id,lbl])=>{const v=parseFloat(g(id).value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
+  const ov=parseFloat(g('ns_otherval').value)||0;if(ov>0){noSolar+=ov;nsItems.push((g('ns_otherlbl').value.trim()||'Other')+' '+money(ov));}
+  cfg.noSolar=noSolar;cfg.nsItems=nsItems;return cfg;
+}
+
+const optInputs={};
+function buildRows(){const c=$('opts');c.innerHTML='';
+  OPTIONS.forEach(o=>{const loan=(o.t==='Compra');
+    const card=document.createElement('div');card.className='vlt-card';card.id='card-'+o.k;
+    let rep='';
+    if(loan){rep=`
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:12px;padding-top:10px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-receipt" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Reporte loan (referencial)</div>
+        <div class="vlt-rep" style="margin-bottom:10px">
+          <div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${o.k}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div>
+          <div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${o.k}" class="vlt-num" value="0"></div>
+          <div><label class="vlt-lbl">Término (años)</label><input type="number" step="1" id="tm-${o.k}" class="vlt-num" value="25"></div>
+          <div><label class="vlt-lbl">APR % (ref.)</label><input type="number" step="0.01" id="apr-${o.k}" class="vlt-num" value="3.99"></div>
+        </div>
+        <div class="vlt-rep">
+          <div><span class="vlt-lbl">TOTAL / Cash</span><span id="cash-${o.k}" style="font-size:14px">$0</span></div>
+          <div><span class="vlt-lbl">Cash + DF</span><span id="fin-${o.k}" style="font-size:14px;font-weight:500">$0</span></div>
+          <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${o.k}" style="font-size:14px">—</span></div>
+          <div id="p1w-${o.k}"><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${o.k}" class="vlt-num" value="0"></div>
+          <div id="p2w-${o.k}" style="display:none"><label class="vlt-lbl">Pago mes 37+ (ref.)</label><input type="number" step="0.01" id="pay2-${o.k}" class="vlt-num" value="0"></div>
+        </div>
+      </div>`;}
+    else{rep=`
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:12px;padding-top:10px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-file-dollar" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Reporte lease (referencial)</div>
+        <div class="vlt-rep">
+          <div><span class="vlt-lbl">TOTAL / Precio Cash</span><span id="cash-${o.k}" style="font-size:14px;font-weight:500">$0</span></div>
+          <div><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${o.k}" class="vlt-num" value="0"></div>
+          <div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${o.k}" class="vlt-num" value="2.99"></div>
+          <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${o.k}" style="font-size:14px">—</span></div>
+        </div>
+      </div>`;}
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
+        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Comisión total</span><span id="comm-${o.k}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${o.k}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end">
+        <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${o.k}" class="vlt-num"></div>
+        <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${o.k}" class="vlt-num" value="3.50"></div>
+      </div>
+      <button id="dtbtn-${o.k}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Detalles del proyecto (esta opción)</button>
+      <div id="det-${o.k}" style="display:none">${detailFields('','-'+o.k)}</div>
+      <div id="bw-${o.k}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Batería <span id="bname-${o.k}"></span> — redline editable</div>
+        <div class="vlt-rep">
+          <div><label class="vlt-lbl">Redline 1ra ($)</label><input type="number" step="100" id="br1-${o.k}" class="vlt-num"></div>
+          <div><label class="vlt-lbl">Redline adic. ($)</label><input type="number" step="100" id="brA-${o.k}" class="vlt-num"></div>
+          <div><span class="vlt-lbl">Com. batería (J28)</span><span id="bt-${o.k}" style="font-size:14px;font-weight:500">$0</span></div>
+        </div>
+      </div>${rep}
+      <div id="note-${o.k}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>`;
+    c.appendChild(card);
+    optInputs[o.k]={rl:card.querySelector('#rl-'+o.k),ct:card.querySelector('#ct-'+o.k),df:card.querySelector('#df-'+o.k),loan};
+    card.querySelector('#dtbtn-'+o.k).addEventListener('click',function(){const d=$('det-'+o.k);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
+  });}
+
+function fillBattRedline(k){const t=$('battType-'+k).value;const d=battDefault(k,t);const r1=$('br1-'+k),rA=$('brA-'+k);if(!r1)return;$('bname-'+k).textContent=BATT_NAME[t];if(d===null){r1.value='';rA.value='';}else{r1.value=d[0]==null?'':d[0];rA.value=d[1]==null?'':d[1];}}
+function syncOptMount(k){const g=$('mount-'+k);if(!g)return;const sh=g.value==='ground';$('gmWrap-'+k).style.display=sh?'block':'none';$('surfWrap-'+k).style.display=sh?'none':'block';}
+function syncOptBatt(k){const g=$('battQty-'+k);if(!g)return;$('bw-'+k).style.display=(parseInt(g.value)||0)>0?'block':'none';}
+
+function calc(){
+  let best=-1e15,bestK=null;const res={};
+  OPTIONS.forEach(o=>{
+    const I=optInputs[o.k];const cfg=readOptCfg(o.k);const W=cfg.W;
+    if(I.rl.value===''||I.rl.dataset.region!==region){I.rl.value=REGIONS[region][o.k];I.rl.dataset.region=region;}
+    const redline=parseFloat(I.rl.value)||0,contract=parseFloat(I.ct.value)||0;
+    const notes=[];const pr=panelRate(o.k,cfg.panel);if(!pr.ok)notes.push('Panel N/A para esta opción (se calcula con base)');
+    const rr=roofRate(o.k,cfg.mount==='rooftop'?cfg.surface:'shingle');const sz=sizeAdder(o.k,W);const szI=sizeAdderInfo(o.k,W);
+    let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
+    const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
+    const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
+    const adderDiv=I.loan?CARVE_LOAN:(W>0?W:CARVE_LOAN);
+    const adderCarve=(W>0)?adder23*(W/adderDiv):adder23;
+    const adderResidual=adder23-adderCarve;
+    let battPriceThis=0,battComm=0,battTxt='$0';
+    if(cfg.battQty>0){const d=battDefault(o.k,cfg.battType);
+      if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Batería PW3 N/A para esta opción');}
+      else{battPriceThis=cfg.battQty*cfg.battPrice;const r1=parseFloat($('br1-'+o.k).value),rA=parseFloat($('brA-'+o.k).value);
+        if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de batería'+(cfg.battType==='enphase'?' (Enphase: TBC en el sheet)':''));}
+        else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);notes.push('Batería: precio '+money(battPriceThis)+' resta a J27; margen (− redline '+money(redlineTot)+') = '+money(battComm)+' a J28');}}}
+    if($('bt-'+o.k))$('bt-'+o.k).textContent=battTxt;
+    const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
+    const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
+    const comm=solarComm+battComm;
+    const cash=contract*W+adderResidual;
+    let financed=cash,df=0;
+    if(I.loan){df=parseFloat(I.df.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+o.k))$('fin-'+o.k).textContent=money(financed);}
+    if($('cash-'+o.k))$('cash-'+o.k).textContent=money(cash);
+    const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
+    if($('off-'+o.k))$('off-'+o.k).textContent=offTxt;
+    res[o.k]={cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed};
+    if(selected[o.k]&&comm>best){best=comm;bestK=o.k;}
+  });
+  OPTIONS.forEach(o=>{const r=res[o.k];const card=$('card-'+o.k);
+    card.style.display=selected[o.k]?'block':'none';
+    $('comm-'+o.k).textContent=money(r.comm);
+    $('cbrk-'+o.k).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
+    $('note-'+o.k).textContent=r.notes.join(' · ');
+    card.style.border=(o.k===bestK)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
+    $('comm-'+o.k).style.color=(o.k===bestK)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
+  });
+  lastRes=res;lastBest=bestK;renderCmp(res,bestK);
+}
+
+function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (incluido)'):(r.sizeLabel+' — '+money(r.sizeAmt));}
+
+function renderCmp(res,bestK){
+  const cmp=$('cmp');const sel=OPTIONS.filter(o=>selected[o.k]);
+  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Selecciona al menos una opción.</div>';return;}
+  const fin=k=>$('co-'+k)?$('co-'+k).value:'';
+  const esc=k=>$('esc-'+k)?($('esc-'+k).value+'%'):'';
+  const pay=k=>{const p=$('pay1-'+k);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
+  const blocks=[
+    {title:'Proyecto',rows:[
+      ['Tipo',(o,r)=>o.t,{a:1}],
+      ['Tamaño (kW)',(o,r)=>r.cfg.kw.toFixed(2),{a:1}],
+      ['Offset',(o,r)=>r.offTxt],
+      ['Panel',(o,r)=>panelDisplay(o.k,r.cfg.panel),{a:1}],
+      ['Montaje',(o,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
+      ['Superficie',(o,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
+    ]},
+    {title:'Adders solares',rows:[
+      ['Adder de tamaño (auto)',(o,r)=>sizeCell(r)],
+      ['Adder de panel',(o,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' — '+money(r.panelAmt)):'—'],
+      ['Adder de superficie',(o,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof — '+money(r.roofAmt)):'—'],
+      ['Ground mount',(o,r)=>r.gmAmt>0?('$0.55/W — '+money(r.gmAmt)):'—'],
+      ['Trenching / septic',(o,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
+      ['Sales rebate (SR)',(o,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
+    ]},
+    {title:'Adders no solares',rows:[
+      ['Adders no solares',(o,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']
+    ]},
+    {title:'Batería',rows:[
+      ['Batería',(o,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' ×'+r.cfg.battQty):'—'],
+      ['Precio batería',(o,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
+      ['Com. batería (J28)',(o,r)=>r.cfg.battQty>0?money(r.battComm):'—']
+    ]},
+    {title:'Resultados',rows:[
+      ['Redline $/W',(o,r)=>'$'+r.redline.toFixed(2),{a:1}],
+      ['Contrato $/W',(o,r)=>'$'+r.contract.toFixed(2),{a:1}],
+      ['Comisión solar (J27)',(o,r)=>money(r.solarComm),{a:1}],
+      ['Comisión total',(o,r)=>money(r.comm),{a:1,bold:1}],
+      ['TOTAL / Cash',(o,r)=>money(r.cash),{a:1}],
+      ['Cash + DF',(o,r)=>(o.t==='Compra'&&r.df>0)?money(r.financed):'—'],
+      ['Financiera / Escalator',(o,r)=>o.t==='Compra'?fin(o.k):esc(o.k)],
+      ['Pago mensual',(o,r)=>pay(o.k)]
+    ]}
+  ];
+  const ncol=1+sel.length;
+  let html='<table class="vlt-tbl"><thead><tr><th></th>';
+  sel.forEach(o=>{const hi=o.k===bestK;html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+o.n+(hi?' ★':'')+'</th>';});
+  html+='</tr></thead><tbody>';
+  blocks.forEach(bk=>{
+    const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(o=>!emptyV(row[1](o,res[o.k]))));
+    if(!vis.length)return;
+    html+='<tr class="vlt-bhdr"><td colspan="'+ncol+'">'+bk.title+'</td></tr>';
+    vis.forEach(row=>{const label=row[0],fn=row[1],opt=row[2];html+='<tr><td>'+label+'</td>';
+      sel.forEach(o=>{const r=res[o.k];let v=fn(o,r);let st='';
+        if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(o.k===bestK)st+='color:var(--color-text-info);';}
+        html+='<td style="'+st+'">'+v+'</td>';});
+      html+='</tr>';});
+  });
+  html+='</tbody></table>';cmp.innerHTML=html;
+}
+
+function buildChips(){const c=$('chips');c.innerHTML='';
+  OPTIONS.forEach(o=>{const b=document.createElement('button');b.className='vlt-chip'+(selected[o.k]?' on':'');
+    b.innerHTML='<i class="ti ti-'+(selected[o.k]?'check':'plus')+'" aria-hidden="true"></i>'+o.n;
+    b.addEventListener('click',()=>{selected[o.k]=!selected[o.k];b.classList.toggle('on',selected[o.k]);b.querySelector('i').className='ti ti-'+(selected[o.k]?'check':'plus');calc();});
+    c.appendChild(b);});}
+
+function applyBaseline(){OPTIONS.forEach(o=>{FIELD_NAMES.forEach(n=>{const src=$('b_'+n),dst=$(n+'-'+o.k);if(src&&dst)dst.value=src.value;});syncOptMount(o.k);syncOptBatt(o.k);fillBattRedline(o.k);});calc();}
+
+function onChange(e){const id=e.target.id||'';
+  if(id==='b_mount'){const sh=$('b_mount').value==='ground';$('b_gmWrap').style.display=sh?'block':'none';$('b_surfWrap').style.display=sh?'none':'block';}
+  else if(id.indexOf('mount-')===0){syncOptMount(id.slice(6));}
+  else if(id.indexOf('battQty-')===0){syncOptBatt(id.slice(8));}
+  else if(id.indexOf('battType-')===0){fillBattRedline(id.slice(9));}
+  else if(id.indexOf('co-')===0){const k=id.slice(3);const bs=$('co-'+k).value==='Sungage Brightstart';$('p2w-'+k).style.display=bs?'block':'none';$('p1w-'+k).querySelector('label').textContent=bs?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';}
+  calc();
+}
+
+function emitPDF(text){
+  if(typeof sendPrompt==='function'){sendPrompt(text);return;}
+  try{navigator.clipboard.writeText(text);}catch(e){}
+  console.log(text);
+  alert('Modo autónomo: el JSON del comparativo se copió al portapapeles (y está en la consola). Pégalo en Claude para generar el PDF.');
+}
+
+function genPDF(){const sel=OPTIONS.filter(o=>selected[o.k]);if(!sel.length)return;
+  const payload={region,direccion:($('projAddr').value||'').trim(),branch:($('projBranch').value||'').trim(),ahj:($('projAHJ').value||'').trim()||null,permit_eta:($('projEta').value||'').trim()||null,generado:new Date().toISOString().slice(0,10),opciones:sel.map(o=>{const r=lastRes[o.k];const c=r.cfg;return{
+    opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(o.k,c.panel),montaje:MOUNT_NAME[c.mount],
+    superficie:c.mount==='ground'?'N/A':SURF_NAME[c.surface],
+    adder_tamano:sizeCell(r),
+    adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
+    adder_superficie:r.roofAmt>0?(SURF_NAME[c.surface]+' Roof '+money(r.roofAmt)):null,
+    ground_mount:r.gmAmt>0?money(r.gmAmt):null,
+    trenching:r.gmFixed>0?money(r.gmFixed):null,
+    sales_rebate:c.rebate>0?money(c.rebate):null,
+    bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty+' @ $'+c.battPrice):null,
+    com_bateria:c.battQty>0?Math.round(r.battComm):null,
+    adders_no_solares:c.nsItems.join('; ')||null,
+    redline:r.redline,contrato:r.contract,
+    comision_solar:Math.round(r.solarComm),comision_total:Math.round(r.comm),
+    total_cash:Math.round(r.cash),cash_df:(o.t==='Compra'&&r.df>0)?Math.round(r.financed):null,
+    financiera:o.t==='Compra'?($('co-'+o.k)?$('co-'+o.k).value:''):null,
+    escalator:o.t==='Lease'?($('esc-'+o.k)?$('esc-'+o.k).value+'%':''):null,
+    pago_mensual:$('pay1-'+o.k)&&parseFloat($('pay1-'+o.k).value)?$('pay1-'+o.k).value:null};})};
+  const txt='[GENERAR_PDF_COMPARATIVO] Genera el PDF descargable del comparativo. Usa la dirección del proyecto como título del PDF (campo "direccion"); si está vacío usa "Comparativo de Comisiones". Muestra Sucursal y Región en el subtítulo. Omite campos null o "—". Datos exactos:\n```json\n'+JSON.stringify(payload)+'\n```';
+  try{ if(window.jspdf&&window.jspdf.jsPDF){renderClientPDF(payload);return;} }catch(e){console.error(e);}
+  emitPDF(txt);
+}
+
+function renderClientPDF(p){
+  const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
+  const doc=new jsPDF({orientation:n>=3?'landscape':'portrait',unit:'pt',format:'letter'});
+  const regionName={SFL:'South Florida',CFL:'Central Florida',NFL:'North Florida'}[p.region]||p.region||'';
+  const title=(p.direccion&&p.direccion.trim())?p.direccion.trim():'Comparativo de Comisiones';
+  const today=p.generado;
+  let bi=0;for(let i=1;i<n;i++)if(ops[i].comision_total>ops[bi].comision_total)bi=i;
+  const showStar=n>1;
+  const M=v=>{if(v===null||v===undefined)return null;const x=Math.round(v);return (x<0?'-$':'$')+Math.abs(x).toLocaleString('en-US');};
+  const empt=v=>v===null||v===undefined||v===''||v==='—'||v==='N/A';
+  const clean=s=>String(s).replace(/—/g,'-').replace(/×/g,'x');
+  const blocks=[
+    ['Proyecto',[['Tipo',o=>o.tipo,1],['Tamaño (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Montaje',o=>o.montaje,1],['Superficie',o=>o.superficie]]],
+    ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
+    ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
+    ['Batería',[['Batería',o=>o.bateria],['Com. batería (J28)',o=>M(o.com_bateria)]]],
+    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
+  ];
+  const ncol=n+1;const body=[];
+  blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
+    if(!rows.length)return;
+    body.push([{content:bk[0],colSpan:ncol,styles:{fillColor:[238,241,246],textColor:[60,70,90],fontStyle:'bold',fontSize:7.5}}]);
+    rows.forEach(row=>{const cells=[{content:row[0],styles:{fontStyle:'bold',textColor:[60,70,90],fillColor:[247,248,250]}}];
+      ops.forEach((o,i)=>{let v=row[1](o);if(empt(v))v='—';const c={content:clean(v),styles:{}};
+        if(row[3]){c.styles.fontStyle='bold';if(o.comision_total<0)c.styles.textColor=[192,57,43];else if(showStar&&i===bi)c.styles.textColor=[31,122,77];}
+        else if(row[0]==='Comisión solar (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
+        cells.push(c);});
+      body.push(cells);});
+  });
+  const head=[['',...ops.map((o,i)=>o.opcion+((showStar&&i===bi)?'  *':''))]];
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(31,42,68);try{doc.addImage(VOLT_LOGO,'JPEG',36,22,LOGO_W,LOGO_H);}catch(e){}
+  doc.text(clean(title),36,32+LOGO_H+14);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(107,114,128);
+  const sp=[];if(p.branch&&p.branch.trim())sp.push('Sucursal: '+p.branch.trim());if(regionName)sp.push('Region: '+regionName);sp.push('Generado: '+today);if(showStar)sp.push('* mayor comision');
+  doc.text(sp.join('   -   '),36,32+LOGO_H+30);
+  let _sy=32+LOGO_H+44;
+  const meta2=[];if(p.ahj&&String(p.ahj).trim())meta2.push('AHJ: '+p.ahj);if(p.permit_eta!==null&&p.permit_eta!==undefined&&String(p.permit_eta).trim()!=='')meta2.push('Permit ETA: '+p.permit_eta+' dias habiles');
+  if(meta2.length){doc.text(clean(meta2.join('   -   ')),36,32+LOGO_H+44);_sy=32+LOGO_H+58;}
+  doc.autoTable({head:head,body:body,startY:_sy,theme:'grid',
+    styles:{fontSize:8.5,cellPadding:3,lineColor:[201,206,216],lineWidth:0.4,valign:'middle'},
+    headStyles:{fillColor:[31,42,68],textColor:[255,255,255],fontStyle:'bold',halign:'left'},
+    columnStyles:{0:{cellWidth:150}},margin:{left:36,right:36},
+    didParseCell:function(d){if(d.section==='head'&&showStar&&d.column.index===bi+1)d.cell.styles.fillColor=[31,122,77];}});
+  let fy=doc.lastAutoTable.finalY+14;doc.setFontSize(7.5);doc.setTextColor(107,114,128);
+  const foot='Comision solar (J27) = (Lender - Redline) x W - adders solares - Tier 2 - adders no solares - precio de bateria. Com. bateria (J28) = precio - redline. Comision total = J27 + J28. TOTAL/Cash = Lender x W + residual. Valores en rojo = comision negativa. Offset, escalator y pago son referenciales.';
+  doc.text(doc.splitTextToSize(foot,doc.internal.pageSize.getWidth()-72),36,fy);
+  const safe=((p.direccion&&p.direccion.trim())?p.direccion.trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,''):'Comparativo_Comisiones_'+(p.region||''))+'_'+today+'.pdf';
+  doc.save(safe);
+}
+
+function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));OPTIONS.forEach(o=>{optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});return true;}
+function loadHandoff(){
+  let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
+  if(!raw)return;let p;try{p=JSON.parse(raw);}catch(e){return;}
+  if(p.address)$('projAddr').value=p.address;
+  const br=(p.branch||p.regionCode||'');
+  if(br)$('projBranch').value=br+(p.county?(' · '+p.county+' County'):'');
+  if(p.ahj)$('projAHJ').value=p.ahj;
+  if(p.permitEta!==undefined&&p.permitEta!==null&&String(p.permitEta).trim()!=='')$('projEta').value=p.permitEta;
+  let msg='Proyecto cargado desde Branch Lookup'+(p.address?': '+p.address:'');
+  setRegion(p.regionCode);
+  if(p.regionCode==='NFL')msg+=' — North Florida usa el pricing de Central Florida (CFL).';
+  $('handoffBanner').textContent=msg;$('handoffBanner').style.display='block';
+  calc();
+}
+
+$('baseFields').innerHTML=detailFields('b_','');
+buildChips();buildRows();
+OPTIONS.forEach(o=>{syncOptMount(o.k);syncOptBatt(o.k);fillBattRedline(o.k);optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});
+const root=$('vlt-root');
+root.addEventListener('input',onChange);root.addEventListener('change',onChange);
+$('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{region=b.dataset.r;$('regSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));OPTIONS.forEach(o=>{optInputs[o.k].rl.value=REGIONS[region][o.k];optInputs[o.k].rl.dataset.region=region;});calc();}));
+$('applyAll').addEventListener('click',applyBaseline);
+$('pdfBtn').addEventListener('click',genPDF);
+calc();
+loadHandoff();
+</script>
+</body>
+</html>
