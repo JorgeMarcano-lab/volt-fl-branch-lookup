@@ -22,6 +22,7 @@ select{cursor:pointer}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 <div id="vlt-root" style="padding:1rem 0;">
@@ -74,10 +75,17 @@ select{cursor:pointer}
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <span style="font-size:15px;font-weight:500"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Resumen comparativo</span>
-    <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generar PDF</button>
+    <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generar PDF</button>
+      <label class="vlt-btn" style="cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)" title="Cargar un PDF generado anteriormente por este widget">
+        <i class="ti ti-upload" aria-hidden="true"></i> Cargar PDF
+        <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
+      </label>
+      <span id="loadStatus" style="font-size:11px;color:var(--color-text-tertiary)"></span>
+    </span>
   </div>
   <div style="overflow-x:auto"><div id="cmp"></div></div>
-  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón de PDF genera el documento directamente en el navegador (jsPDF). El título será la dirección del proyecto y la sucursal/región van en el subtítulo. Si la librería no carga (sin conexión), copia el JSON como respaldo.</div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón <b>Generar PDF</b> descarga el documento. El botón <b>Cargar PDF</b> permite reabrir un PDF generado anteriormente y recarga todos los campos automáticamente.</div>
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
@@ -393,6 +401,156 @@ function emitPDF(text){
   try{navigator.clipboard.writeText(text);}catch(e){}
   alert('JSON copiado al portapapeles.');
 }
+
+// ===================== CARGAR PDF =====================
+document.getElementById('pdfUpload').addEventListener('change', async function(){
+  const file=this.files[0]; if(!file) return;
+  const status=$('loadStatus');
+  status.textContent='Leyendo PDF...';
+  try{
+    const ab=await file.arrayBuffer();
+    const pdfjsLib=window['pdfjs-dist/build/pdf'];
+    if(pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const loadingTask=(pdfjsLib||window.pdfjsLib).getDocument({data:ab});
+    const pdf=await loadingTask.promise;
+    let fullText='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const tc=await page.getTextContent();
+      // Group items by Y position to reconstruct rows
+      const items=tc.items.map(it=>({str:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(it.transform[5])})).filter(it=>it.str);
+      // Sort by y desc, then x asc
+      items.sort((a,b)=>b.y-a.y||a.x-b.x);
+      // Group by y (tolerance 4px)
+      const rows=[];let cur=[];let lastY=null;
+      items.forEach(it=>{if(lastY!==null&&Math.abs(it.y-lastY)>4){rows.push(cur);cur=[];}cur.push(it);lastY=it.y;});
+      if(cur.length)rows.push(cur);
+      fullText+=rows.map(r=>r.map(i=>i.str).join('\t')).join('\n')+'\n';
+    }
+    parsePDFText(fullText, file.name);
+    status.textContent='';
+    this.value='';
+  }catch(e){status.textContent='⚠ Error al leer el PDF: '+e.message;console.error(e);}
+});
+
+function parsePDFText(text, filename){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  // --- Header: title (line 0), subtitle (line 1), optional AHJ line ---
+  let addr='', branch='', reg='', ahj='', eta='', dateStr='';
+  if(lines.length>0) addr=lines[0].replace(/\*/g,'').trim();
+  for(let i=1;i<Math.min(5,lines.length);i++){
+    const l=lines[i];
+    if(l.includes('Sucursal:')){ branch=(l.match(/Sucursal:\s*([^-]+)/)||[])[1]?.trim()||''; reg=(l.match(/Region:\s*([^-]+)/)||[])[1]?.trim()||''; dateStr=(l.match(/Generado:\s*([0-9-]+)/)||[])[1]?.trim()||'';}
+    if(l.includes('AHJ:')){ ahj=(l.match(/AHJ:\s*([^-]+)/)||[])[1]?.trim()||''; const em=l.match(/Permit ETA:\s*(\d+)/); if(em)eta=em[1];}
+  }
+
+  // Map region display name to code
+  const regCode={'South Florida':'SFL','Central Florida':'CFL','North Florida':'NFL'}[reg]||'SFL';
+
+  // --- Find the table: header row has option names ---
+  // Lines that are tab-separated with 2+ cells = table rows
+  const tableLines=lines.filter(l=>l.includes('\t'));
+  if(!tableLines.length){alert('No se encontró la tabla de datos en el PDF. ¿Es un PDF generado por este widget?');return;}
+
+  // Header row: first row with multiple tab-separated non-empty cells
+  const headerIdx=tableLines.findIndex(l=>{const p=l.split('\t').filter(Boolean);return p.length>=2&&!p[0].match(/^\$|^[0-9]/)&&p.some(c=>['LightReach','Enfin','Tesla','Affordable','Powerwall'].some(k=>c.includes(k)));});
+  if(headerIdx<0){alert('No se identificaron las opciones en el PDF.');return;}
+
+  const headerCells=tableLines[headerIdx].split('\t').filter(Boolean);
+  // First cell is empty label column; rest are option names
+  const optNames=headerCells[0]===''?headerCells.slice(1):headerCells;
+
+  // Build key→value map per option column
+  const numOpts=optNames.length;
+  const data={}; // data[label][colIdx] = value
+  tableLines.slice(headerIdx+1).forEach(line=>{
+    const cells=line.split('\t');
+    const label=cells[0]?.trim();
+    if(!label||label==='Proyecto'||label==='Adders solares'||label==='Adders no solares'||label==='Bateria'||label==='Resultados'||label==='Batería') return;
+    if(!data[label]) data[label]=[];
+    for(let c=1;c<=numOpts;c++) data[label].push((cells[c]||'').trim());
+  });
+
+  const get=(label,col)=>(data[label]||[])[col]||'';
+  const parseMoney=s=>{if(!s||s==='—'||s==='-')return 0;return parseFloat(s.replace(/[$,]/g,'').replace(/^-/,''))*(/^-/.test(s)||s.startsWith('-')?-1:1);};
+
+  // Prefill header fields
+  if(addr) $('projAddr').value=addr;
+  if(branch) $('projBranch').value=branch;
+  if(ahj) $('projAHJ').value=ahj;
+  if(eta) $('projEta').value=eta;
+  setRegion(regCode);
+
+  // Rebuild instances
+  $('opts').innerHTML=''; instances=[];
+  optNames.forEach((rawName,col)=>{
+    const name=rawName.replace(/\s*\*\s*$/,'').trim();
+    const optDef=OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
+    if(!optDef){console.warn('Opcion no reconocida:',name);return;}
+    const k=optDef.k; const id=k+'-'+(++instCounter);
+    instances.push({id,k}); buildCard({id,k});
+
+    // Redline / Contrato
+    const rl=parseMoney(get('Redline $/W',col)); if(rl&&$('rl-'+id)) $('rl-'+id).value=rl;
+    const ct=parseMoney(get('Contrato $/W (Lender)',col)||get('Contrato $/W',col)); if(ct&&$('ct-'+id)) $('ct-'+id).value=ct;
+
+    // Financiera / Escalator
+    const finEsc=get('Financiera / Escalator',col);
+    if(optDef.t==='Compra'&&finEsc&&$('co-'+id)){
+      const match=FINCO.find(f=>f===finEsc||finEsc.includes(f.split(' ')[0]));
+      if(match) $('co-'+id).value=match;
+    }
+    if(optDef.t==='Lease'&&finEsc&&$('esc-'+id)) $('esc-'+id).value=parseFloat(finEsc)||2.99;
+
+    // Pago mensual
+    const pago=get('Pago mensual (ref.)',col)||get('Pago mensual',col);
+    if(pago&&$('pay1-'+id)) $('pay1-'+id).value=parseFloat(pago.replace(/[$,]/g,''))||0;
+
+    // Cash + DF → derive DF %
+    const cash=parseMoney(get('TOTAL / Cash',col)||get('TOTAL / Precio Cash',col));
+    const cashDF=parseMoney(get('Cash + DF',col));
+    if(cash&&cashDF&&cashDF>cash&&$('df-'+id)){
+      const df=Math.round((1-cash/cashDF)*10000)/100;
+      $('df-'+id).value=df;
+    }
+
+    // Size
+    const kw=parseFloat(get('Tamano (kW)',col)||get('Tamaño (kW)',col));
+    if(kw&&$('size-'+id)) $('size-'+id).value=kw;
+
+    // Offset
+    const off=get('Offset',col); if(off&&$('offset-'+id)) $('offset-'+id).value=parseFloat(off)||'';
+
+    // Panel
+    const panelTxt=get('Panel',col);
+    const panelKey=Object.entries(PANEL_NAME).find(([k,v])=>panelTxt.includes(v)&&k!=='base')?.[0]||'base';
+    if($('panel-'+id)) $('panel-'+id).value=panelKey;
+
+    // Surface
+    const surfTxt=get('Superficie',col);
+    const surfKey=Object.entries(SURF_NAME).find(([k,v])=>surfTxt===v)?.[0]||'shingle';
+    if($('surface-'+id)) $('surface-'+id).value=surfKey;
+
+    // Battery
+    const batTxt=get('Bateria',col)||get('Batería',col);
+    if(batTxt&&batTxt!=='—'){
+      const bq=batTxt.match(/x(\d+)/); if(bq&&$('battQty-'+id)) $('battQty-'+id).value=bq[1];
+      const bp=batTxt.match(/@ \$?([\d,]+)/); if(bp&&$('battPrice-'+id)) $('battPrice-'+id).value=bp[1].replace(/,/g,'');
+      const bt=batTxt.includes('Enphase')?'enphase':'pw3'; if($('battType-'+id)) $('battType-'+id).value=bt;
+      syncOptBatt(id); fillBattRedline(id);
+    }
+    syncOptMount(id);
+  });
+
+  calc();
+  window.scrollTo({top:0,behavior:'smooth'});
+  $('handoffBanner').textContent='Proyecto cargado desde PDF: '+addr;
+  $('handoffBanner').style.display='block';
+  $('loadStatus').textContent='✓ '+optNames.length+' opción(es) cargadas';
+  setTimeout(()=>$('loadStatus').textContent='',4000);
+}
+// ======================================================
 
 function genPDF(){
   if(!instances.length)return;
