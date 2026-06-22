@@ -1,0 +1,41 @@
+name: Ensure handoff.js in index.html
+
+on:
+  push:
+    branches: [main]
+    paths: [index.html]
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    # Evita loop: no corre si el propio Action hizo el commit anterior
+    if: "!contains(github.event.head_commit.message, '[handoff-bot]')"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check and inject handoff.js tag
+        run: |
+          if grep -q 'src="handoff.js"' index.html; then
+            echo "handoff.js already present — nothing to do."
+            exit 0
+          fi
+          echo "handoff.js missing — injecting..."
+          # Insert before last </body>
+          python3 - << 'PYEOF'
+          src = open('index.html', encoding='utf-8', errors='replace').read()
+          idx = src.rfind('</body>')
+          if idx == -1:
+              raise SystemExit('No </body> found in index.html')
+          patched = src[:idx] + '<script src="handoff.js"></script>\n' + src[idx:]
+          open('index.html', 'w', encoding='utf-8').write(patched)
+          print('Injected handoff.js tag.')
+          PYEOF
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "handoff-bot"
+          git config user.email "handoff-bot@volt-fl"
+          git diff --quiet && exit 0
+          git add index.html
+          git commit -m "[handoff-bot] Restore handoff.js script tag"
+          git push
