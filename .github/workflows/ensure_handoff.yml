@@ -11,61 +11,8 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[handoff-bot]')"
     steps:
       - uses: actions/checkout@v4
-
-      - name: Inject handoff.js and push via API
+      - name: Restore handoff.js if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          SHA: ${{ github.sha }}
-        run: |
-          python3 - << 'PYEOF'
-import os, base64, json, urllib.request, urllib.error
-
-token = os.environ['GH_TOKEN']
-repo  = os.environ['REPO']
-headers = {
-    "Authorization": f"token {token}",
-    "Accept": "application/vnd.github+json",
-    "Content-Type": "application/json",
-    "User-Agent": "handoff-bot"
-}
-
-def gh(method, path, body=None):
-    url = f"https://api.github.com{path}"
-    data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read()) if r.length != 0 else {}, r.status
-    except urllib.error.HTTPError as e:
-        return json.loads(e.read()), e.code
-
-# Read current index.html
-src = open('index.html', encoding='utf-8', errors='replace').read()
-
-if 'handoff.js' in src:
-    print("handoff.js already present — nothing to do.")
-    exit(0)
-
-print("handoff.js missing — patching via API...")
-idx = src.rfind('</body>')
-patched = src[:idx] + '<script src="handoff.js"></script>\n' + src[idx:]
-
-# Get current file SHA from API
-info, _ = gh("GET", f"/repos/{repo}/contents/index.html?ref=main")
-file_sha = info['sha']
-
-# Push via Contents API
-content_b64 = base64.b64encode(patched.encode('utf-8', 'replace')).decode()
-res, code = gh("PUT", f"/repos/{repo}/contents/index.html", {
-    "message": "[handoff-bot] Restore handoff.js script tag",
-    "content": content_b64,
-    "sha": file_sha,
-    "branch": "main"
-})
-if code in (200, 201):
-    print(f"OK — commit {res.get('commit',{}).get('sha','?')[:7]}")
-else:
-    print(f"ERROR HTTP {code}:", res.get('message'))
-    exit(1)
-PYEOF
+        run: python3 .github/workflows/patch_handoff.py
