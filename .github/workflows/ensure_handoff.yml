@@ -5,14 +5,28 @@ on:
     branches: [main]
     paths: [index.html]
 
+permissions:
+  contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[handoff-bot]')"
     steps:
       - uses: actions/checkout@v4
+
       - name: Restore handoff.js if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-        run: python3 .github/workflows/patch_handoff.py
+        run: |
+          if grep -q 'src="handoff.js"' index.html; then
+            echo "handoff.js already present."
+            exit 0
+          fi
+          echo "Injecting handoff.js..."
+          sed -i 's|</body>|<script src="handoff.js"></script>\n</body>|' index.html
+          git config user.name "handoff-bot"
+          git config user.email "handoff-bot@users.noreply.github.com"
+          git add index.html
+          git commit -m "[handoff-bot] Restore handoff.js script tag"
+          git push
