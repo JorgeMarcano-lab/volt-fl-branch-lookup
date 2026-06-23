@@ -68,6 +68,13 @@
     };
 
     try{ sessionStorage.setItem('voltProject', JSON.stringify(proj)); } catch(e){}
+    // Verify save worked
+    var saved = '';
+    try{ saved = sessionStorage.getItem('voltProject') || 'EMPTY'; }catch(e){ saved = 'ERROR'; }
+    if(!saved || saved === 'EMPTY'){
+      alert('ERROR: sessionStorage is empty. Please try again.');
+      return;
+    }
     window.location.href = SALES_URL;
   };
 
