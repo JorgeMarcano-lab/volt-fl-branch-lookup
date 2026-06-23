@@ -1,7 +1,5 @@
-/* Volt - Branch Lookup -> Sales Breakdown handoff v2
-   Este archivo es independiente del index.html.
-   Solo necesita estar en el mismo repo y el index.html
-   debe tener: <script src="handoff.js"></script>
+/* Volt - Branch Lookup -> Sales Breakdown handoff v3
+   index.html debe tener: <script src="handoff.js"></script>
 */
 (function(){
   var SALES_URL = 'sales-breakdown.html';
@@ -9,7 +7,7 @@
   var btn = document.createElement('button');
   btn.id = 'proceedBtn';
   btn.textContent = 'Proceder con el Proyecto \u2192';
-  btn.style.cssText = 'display:none;margin:18px auto 0;padding:13px 22px;background:#e8b000;color:#0d0f14;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;';
+  btn.style.cssText = 'display:none;margin:18px auto 0;padding:13px 22px;background:#e8b000;color:#0d0f14;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;width:100%;max-width:400px;';
   btn.onmouseover = function(){ this.style.background = '#ffc82e'; };
   btn.onmouseout  = function(){ this.style.background = '#e8b000'; };
 
@@ -17,13 +15,14 @@
     var out = document.getElementById('out');
     var raw = (document.getElementById('addr') || {}).value || '';
 
-    // AHJ: lee el valor que el Lookup ya resolvio y muestra en pantalla
+    // AHJ: read from rendered card
     var ahjEl = out ? out.querySelector('.fv.ahj') : null;
     var ahj = ahjEl ? ahjEl.textContent.trim() : '';
 
-    // Permit ETA: lee el numero del bloque de ETA renderizado
+    // Permit ETA: read from ETA block (same day or N days)
     var permitEta = '';
     if(out){
+      // Try same day span first
       var etaEl = out.querySelector('.fv[style*="font-size:1rem"], .fv[style*="font-size: 1rem"]');
       if(etaEl){
         var etaTxt = etaEl.textContent.trim();
@@ -32,6 +31,7 @@
       }
     }
 
+    // ZIP, branch, city, county from byZip
     var m = raw.match(/\b(3[0-9]{4})\b/g);
     var zip = m ? m[m.length-1] : '';
     var rec = (typeof byZip !== 'undefined' && zip) ? byZip[zip] : null;
