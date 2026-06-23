@@ -25,6 +25,19 @@ select{cursor:pointer}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
+<div id="debugBanner" style="background:#fff3cd;border:1px solid #ffc107;padding:8px 12px;font-size:12px;font-family:monospace;margin-bottom:8px;display:none;border-radius:6px;word-break:break-all;"></div>
+<script>
+(function(){
+  try{
+    var raw = sessionStorage.getItem('voltProject');
+    var el = document.getElementById('debugBanner');
+    if(el){
+      el.style.display='block';
+      el.textContent = 'sessionStorage voltProject: ' + (raw || 'NULL/EMPTY');
+    }
+  }catch(e){}
+})();
+</script>
 <div id="vlt-root" style="padding:1rem 0;">
 <h2 class="sr-only">Comparador de comisiones solar Volt — Sales Breakdown.</h2>
 <div id="handoffBanner" style="display:none;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px">
