@@ -399,7 +399,7 @@ function renderCmp(res,bestId){
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap);}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
-        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ efectivo $'+r.solarEffectiveWatt.toFixed(2)+'/W';}
+        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
