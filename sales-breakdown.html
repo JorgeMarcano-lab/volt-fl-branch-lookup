@@ -327,7 +327,8 @@ function calc(){
     res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>BATT_PRICE_CAP,
       rebateCapExceeded,rebateCap,
-      solarCapExceeded:contract>SOLAR_PRICE_CAP};
+      solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
+      solarEffectiveWatt:W>0?((cash-adder23-otrosFull-battPriceThis)/W):0};
     if(comm>best){best=comm;bestId=id;}
   });
   instances.forEach(inst=>{const {id}=inst;const r=res[id];if(!r)return;
@@ -397,8 +398,8 @@ function renderCmp(res,bestId){
         if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';}
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap);}
-        // Solar price cap: $3.50/W máximo (precio solar puro sin adders/batería/DF)
-        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';}
+        // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
+        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ efectivo $'+r.solarEffectiveWatt.toFixed(2)+'/W';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
