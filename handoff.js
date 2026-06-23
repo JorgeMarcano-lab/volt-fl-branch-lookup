@@ -1,10 +1,9 @@
-/* Volt - Branch Lookup -> Sales Breakdown handoff v5
-   Expone window._handoffInit para que checkPassword lo llame directamente
+/* Volt - Branch Lookup -> Sales Breakdown handoff v6
+   Sin password screen - acceso directo
 */
 (function(){
   var SALES_URL = 'sales-breakdown.html';
 
-  // --- Create button ---
   var btn = document.createElement('button');
   btn.id = 'proceedBtn';
   btn.textContent = 'Proceder con el Proyecto \u2192';
@@ -27,7 +26,6 @@
   btn.onmouseover = function(){ this.style.background = '#ffc82e'; };
   btn.onmouseout  = function(){ this.style.background = '#e8b000'; };
 
-  // --- Capture data and navigate ---
   btn.onclick = function(){
     var out = document.getElementById('out');
     var raw = (document.getElementById('addr') || {}).value || '';
@@ -47,7 +45,6 @@
       }
     }
 
-    // ZIP + branch data from byZip
     var m = raw.match(/\b(3[0-9]{4})\b/g);
     var zip = m ? m[m.length-1] : '';
     var rec = (typeof byZip !== 'undefined' && zip) ? byZip[zip] : null;
@@ -70,12 +67,10 @@
     window.location.href = SALES_URL;
   };
 
-  // --- Attach observer to #out div ---
-  function attachObserver(){
+  function init(){
     var out = document.getElementById('out');
-    if(!out) return false;
+    if(!out) return;
 
-    // Insert button after #out if not already there
     if(!document.getElementById('proceedBtn')){
       out.parentNode.insertBefore(btn, out.nextSibling);
     }
@@ -87,25 +82,8 @@
             && !/Analyzing|determining|loading/i.test(t);
       btn.style.display = ok ? 'block' : 'none';
     }).observe(out, {childList:true, subtree:true});
-
-    return true;
   }
 
-  // --- Exposed for checkPassword to call after unlock ---
-  window._handoffInit = function(){
-    attachObserver();
-  };
-
-  // --- Auto-init if wrap already visible (already authenticated) ---
-  function tryInit(){
-    var wrap = document.querySelector('.wrap');
-    var alreadyAuth = typeof sessionStorage !== 'undefined'
-                   && sessionStorage.getItem('volt-auth') === '1';
-    if(alreadyAuth || (wrap && wrap.style.visibility !== 'hidden')){
-      attachObserver();
-    }
-  }
-
-  if(document.readyState !== 'loading') tryInit();
-  else document.addEventListener('DOMContentLoaded', tryInit);
+  if(document.readyState !== 'loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
 })();
