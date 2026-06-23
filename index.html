@@ -2751,7 +2751,7 @@ document.getElementById("out").innerHTML='<div class="empty"><div class="empty-i
   // Check if already authenticated in this session
   if(sessionStorage.getItem('volt-auth')==='1'){
     document.getElementById('lockScreen').style.display='none';
-    return;
+    return; // handoff will init via DOMContentLoaded since wrap is already visible
   }
   // Block the main content until authenticated
   document.addEventListener('DOMContentLoaded',function(){
@@ -2770,6 +2770,7 @@ function checkPassword(){
       document.getElementById('lockScreen').style.display='none';
       var wrap=document.querySelector('.wrap');
       if(wrap) wrap.style.visibility='visible';
+      if(typeof window._handoffInit==='function') window._handoffInit();
     } else {
       err.textContent='Incorrect password. Please try again.';
       document.getElementById('lockPwd').value='';
