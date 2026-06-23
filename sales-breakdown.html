@@ -671,7 +671,13 @@ buildChips();
 document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
 document.getElementById('applyAll').addEventListener('click',applyBaseline);
 document.getElementById('pdfBtn').addEventListener('click',genPDF);
-document.addEventListener("DOMContentLoaded", loadHandoff);
+// Call loadHandoff after DOM is fully ready
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', loadHandoff);
+} else {
+  // DOM already loaded (inline script ran after parse)
+  loadHandoff();
+}
 
 function renderClientPDF(p){
   const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
