@@ -2656,6 +2656,8 @@ function askClaude(raw, zip, rec, out, btn){
 }
 
 function renderCard(d){
+  // Store result globally for handoff.js to read
+  window._voltLastResult = d;
   var isU=d.ahj_type==="county-unincorporated";
   var jtag=isU
     ?'<span class="tag-u">UNINCORPORATED - County Jurisdiction</span>'
