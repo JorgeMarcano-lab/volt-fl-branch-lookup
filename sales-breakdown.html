@@ -104,7 +104,7 @@ const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
-const CARVE_LOAN=23370;
+const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY (todas las opciones excepto Tesla Program)
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
@@ -310,7 +310,8 @@ function calc(){
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan};
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan,
+      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>BATT_PRICE_CAP};
     if(comm>best){best=comm;bestId=id;}
   });
   instances.forEach(inst=>{const {id}=inst;const r=res[id];if(!r)return;
@@ -376,6 +377,8 @@ function renderCmp(res,bestId){
     vis.forEach(row=>{const label=row[0],fn=row[1],opt=row[2];html+='<tr><td>'+label+'</td>';
       sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
         if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
+        // Battery price cap validation: fondo rojo si precio/bat > $18,000 (Adder Sheet)
+        if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
