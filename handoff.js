@@ -1,5 +1,5 @@
-/* Volt - Branch Lookup -> Sales Breakdown handoff v6
-   Sin password screen - acceso directo
+/* Volt - Branch Lookup -> Sales Breakdown handoff v7
+   Lee datos de window._voltLastResult en lugar del DOM
 */
 (function(){
   var SALES_URL = 'sales-breakdown.html';
@@ -27,39 +27,40 @@
   btn.onmouseout  = function(){ this.style.background = '#e8b000'; };
 
   btn.onclick = function(){
-    var out = document.getElementById('out');
-    var raw = (document.getElementById('addr') || {}).value || '';
+    var d = window._voltLastResult || {};
+    var raw = (document.getElementById('addr') || {}).value || d.raw || '';
 
-    // AHJ from rendered card
-    var ahjEl = out ? out.querySelector('.fv.ahj') : null;
-    var ahj = ahjEl ? ahjEl.textContent.trim() : '';
-
-    // Permit ETA
+    // Get ETA from AHJ_ETA map if available
     var permitEta = '';
-    if(out){
-      var etaEl = out.querySelector('.fv[style*="font-size:1rem"], .fv[style*="font-size: 1rem"]');
-      if(etaEl){
-        var etaTxt = etaEl.textContent.trim();
-        if(/same.?day/i.test(etaTxt)){ permitEta = '0'; }
-        else { var nm = etaTxt.match(/\d+/); if(nm) permitEta = nm[0]; }
+    if(d.ahj && typeof AHJ_ETA !== 'undefined'){
+      var etaVal = AHJ_ETA[d.ahj];
+      if(etaVal !== undefined) permitEta = String(etaVal);
+    }
+    // Fallback: read from DOM
+    if(!permitEta){
+      var out = document.getElementById('out');
+      if(out){
+        var etaEl = out.querySelector('.fv[style*="font-size:1rem"], .fv[style*="font-size: 1rem"]');
+        if(etaEl){
+          var etaTxt = etaEl.textContent.trim();
+          if(/same.?day/i.test(etaTxt)){ permitEta = '0'; }
+          else { var nm = etaTxt.match(/\d+/); if(nm) permitEta = nm[0]; }
+        }
       }
     }
 
-    var m = raw.match(/\b(3[0-9]{4})\b/g);
-    var zip = m ? m[m.length-1] : '';
-    var rec = (typeof byZip !== 'undefined' && zip) ? byZip[zip] : null;
-    var code = rec ? rec.branch : '';
     var FULL = {CFL:'Central Florida', NFL:'North Florida', SFL:'South Florida'};
+    var code = d.branch || '';
 
     var proj = {
       address   : raw,
-      zip       : zip || '',
-      city      : rec ? rec.city   : '',
-      county    : rec ? rec.county : '',
+      zip       : d.zip || '',
+      city      : d.city || '',
+      county    : d.county || '',
       regionCode: code,
       branch    : FULL[code] || code || '',
-      ahj       : ahj,
-      pa        : rec ? rec.pa : '',
+      ahj       : d.ahj || '',
+      pa        : d.pa || '',
       permitEta : permitEta
     };
 
