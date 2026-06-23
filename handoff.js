@@ -1,5 +1,5 @@
-/* Volt - Branch Lookup -> Sales Breakdown handoff v4
-   Compatible con password screen (lockScreen / .wrap visibility)
+/* Volt - Branch Lookup -> Sales Breakdown handoff v5
+   Expone window._handoffInit para que checkPassword lo llame directamente
 */
 (function(){
   var SALES_URL = 'sales-breakdown.html';
@@ -70,12 +70,12 @@
     window.location.href = SALES_URL;
   };
 
-  // --- Watch #out for results and show/hide button ---
+  // --- Attach observer to #out div ---
   function attachObserver(){
     var out = document.getElementById('out');
     if(!out) return false;
 
-    // Insert button after #out
+    // Insert button after #out if not already there
     if(!document.getElementById('proceedBtn')){
       out.parentNode.insertBefore(btn, out.nextSibling);
     }
@@ -91,24 +91,21 @@
     return true;
   }
 
-  // --- Init: handle both immediate load and post-password-unlock ---
-  function init(){
-    // Try immediately
-    if(attachObserver()) return;
+  // --- Exposed for checkPassword to call after unlock ---
+  window._handoffInit = function(){
+    attachObserver();
+  };
 
-    // If wrap is hidden (password screen), wait for it to become visible
+  // --- Auto-init if wrap already visible (already authenticated) ---
+  function tryInit(){
     var wrap = document.querySelector('.wrap');
-    if(wrap){
-      var visObserver = new MutationObserver(function(){
-        if(wrap.style.visibility === 'visible'){
-          visObserver.disconnect();
-          attachObserver();
-        }
-      });
-      visObserver.observe(wrap, {attributes:true, attributeFilter:['style']});
+    var alreadyAuth = typeof sessionStorage !== 'undefined'
+                   && sessionStorage.getItem('volt-auth') === '1';
+    if(alreadyAuth || (wrap && wrap.style.visibility !== 'hidden')){
+      attachObserver();
     }
   }
 
-  if(document.readyState !== 'loading') init();
-  else document.addEventListener('DOMContentLoaded', init);
+  if(document.readyState !== 'loading') tryInit();
+  else document.addEventListener('DOMContentLoaded', tryInit);
 })();
