@@ -28,6 +28,9 @@
 
   btn.onclick = function(){
     var d = window._voltLastResult || {};
+    // DEBUG - remove after testing
+    console.log('_voltLastResult:', JSON.stringify(d));
+    console.log('sessionStorage before save:', JSON.stringify({ahj:d.ahj, branch:d.branch, zip:d.zip}));
     var raw = (document.getElementById('addr') || {}).value || d.raw || '';
 
     // Get ETA from AHJ_ETA map if available
