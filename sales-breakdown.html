@@ -695,6 +695,10 @@ function renderClientPDF(p){
       ops.forEach((o,i)=>{let v=row[1](o);if(empt(v))v='—';const c={content:clean(v),styles:{}};
         if(row[3]){c.styles.fontStyle='bold';if(o.comision_total<0)c.styles.textColor=[192,57,43];else if(showStar&&i===bi)c.styles.textColor=[31,122,77];}
         else if(row[0]==='Comisión solar (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
+        // Cap warnings: texto detallado + rojo en PDF
+        if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ⚠ cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Precio bateria'&&o.battCapExceeded){const bex=o.cfg.battQty*o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ⚠ cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Contrato $/W'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         cells.push(c);});
       body.push(cells);});
   });
