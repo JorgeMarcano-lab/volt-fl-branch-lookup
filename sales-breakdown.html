@@ -600,7 +600,11 @@ function genPDF(){
         cash_df:(r.loan&&r.df>0)?Math.round(r.financed):null,
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
         escalator:!r.loan?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
-        pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null};}).filter(Boolean)};
+        pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
+        rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
+        battCapExceeded:r.battCapExceeded||false,
+        solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
+        cfg:{rebate:c.rebate,battQty:c.battQty,battPrice:c.battPrice,W:r.cfg.W}};}).filter(Boolean)};
   const txt='[GENERAR_PDF_COMPARATIVO] Genera el PDF descargable del comparativo. Datos exactos:\n```json\n'+JSON.stringify(payload)+'\n```';
   try{if(window.jspdf&&window.jspdf.jsPDF){renderClientPDF(payload);return;}}catch(e){console.error(e);}
   emitPDF(txt);
