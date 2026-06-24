@@ -688,7 +688,7 @@ function renderClientPDF(p){
     ['Proyecto',[['Tipo',o=>o.tipo,1],['Tamaño (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Montaje',o=>o.montaje,1],['Superficie',o=>o.superficie]]],
     ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
-    ['Batería',[['Batería',o=>o.bateria],['Com. batería (J28)',o=>M(o.com_bateria)]]],
+    ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>o.cfg?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
     ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
   ];
   const ncol=n+1;const body=[];
@@ -701,8 +701,8 @@ function renderClientPDF(p){
         else if(row[0]==='Comisión solar (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
         // Cap warnings: texto detallado + rojo en PDF
         if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ! cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Precio bateria'&&o.battCapExceeded){const bex=o.cfg.battQty*o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Contrato $/W'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Precio bateria'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battQty*o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Contrato $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         cells.push(c);});
       body.push(cells);});
   });
