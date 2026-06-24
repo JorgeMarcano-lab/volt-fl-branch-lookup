@@ -398,8 +398,6 @@ function renderCmp(res,bestId){
         if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const battExcess=r.cfg.battQty*r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
-        // Offset cap: > 115% resaltado en rojo
-        if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:#fdecea;color:#c0392b;font-weight:600;';}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
         if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
         html+='<td style="'+st+'">'+v+'</td>';});
@@ -714,7 +712,8 @@ function renderClientPDF(p){
     didParseCell:function(d){
       if(d.section==='head'&&showStar&&d.column.index===bi+1)d.cell.styles.fillColor=[31,122,77];
       if(d.section==='body'&&d.column.index>0){
-        var lbl=d.row.cells[0]?d.row.cells[0].raw:'';
+        var _c0=d.row.cells[0]?d.row.cells[0].raw:'';
+        var lbl=typeof _c0==='object'&&_c0!==null?(_c0.content||''):String(_c0||'');
         var colIdx=d.column.index-1;
         var o=ops[colIdx];
         if(!o)return;
