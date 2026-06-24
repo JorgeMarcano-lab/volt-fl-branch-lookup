@@ -399,7 +399,6 @@ function renderCmp(res,bestId){
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
-        if(label==='Offset'&&parseFloat(r.offTxt)>115){st='background:#fdecea;color:#c0392b;font-weight:600;';}
         if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
@@ -710,7 +709,21 @@ function renderClientPDF(p){
     styles:{fontSize:8.5,cellPadding:3,lineColor:[201,206,216],lineWidth:0.4,valign:'middle'},
     headStyles:{fillColor:[31,42,68],textColor:[255,255,255],fontStyle:'bold',halign:'left'},
     columnStyles:{0:{cellWidth:150}},margin:{left:36,right:36},
-    didParseCell:function(d){if(d.section==='head'&&showStar&&d.column.index===bi+1)d.cell.styles.fillColor=[31,122,77];}});
+    didParseCell:function(d){
+      if(d.section==='head'&&showStar&&d.column.index===bi+1)d.cell.styles.fillColor=[31,122,77];
+      if(d.section==='body'&&d.column.index>0){
+        var lbl=d.row.cells[0]?d.row.cells[0].raw:'';
+        var colIdx=d.column.index-1;
+        var o=ops[colIdx];
+        if(!o)return;
+        var warn=false;
+        if(lbl==='Offset'){var pct=parseFloat(d.cell.raw);if(!isNaN(pct)&&pct>115)warn=true;}
+        if(lbl==='Sales rebate (SR)'&&o.rebateCapExceeded)warn=true;
+        if(lbl==='Precio bateria'&&o.battCapExceeded)warn=true;
+        if(lbl==='Contrato $/W'&&o.solarCapExceeded)warn=true;
+        if(warn){d.cell.styles.fillColor=[253,236,234];d.cell.styles.textColor=[192,57,43];d.cell.styles.fontStyle='bold';}
+      }
+    }});
   let fy=doc.lastAutoTable.finalY+14;doc.setFontSize(7.5);doc.setTextColor(107,114,128);
   const foot='Comision solar (J27) = (Lender - Redline) x W - adders solares - Tier 2 - adders no solares - precio de bateria. Com. bateria (J28) = precio - redline. Comision total = J27 + J28. TOTAL/Cash = Lender x W + residual. Valores en rojo = comision negativa. Offset, escalator y pago son referenciales.';
   doc.text(doc.splitTextToSize(foot,doc.internal.pageSize.getWidth()-72),36,fy);
