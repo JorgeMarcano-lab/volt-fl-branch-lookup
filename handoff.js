@@ -64,7 +64,10 @@
       branch    : FULL[code] || code || '',
       ahj       : d.ahj || '',
       pa        : d.pa || '',
-      permitEta : permitEta
+      permitEta : permitEta,
+      nameOnTitle: d.nameOnTitle || '',
+      roofAge   : d.roofAge || '',
+      prevPermits: d.prevPermits || ''
     };
 
     try{ sessionStorage.setItem('voltProject', JSON.stringify(proj)); } catch(e){}
