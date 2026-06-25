@@ -76,7 +76,7 @@ h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;letter-spacin
 .pa-link:hover{opacity:0.75;text-decoration:underline;}
 .name-on-title-wrap{margin-top:14px;padding:12px 14px;background:rgba(26,47,94,0.04);border:1px solid rgba(26,47,94,0.15);border-radius:10px;}
 .name-on-title-label{font-size:0.62rem;font-family:"DM Mono",monospace;color:var(--accent-dark);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;}
-.name-on-title-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.92rem;font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.15s;}
+.name-on-title-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.92rem;font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.15s;resize:none;overflow:hidden;min-height:38px;line-height:1.45;box-sizing:border-box;display:block;}
 .name-on-title-input:focus{border-color:var(--accent-dark);}
 .name-on-title-input::placeholder{color:var(--text3);}
 .name-on-title-saved{font-size:0.68rem;font-family:"DM Mono",monospace;color:var(--nfl);margin-top:4px;height:14px;transition:opacity 0.3s;}
@@ -2724,20 +2724,24 @@ function renderCard(d){
     +paF
     +'<div class="name-on-title-wrap">'
     +'<div class="name-on-title-label">NAME ON TITLE</div>'
-    +'<input class="name-on-title-input" id="nameOnTitle" type="text" placeholder="Pega el nombre del propietario..." oninput="updateNameOnTitle(this.value)" autocomplete="off">'
+    +'<textarea class="name-on-title-input" id="nameOnTitle" placeholder="Pega el nombre del propietario..." rows="1" oninput="updateNameOnTitle(this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'<div class="name-on-title-saved" id="notSaved"></div>'
     +'</div>'
     +'<div class="name-on-title-wrap" style="margin-top:8px;background:rgba(14,122,82,0.05);border-color:rgba(14,122,82,0.2)">'
     +'<div class="name-on-title-label" style="color:var(--nfl)">ROOF AGE</div>'
-    +'<input class="name-on-title-input" id="roofAge" type="text" placeholder="ej. 5 años, 2019, Unknown..." oninput="updateExtraField(\'roofAge\',this.value)" autocomplete="off">'
+    +'<textarea class="name-on-title-input" id="roofAge" placeholder="ej. 5 años, 2019, Unknown..." rows="1" oninput="updateExtraField(\'roofAge\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'</div>'
     +'<div class="name-on-title-wrap" style="margin-top:8px;background:rgba(109,79,194,0.05);border-color:rgba(109,79,194,0.2)">'
     +'<div class="name-on-title-label" style="color:var(--cfl)">PREVIOUS PERMITS</div>'
-    +'<input class="name-on-title-input" id="prevPermits" type="text" placeholder="ej. Solar 2021, Roof 2019, None..." oninput="updateExtraField(\'prevPermits\',this.value)" autocomplete="off">'
+    +'<textarea class="name-on-title-input" id="prevPermits" placeholder="ej. Solar 2021, Roof 2019, None..." rows="1" oninput="updateExtraField(\'prevPermits\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'</div>'
     +'</div></div>';
 }
 
+function autoResizeTA(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
 function updateNameOnTitle(val){
   if(window._voltLastResult) window._voltLastResult.nameOnTitle = val.trim();
   var saved = document.getElementById("notSaved");
