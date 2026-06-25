@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260625191940 -->
+<!-- v20260625192619 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,6 +84,12 @@ h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;letter-spacin
 .owner-error{margin-top:10px;padding:8px 12px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:8px;font-size:0.78rem;color:var(--sfl);}
 .owner-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(167,139,250,0.3);border-top-color:var(--cfl);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:4px;}
 @keyframes spin{to{transform:rotate(360deg);}}
+.name-on-title-wrap{margin-top:14px;padding:12px 14px;background:rgba(232,176,0,0.06);border:1px solid rgba(232,176,0,0.25);border-radius:10px;}
+.name-on-title-label{font-size:0.62rem;font-family:"DM Mono",monospace;color:var(--accent);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;}
+.name-on-title-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.92rem;font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.15s;}
+.name-on-title-input:focus{border-color:var(--accent);}
+.name-on-title-input::placeholder{color:var(--text3);}
+.name-on-title-saved{font-size:0.68rem;font-family:"DM Mono",monospace;color:var(--nfl);margin-top:4px;height:14px;transition:opacity 0.3s;}
 .empty{text-align:center;padding:44px 20px;color:var(--text3);font-size:0.88rem;line-height:1.6;}
 .empty-icon{font-size:2rem;margin-bottom:10px;}
 .etip{margin-top:18px;padding:14px 18px;background:var(--surface2);border-radius:10px;font-size:0.76rem;color:var(--text2);font-family:"DM Mono",monospace;text-align:left;border:1px solid var(--border);line-height:1.8;}
@@ -2729,7 +2735,25 @@ function renderCard(d){
     +'</div>'
     +etaF
     +paF
+    +'<div class="name-on-title-wrap">'
+    +'<div class="name-on-title-label">NAME ON TITLE</div>'
+    +'<input class="name-on-title-input" id="nameOnTitle" type="text" placeholder="Pega aquí el nombre del propietario..." oninput="updateNameOnTitle(this.value)" autocomplete="off">'
+    +'<div class="name-on-title-saved" id="notSaved"></div>'
+    +'</div>'
     +'</div></div>';
+}
+
+function updateNameOnTitle(val){
+  // Update the global result object so handoff.js picks it up
+  if(window._voltLastResult) window._voltLastResult.nameOnTitle = val.trim();
+  var saved = document.getElementById("notSaved");
+  if(!saved) return;
+  if(val.trim()){
+    saved.textContent = "✓ Guardado en handoff";
+    saved.style.opacity = "1";
+  } else {
+    saved.textContent = "";
+  }
 }
 
 function lookupOwner(address, county, paUrl){
