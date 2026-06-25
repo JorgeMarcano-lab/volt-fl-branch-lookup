@@ -63,6 +63,9 @@ select{cursor:pointer}
     <div class="vlt-fld"><label class="vlt-lbl">Sucursal / Branch</label><input class="vlt-num" type="text" id="projBranch" placeholder="(auto desde Branch Lookup)"></div>
     <div class="vlt-fld"><label class="vlt-lbl">AHJ</label><input class="vlt-num" type="text" id="projAHJ" placeholder="(auto desde Branch Lookup)"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Permit ETA (días hábiles)</label><input class="vlt-num" type="text" id="projEta" placeholder="ej. 21"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Name on Title</label><input class="vlt-num" type="text" id="projNameOnTitle" placeholder="(auto desde Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="ej. 5 años, 2019, Unknown..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="ej. Solar 2021, Roof 2019, None..."></div>
   </div>
   <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
   <div id="baseFields"></div>
@@ -463,12 +466,13 @@ function parsePDFText(text, filename){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
 
   // --- Header: title (line 0), subtitle (line 1), optional AHJ line ---
-  let addr='', branch='', reg='', ahj='', eta='', dateStr='';
+  let addr='', branch='', reg='', ahj='', eta='', dateStr='', nameOnTitle='', roofAge='', prevPermits='';
   if(lines.length>0) addr=lines[0].replace(/\*/g,'').trim();
-  for(let i=1;i<Math.min(5,lines.length);i++){
+  for(let i=1;i<Math.min(7,lines.length);i++){
     const l=lines[i];
     if(l.includes('Sucursal:')){ branch=(l.match(/Sucursal:\s*([^-]+)/)||[])[1]?.trim()||''; reg=(l.match(/Region:\s*([^-]+)/)||[])[1]?.trim()||''; dateStr=(l.match(/Generado:\s*([0-9-]+)/)||[])[1]?.trim()||'';}
     if(l.includes('AHJ:')){ ahj=(l.match(/AHJ:\s*([^-]+)/)||[])[1]?.trim()||''; const em=l.match(/Permit ETA:\s*(\d+)/); if(em)eta=em[1];}
+    if(l.includes('Name on Title:')){ nameOnTitle=(l.match(/Name on Title:\s*([^-]+)/)||[])[1]?.trim()||''; const rm=l.match(/Roof Age:\s*([^-]+)/); if(rm)roofAge=rm[1].trim(); const pm=l.match(/Previous Permits:\s*(.+)/); if(pm)prevPermits=pm[1].trim();}
   }
 
   // Map region display name to code
@@ -506,6 +510,9 @@ function parsePDFText(text, filename){
   if(branch) $('projBranch').value=branch;
   if(ahj) $('projAHJ').value=ahj;
   if(eta) $('projEta').value=eta;
+  if(nameOnTitle) $('projNameOnTitle').value=nameOnTitle;
+  if(roofAge) $('projRoofAge').value=roofAge;
+  if(prevPermits) $('projPrevPermits').value=prevPermits;
   setRegion(regCode);
 
   // Rebuild instances
@@ -582,6 +589,9 @@ function genPDF(){
   if(!instances.length)return;
   const payload={region,direccion:($('projAddr').value||'').trim(),branch:($('projBranch').value||'').trim(),
     ahj:($('projAHJ').value||'').trim()||null,permit_eta:($('projEta').value||'').trim()||null,
+    name_on_title:($('projNameOnTitle').value||'').trim()||null,
+    roof_age:($('projRoofAge').value||'').trim()||null,
+    prev_permits:($('projPrevPermits').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
       return{opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
@@ -621,6 +631,9 @@ function loadHandoff(){
   if(br)$('projBranch').value=br+(p.county?(' - '+p.county+' County'):'');
   if(p.ahj)$('projAHJ').value=p.ahj;
   if(p.permitEta!==undefined&&p.permitEta!==null&&String(p.permitEta).trim()!=='')$('projEta').value=p.permitEta;
+  if(p.nameOnTitle)$('projNameOnTitle').value=p.nameOnTitle;
+  if(p.roofAge)$('projRoofAge').value=p.roofAge;
+  if(p.prevPermits)$('projPrevPermits').value=p.prevPermits;
   setRegion(p.regionCode);
   let msg='Proyecto cargado desde Branch Lookup'+(p.address?': '+p.address:'');
   if(p.regionCode==='NFL')msg+=' - North Florida usa el pricing de Central Florida (CFL).';
@@ -715,6 +728,8 @@ function renderClientPDF(p){
   let _sy=32+LOGO_H+44;
   const meta2=[];if(p.ahj&&String(p.ahj).trim())meta2.push('AHJ: '+p.ahj);if(p.permit_eta!==null&&p.permit_eta!==undefined&&String(p.permit_eta).trim()!=='')meta2.push('Permit ETA: '+p.permit_eta+' dias habiles');
   if(meta2.length){doc.text(clean(meta2.join('   -   ')),36,32+LOGO_H+44);_sy=32+LOGO_H+58;}
+  const meta3=[];if(p.name_on_title&&String(p.name_on_title).trim())meta3.push('Name on Title: '+p.name_on_title);if(p.roof_age&&String(p.roof_age).trim())meta3.push('Roof Age: '+p.roof_age);if(p.prev_permits&&String(p.prev_permits).trim())meta3.push('Previous Permits: '+p.prev_permits);
+  if(meta3.length){doc.text(clean(meta3.join('   -   ')),36,_sy);_sy+=14;}
   doc.autoTable({head:head,body:body,startY:_sy,theme:'grid',
     styles:{fontSize:8.5,cellPadding:3,lineColor:[201,206,216],lineWidth:0.4,valign:'middle'},
     headStyles:{fillColor:[31,42,68],textColor:[255,255,255],fontStyle:'bold',halign:'left'},
