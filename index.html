@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260625185710 -->
+<!-- v20260625191940 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2707,7 +2707,7 @@ function renderCard(d){
   }
   var paF=d.pa
     ?'<div class="cf full"><div class="fl">Property Appraiser</div><a class="pa-link" href="'+esc(d.pa)+'" target="_blank" rel="noopener">'+EXT+' Search '+esc(d.county)+' County Property Records</a>'
-     +'<div><button class="owner-btn" id="owner-btn" onclick="lookupOwner(\''+esc(d.raw).replace(/'/g,"\\'")+'\',\''+esc(d.county)+'\',\''+esc(d.pa||'')+'\')">&#128100; Lookup Owner</button></div>'
+     +'<div><button class="owner-btn" onclick="lookupOwner(\''+esc(d.raw).replace(/'/g,"\\'")+'\',\''+esc(d.county)+'\',\''+esc(d.pa||'')+'\')">&#128100; Open Owner Search</button></div>'
      +'<div id="owner-result"></div>'
      +'</div>'
     :"";
@@ -2733,101 +2733,85 @@ function renderCard(d){
 }
 
 function lookupOwner(address, county, paUrl){
-  var btn = document.getElementById("owner-btn");
-  var ownerDiv = document.getElementById("owner-result");
-  if(!btn || !ownerDiv) return;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="owner-spinner"></span>Consultando registros...';
-  ownerDiv.innerHTML = '';
+  // Parse address into components for PA search URLs
+  var parts = address.match(/^(.*?),?\s*([A-Za-z\s]+),?\s*FL\s*(\d{5})/i);
+  var streetOnly = parts ? parts[1].trim() : address.split(',')[0].trim();
+  var streetEnc = encodeURIComponent(streetOnly);
+  var addrEnc   = encodeURIComponent(address);
 
-  // Build a direct-search URL for the county PA (opens in new tab as fallback)
-  var paSearchUrls = {
-    "Miami-Dade":"https://www.miamidade.gov/Apps/PA/propertysearch/#/?query=",
-    "Broward":"https://www.bcpa.net/RecAddress.asp?URL_ADDRESS=",
-    "Hillsborough":"https://www.hcpafl.org/Property-Info/Property-Search#address/",
-    "Orange":"https://ocpaweb.ocpafl.org/parcelsearch",
-    "Palm Beach":"https://www.pbcgov.org/papa/",
-    "Pinellas":"https://www.pcpao.gov/",
-    "Duval":"https://apps.coj.net/pao_propertySearch/",
-    "Polk":"https://www.polkflpa.gov/CamaSearch.aspx",
-    "Osceola":"https://www.property-appraiser.org/",
-    "Seminole":"https://www.scpafl.org/",
-    "Volusia":"https://vcpa.vcgov.org/",
-    "Lee":"https://www.leepa.org/",
-    "Collier":"https://www.collierappraiser.com/",
-    "Sarasota":"https://www.sc-pa.com/",
-    "Manatee":"https://www.manateepao.gov/",
-    "Brevard":"https://www.bcpao.us/",
-    "Lake":"https://www.lakecopropappr.com/",
-    "St. Johns":"https://www.sjcpa.us/",
-    "Pasco":"https://www.pascopa.com/",
-    "Marion":"https://www.pa.marion.fl.us/"
+  // County-specific deep-link search URLs
+  // "direct" = URL pre-fills the search; "form" = opens search page (user pastes)
+  var paDeepLinks = {
+    "Miami-Dade": { url: "https://www.miamidade.gov/Apps/PA/propertysearch/#/?query=" + streetEnc, type: "direct" },
+    "Broward":    { url: "https://www.bcpa.net/RecAddress.asp?URL_ADDRESS=" + streetEnc, type: "direct" },
+    "Brevard":    { url: "https://www.bcpao.us/PropertySearch/#addr=" + streetEnc, type: "direct" },
+    "Sarasota":   { url: "https://www.sc-pa.com/propertysearch/index?addr=" + streetEnc, type: "direct" },
+    "Manatee":    { url: "https://www.manateepao.gov/property-search/?addr=" + streetEnc, type: "direct" },
+    "Orange":     { url: "https://ocpaweb.ocpafl.org/parcelsearch", type: "form" },
+    "Palm Beach": { url: "https://www.pbcgov.org/papa/", type: "form" },
+    "Hillsborough":{ url: "https://gis.hcpafl.org/propertysearch/#/nav/Basic%20Search", type: "form" },
+    "Pinellas":   { url: "https://www.pcpao.gov/", type: "form" },
+    "Osceola":    { url: "https://www.property-appraiser.org/search/commonsearch.aspx?mode=address", type: "form" },
+    "Seminole":   { url: "https://www.scpafl.org/", type: "form" },
+    "Duval":      { url: "https://apps.coj.net/pao_propertySearch/Basic.aspx", type: "form" },
+    "Polk":       { url: "https://www.polkflpa.gov/CamaSearch.aspx", type: "form" },
+    "Lee":        { url: "https://www.leepa.org/Search/GenericSearch.aspx?typ=addr", type: "form" },
+    "Collier":    { url: "https://www.collierappraiser.com/main_search.html", type: "form" },
+    "Volusia":    { url: "https://vcpa.vcgov.org/", type: "form" },
+    "Pasco":      { url: "https://www.pascopa.com/", type: "form" },
+    "Lake":       { url: "https://www.lakecopropappr.com/", type: "form" },
+    "Marion":     { url: "https://www.pa.marion.fl.us/", type: "form" },
+    "Alachua":    { url: "https://www.acpafl.org/", type: "form" },
+    "Saint Johns":{ url: "https://www.sjcpa.us/", type: "form" },
+    "St. Johns":  { url: "https://www.sjcpa.us/", type: "form" },
+    "Escambia":   { url: "https://www.escpa.org/", type: "form" },
+    "Leon":       { url: "https://www.leonpa.org/", type: "form" },
+    "Bay":        { url: "https://www.baypa.net/", type: "form" },
+    "St. Lucie":  { url: "https://map.paslc.gov/Search/", type: "form" },
+    "Saint Lucie":{ url: "https://map.paslc.gov/Search/", type: "form" },
+    "Martin":     { url: "https://www.pa.martin.fl.us/", type: "form" },
+    "Indian River":{ url: "https://www.ircpa.org/", type: "form" },
+    "Charlotte":  { url: "https://www.ccappraiser.com/", type: "form" },
+    "Highlands":  { url: "https://www.hcpao.org/", type: "form" },
+    "Sumter":     { url: "https://www.sumterpa.com/", type: "form" },
+    "Hernando":   { url: "https://propsearch.hernandocountypa-florida.us/home", type: "form" },
+    "Citrus":     { url: "https://www.citruspa.org/", type: "form" },
+    "Clay":       { url: "https://www.ccpao.com/", type: "form" },
+    "Nassau":     { url: "https://www.nassauflpa.com/", type: "form" },
+    "Okaloosa":   { url: "https://www.okaloosapafl.com/", type: "form" },
+    "Santa Rosa": { url: "https://www.santarosapafl.com/", type: "form" },
+    "Walton":     { url: "https://www.waltonpa.com/", type: "form" },
+    "Monroe":     { url: "https://www.mcpafl.org/", type: "form" }
   };
 
-  var addrEnc = encodeURIComponent(address);
-  var directUrl = paSearchUrls[county]
-    ? (paSearchUrls[county].indexOf("?")>-1 || paSearchUrls[county].slice(-1)==="/"
-        ? paSearchUrls[county] + addrEnc
-        : paSearchUrls[county] + "?address=" + addrEnc)
-    : paUrl;
+  var entry = paDeepLinks[county] || { url: paUrl, type: "form" };
+  var isDirect = entry.type === "direct";
 
-  var systemPrompt = "You are a Florida property records assistant. "
-    + "The user will give you a Florida property address and county. "
-    + "Using your training knowledge of Florida public property records, return whatever owner information you know. "
-    + "If you are not confident about the specific owner, set found:false. "
-    + "Return ONLY a raw JSON object (no markdown, no backticks): "
-    + "{\"owner\":\"Owner name or null\",\"folio\":\"Folio/parcel ID or null\",\"found\":true or false,\"confidence\":\"high/medium/low\"}";
+  // Copy address to clipboard for "form" counties (user just pastes)
+  if(!isDirect){
+    try { navigator.clipboard.writeText(streetOnly); } catch(e){}
+  }
 
-  var userMsg = "Florida property address: " + address + ". County: " + county + ". "
-    + "What is the registered owner name in the public property records? Return JSON only.";
+  // Open the PA search page
+  window.open(entry.url, "_blank", "noopener");
 
-  fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-20250514",
-      max_tokens:300,
-      system:systemPrompt,
-      messages:[{role:"user",content:userMsg}]
-    })
-  }).then(function(r){
-    if(!r.ok) throw new Error("API error "+r.status);
-    return r.json();
-  }).then(function(d){
-    var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
-    // Strip markdown fences if present
-    txt = txt.replace(/```json|```/g,"").trim();
-    var m = txt.match(/\{[\s\S]*?\}/);
-    if(!m) throw new Error("No se pudo parsear la respuesta");
-    var result = JSON.parse(m[0]);
-    if(result.found && result.owner){
-      var folio = result.folio ? '<div>Folio/Parcel: '+esc(result.folio)+'</div>' : '';
-      var confColor = result.confidence==="high"?"var(--nfl)":result.confidence==="medium"?"var(--accent)":"var(--sfl)";
-      var confLabel = result.confidence==="high"?"Alta":result.confidence==="medium"?"Media":"Baja";
-      ownerDiv.innerHTML = '<div class="owner-result">'
-        + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPIETARIO REGISTRADO</div>'
-        + '<div class="owner-name">'+esc(result.owner)+'</div>'
-        + '<div class="owner-meta">'+folio
-        + '<div style="margin-top:4px">Confianza: <span style="color:'+confColor+';font-weight:600">'+confLabel+'</span>'
-        + ' &mdash; <a href="'+esc(directUrl)+'" target="_blank" rel="noopener" style="color:var(--accent)">Verificar en PA &#8599;</a></div>'
-        + '</div></div>';
-    } else {
-      ownerDiv.innerHTML = '<div class="owner-error" style="display:flex;flex-direction:column;gap:8px">'
-        + '&#9888; No encontrado en base de conocimiento de Claude.<br>'
-        + '<a href="'+esc(directUrl)+'" target="_blank" rel="noopener" '
-        + 'style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-size:0.8rem;font-weight:600;text-decoration:none">'
-        + '&#128279; Buscar directamente en el Property Appraiser &#8599;</a>'
-        + '</div>';
-    }
-    btn.innerHTML = '&#128100; Lookup Owner';
-    btn.disabled = false;
-  }).catch(function(e){
-    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error: '+esc(e.message)
-      +'<br><a href="'+esc(directUrl)+'" target="_blank" rel="noopener" '
-      +'style="color:var(--accent);font-size:0.8rem">Buscar en Property Appraiser &#8599;</a></div>';
-    btn.innerHTML = '&#128100; Lookup Owner';
-    btn.disabled = false;
-  });
+  // Show feedback in the card
+  var ownerDiv = document.getElementById("owner-result");
+  if(!ownerDiv) return;
+
+  if(isDirect){
+    ownerDiv.innerHTML = '<div class="owner-result">'
+      + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPERTY APPRAISER</div>'
+      + '<div style="font-size:0.85rem;color:var(--nfl)">&#10003; Abriendo búsqueda directa para <b>'+esc(county)+' County</b></div>'
+      + '<div style="font-size:0.72rem;color:var(--text3);margin-top:4px">La búsqueda se abrió pre-cargada con la dirección en una nueva pestaña.</div>'
+      + '</div>';
+  } else {
+    ownerDiv.innerHTML = '<div class="owner-result">'
+      + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPERTY APPRAISER</div>'
+      + '<div style="font-size:0.85rem;color:var(--accent)">&#128203; Abriendo '+esc(county)+' County PA &mdash; dirección copiada al clipboard</div>'
+      + '<div style="font-size:0.72rem;color:var(--text3);margin-top:4px;font-family:DM Mono,monospace">Pega: <span style="color:var(--text);font-weight:600">'+esc(streetOnly)+'</span></div>'
+      + '</div>';
+  }
 }
 
 document.getElementById("addr").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch();});
