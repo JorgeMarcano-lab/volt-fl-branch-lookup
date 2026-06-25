@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260625184209 -->
+<!-- v20260625185329 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2742,40 +2742,62 @@ function lookupOwner(address, county, paUrl){
 
   var systemPrompt = "You are a Florida real estate property lookup assistant. "
     + "Use web search to find the current owner of the given property from the official county Property Appraiser website. "
-    + "Return ONLY a JSON object with these fields: "
-    + "{\"owner\":\"Full owner name as listed on public records\","
-    + "\"mailing_address\":\"Owner mailing address if available, or null\","
-    + "\"folio\":\"Folio/Parcel ID if found, or null\","
-    + "\"site\":\"Property Appraiser site used\","
-    + "\"found\":true or false}"
-    + " If you cannot find the property, set found:false and owner:null. Return ONLY the JSON, no other text.";
+    + "Search for the property by address. Extract the owner name exactly as it appears in the public records. "
+    + "After searching, return ONLY a valid JSON object — no markdown, no explanation, just the raw JSON — with these exact fields: "
+    + "{\"owner\":\"Full owner name as listed\","
+    + "\"mailing_address\":\"Owner mailing address or null\","
+    + "\"folio\":\"Folio or Parcel ID or null\","
+    + "\"site\":\"URL of Property Appraiser site searched\","
+    + "\"found\":true}"
+    + " If no result found: {\"found\":false,\"owner\":null,\"mailing_address\":null,\"folio\":null,\"site\":\""+paUrl+"\"}";
 
-  var userMsg = "Find the current property owner for this Florida address: " + address
-    + ". County: " + county + ". "
-    + "Search the official Property Appraiser website: " + paUrl
-    + ". Return the owner name exactly as listed in the public records.";
+  var userMsg = "Find the current property owner for: " + address
+    + " ("+county+" County, Florida). "
+    + "Search the Property Appraiser site: " + paUrl;
 
-  fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-6",
-      max_tokens:1000,
-      system:systemPrompt,
-      tools:[{"type":"web_search_20250305","name":"web_search"}],
-      messages:[{role:"user",content:userMsg}]
-    })
-  }).then(function(r){
-    if(!r.ok) throw new Error("API error "+r.status);
-    return r.json();
-  }).then(function(d){
-    // Extract text blocks from response (may contain tool_use blocks too)
-    var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
-    var m = txt.match(/\{[\s\S]*?\}/);
-    if(!m) throw new Error("No JSON in response");
-    var result = JSON.parse(m[0]);
+  // Multi-turn handler for web_search tool
+  function runConversation(messages) {
+    return fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "anthropic-version":"2023-06-01",
+        "anthropic-beta":"web-search-2025-03-05"
+      },
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        system:systemPrompt,
+        tools:[{"type":"web_search_20250305","name":"web_search"}],
+        messages:messages
+      })
+    }).then(function(r){
+      if(!r.ok) return r.json().then(function(e){ throw new Error((e.error&&e.error.message)||("API error "+r.status)); });
+      return r.json();
+    }).then(function(d){
+      // If stop_reason is tool_use, continue the conversation
+      if(d.stop_reason === "tool_use"){
+        var toolResults = d.content
+          .filter(function(b){ return b.type === "tool_use"; })
+          .map(function(b){ return {type:"tool_result", tool_use_id:b.id, content:"(search executed)"}; });
+        var newMessages = messages.concat([
+          {role:"assistant", content:d.content},
+          {role:"user", content:toolResults}
+        ]);
+        return runConversation(newMessages);
+      }
+      // Final response — extract JSON
+      var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+      var m = txt.match(/\{[\s\S]*?\}/);
+      if(!m) throw new Error("No se pudo extraer la respuesta del modelo");
+      return JSON.parse(m[0]);
+    });
+  }
+
+  runConversation([{role:"user", content:userMsg}])
+  .then(function(result){
     if(result.found && result.owner){
-      var mailing = result.mailing_address ? '<div>Mailing: '+esc(result.mailing_address)+'</div>' : '';
+      var mailing = result.mailing_address ? '<div>Correo: '+esc(result.mailing_address)+'</div>' : '';
       var folio = result.folio ? '<div>Folio/Parcel: '+esc(result.folio)+'</div>' : '';
       ownerDiv.innerHTML = '<div class="owner-result">'
         + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPIETARIO REGISTRADO</div>'
@@ -2783,12 +2805,12 @@ function lookupOwner(address, county, paUrl){
         + '<div class="owner-meta">'+folio+mailing+'<div>Fuente: '+esc(result.site||paUrl)+'</div></div>'
         + '</div>';
     } else {
-      ownerDiv.innerHTML = '<div class="owner-error">&#9888; No se encontró el propietario en los registros públicos del condado.<br><small>Intenta buscarlo directamente en el Property Appraiser.</small></div>';
+      ownerDiv.innerHTML = '<div class="owner-error">&#9888; No se encontró el propietario en los registros del condado.<br><small>Intenta buscarlo directamente en el Property Appraiser.</small></div>';
     }
     btn.innerHTML = '&#128100; Lookup Owner';
     btn.disabled = false;
   }).catch(function(e){
-    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error al buscar propietario: '+esc(e.message)+'</div>';
+    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error: '+esc(e.message)+'</div>';
     btn.innerHTML = '&#128100; Lookup Owner';
     btn.disabled = false;
   });
