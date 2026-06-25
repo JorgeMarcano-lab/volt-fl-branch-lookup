@@ -688,14 +688,11 @@ function renderClientPDF(p){
     ['Proyecto',[['Tipo',o=>o.tipo,1],['Tamaño (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Montaje',o=>o.montaje,1],['Superficie',o=>o.superficie]]],
     ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
-    ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>o.cfg?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
+    ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
     ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
   ];
   const ncol=n+1;const body=[];
-  blocks.forEach(bk=>{
-    // Skip Batería section entirely if no option has a battery
-    if(bk[0]==='Batería'&&!ops.some(o=>o.cfg&&o.cfg.battQty>0))return;
-    const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
+  blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
     if(!rows.length)return;
     body.push([{content:bk[0],colSpan:ncol,styles:{fillColor:[238,241,246],textColor:[60,70,90],fontStyle:'bold',fontSize:7.5}}]);
     rows.forEach(row=>{const cells=[{content:row[0],styles:{fontStyle:'bold',textColor:[60,70,90],fillColor:[247,248,250]}}];
