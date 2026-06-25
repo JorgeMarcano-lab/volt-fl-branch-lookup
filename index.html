@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260625185329 -->
+<!-- v20260625185710 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2737,80 +2737,94 @@ function lookupOwner(address, county, paUrl){
   var ownerDiv = document.getElementById("owner-result");
   if(!btn || !ownerDiv) return;
   btn.disabled = true;
-  btn.innerHTML = '<span class="owner-spinner"></span>Buscando propietario...';
+  btn.innerHTML = '<span class="owner-spinner"></span>Consultando registros...';
   ownerDiv.innerHTML = '';
 
-  var systemPrompt = "You are a Florida real estate property lookup assistant. "
-    + "Use web search to find the current owner of the given property from the official county Property Appraiser website. "
-    + "Search for the property by address. Extract the owner name exactly as it appears in the public records. "
-    + "After searching, return ONLY a valid JSON object — no markdown, no explanation, just the raw JSON — with these exact fields: "
-    + "{\"owner\":\"Full owner name as listed\","
-    + "\"mailing_address\":\"Owner mailing address or null\","
-    + "\"folio\":\"Folio or Parcel ID or null\","
-    + "\"site\":\"URL of Property Appraiser site searched\","
-    + "\"found\":true}"
-    + " If no result found: {\"found\":false,\"owner\":null,\"mailing_address\":null,\"folio\":null,\"site\":\""+paUrl+"\"}";
+  // Build a direct-search URL for the county PA (opens in new tab as fallback)
+  var paSearchUrls = {
+    "Miami-Dade":"https://www.miamidade.gov/Apps/PA/propertysearch/#/?query=",
+    "Broward":"https://www.bcpa.net/RecAddress.asp?URL_ADDRESS=",
+    "Hillsborough":"https://www.hcpafl.org/Property-Info/Property-Search#address/",
+    "Orange":"https://ocpaweb.ocpafl.org/parcelsearch",
+    "Palm Beach":"https://www.pbcgov.org/papa/",
+    "Pinellas":"https://www.pcpao.gov/",
+    "Duval":"https://apps.coj.net/pao_propertySearch/",
+    "Polk":"https://www.polkflpa.gov/CamaSearch.aspx",
+    "Osceola":"https://www.property-appraiser.org/",
+    "Seminole":"https://www.scpafl.org/",
+    "Volusia":"https://vcpa.vcgov.org/",
+    "Lee":"https://www.leepa.org/",
+    "Collier":"https://www.collierappraiser.com/",
+    "Sarasota":"https://www.sc-pa.com/",
+    "Manatee":"https://www.manateepao.gov/",
+    "Brevard":"https://www.bcpao.us/",
+    "Lake":"https://www.lakecopropappr.com/",
+    "St. Johns":"https://www.sjcpa.us/",
+    "Pasco":"https://www.pascopa.com/",
+    "Marion":"https://www.pa.marion.fl.us/"
+  };
 
-  var userMsg = "Find the current property owner for: " + address
-    + " ("+county+" County, Florida). "
-    + "Search the Property Appraiser site: " + paUrl;
+  var addrEnc = encodeURIComponent(address);
+  var directUrl = paSearchUrls[county]
+    ? (paSearchUrls[county].indexOf("?")>-1 || paSearchUrls[county].slice(-1)==="/"
+        ? paSearchUrls[county] + addrEnc
+        : paSearchUrls[county] + "?address=" + addrEnc)
+    : paUrl;
 
-  // Multi-turn handler for web_search tool
-  function runConversation(messages) {
-    return fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "anthropic-version":"2023-06-01",
-        "anthropic-beta":"web-search-2025-03-05"
-      },
-      body:JSON.stringify({
-        model:"claude-sonnet-4-6",
-        max_tokens:1000,
-        system:systemPrompt,
-        tools:[{"type":"web_search_20250305","name":"web_search"}],
-        messages:messages
-      })
-    }).then(function(r){
-      if(!r.ok) return r.json().then(function(e){ throw new Error((e.error&&e.error.message)||("API error "+r.status)); });
-      return r.json();
-    }).then(function(d){
-      // If stop_reason is tool_use, continue the conversation
-      if(d.stop_reason === "tool_use"){
-        var toolResults = d.content
-          .filter(function(b){ return b.type === "tool_use"; })
-          .map(function(b){ return {type:"tool_result", tool_use_id:b.id, content:"(search executed)"}; });
-        var newMessages = messages.concat([
-          {role:"assistant", content:d.content},
-          {role:"user", content:toolResults}
-        ]);
-        return runConversation(newMessages);
-      }
-      // Final response — extract JSON
-      var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
-      var m = txt.match(/\{[\s\S]*?\}/);
-      if(!m) throw new Error("No se pudo extraer la respuesta del modelo");
-      return JSON.parse(m[0]);
-    });
-  }
+  var systemPrompt = "You are a Florida property records assistant. "
+    + "The user will give you a Florida property address and county. "
+    + "Using your training knowledge of Florida public property records, return whatever owner information you know. "
+    + "If you are not confident about the specific owner, set found:false. "
+    + "Return ONLY a raw JSON object (no markdown, no backticks): "
+    + "{\"owner\":\"Owner name or null\",\"folio\":\"Folio/parcel ID or null\",\"found\":true or false,\"confidence\":\"high/medium/low\"}";
 
-  runConversation([{role:"user", content:userMsg}])
-  .then(function(result){
+  var userMsg = "Florida property address: " + address + ". County: " + county + ". "
+    + "What is the registered owner name in the public property records? Return JSON only.";
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:300,
+      system:systemPrompt,
+      messages:[{role:"user",content:userMsg}]
+    })
+  }).then(function(r){
+    if(!r.ok) throw new Error("API error "+r.status);
+    return r.json();
+  }).then(function(d){
+    var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+    // Strip markdown fences if present
+    txt = txt.replace(/```json|```/g,"").trim();
+    var m = txt.match(/\{[\s\S]*?\}/);
+    if(!m) throw new Error("No se pudo parsear la respuesta");
+    var result = JSON.parse(m[0]);
     if(result.found && result.owner){
-      var mailing = result.mailing_address ? '<div>Correo: '+esc(result.mailing_address)+'</div>' : '';
       var folio = result.folio ? '<div>Folio/Parcel: '+esc(result.folio)+'</div>' : '';
+      var confColor = result.confidence==="high"?"var(--nfl)":result.confidence==="medium"?"var(--accent)":"var(--sfl)";
+      var confLabel = result.confidence==="high"?"Alta":result.confidence==="medium"?"Media":"Baja";
       ownerDiv.innerHTML = '<div class="owner-result">'
         + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPIETARIO REGISTRADO</div>'
         + '<div class="owner-name">'+esc(result.owner)+'</div>'
-        + '<div class="owner-meta">'+folio+mailing+'<div>Fuente: '+esc(result.site||paUrl)+'</div></div>'
-        + '</div>';
+        + '<div class="owner-meta">'+folio
+        + '<div style="margin-top:4px">Confianza: <span style="color:'+confColor+';font-weight:600">'+confLabel+'</span>'
+        + ' &mdash; <a href="'+esc(directUrl)+'" target="_blank" rel="noopener" style="color:var(--accent)">Verificar en PA &#8599;</a></div>'
+        + '</div></div>';
     } else {
-      ownerDiv.innerHTML = '<div class="owner-error">&#9888; No se encontró el propietario en los registros del condado.<br><small>Intenta buscarlo directamente en el Property Appraiser.</small></div>';
+      ownerDiv.innerHTML = '<div class="owner-error" style="display:flex;flex-direction:column;gap:8px">'
+        + '&#9888; No encontrado en base de conocimiento de Claude.<br>'
+        + '<a href="'+esc(directUrl)+'" target="_blank" rel="noopener" '
+        + 'style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-size:0.8rem;font-weight:600;text-decoration:none">'
+        + '&#128279; Buscar directamente en el Property Appraiser &#8599;</a>'
+        + '</div>';
     }
     btn.innerHTML = '&#128100; Lookup Owner';
     btn.disabled = false;
   }).catch(function(e){
-    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error: '+esc(e.message)+'</div>';
+    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error: '+esc(e.message)
+      +'<br><a href="'+esc(directUrl)+'" target="_blank" rel="noopener" '
+      +'style="color:var(--accent);font-size:0.8rem">Buscar en Property Appraiser &#8599;</a></div>';
     btn.innerHTML = '&#128100; Lookup Owner';
     btn.disabled = false;
   });
