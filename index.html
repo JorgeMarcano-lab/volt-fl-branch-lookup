@@ -2233,6 +2233,8 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 33868 - Polk City
+  'kalamata': {ahj:'City of Polk City Building Department', ahj_type:'municipal', city:'Polk City', note:'Kalamata Dr is within Polk City limits'},
   // 33844 - Polk County mixed ZIP
   'cumberland trail': {ahj:'Town of Lake Hamilton Building Department', ahj_type:'municipal', city:'Lake Hamilton', note:'Cumberland Trail area is within Lake Hamilton town limits'},
   'bates rd': {ahj:'Polk County Building Division', ahj_type:'county-unincorporated', city:'Polk County', note:'Bates Rd is unincorporated Polk County'},
