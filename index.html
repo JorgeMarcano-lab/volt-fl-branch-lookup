@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260620202457 -->
+<!-- v20260625184209 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,6 +75,15 @@ h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;letter-spacin
 .src-ai{background:rgba(167,139,250,0.1);color:var(--cfl);border:1px solid rgba(167,139,250,0.2);}
 .pa-link{display:inline-flex;align-items:center;gap:6px;margin-top:2px;color:var(--accent);font-size:0.85rem;font-weight:500;text-decoration:none;padding:6px 0;transition:opacity 0.15s;}
 .pa-link:hover{opacity:0.75;text-decoration:underline;}
+.owner-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:rgba(167,139,250,0.08);color:var(--cfl);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:"DM Sans",sans-serif;}
+.owner-btn:hover:not(:disabled){background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.5);}
+.owner-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.owner-result{margin-top:10px;padding:10px 14px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:8px;font-size:0.85rem;}
+.owner-name{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.owner-meta{font-size:0.72rem;color:var(--text3);font-family:"DM Mono",monospace;line-height:1.6;}
+.owner-error{margin-top:10px;padding:8px 12px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:8px;font-size:0.78rem;color:var(--sfl);}
+.owner-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(167,139,250,0.3);border-top-color:var(--cfl);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:44px 20px;color:var(--text3);font-size:0.88rem;line-height:1.6;}
 .empty-icon{font-size:2rem;margin-bottom:10px;}
 .etip{margin-top:18px;padding:14px 18px;background:var(--surface2);border-radius:10px;font-size:0.76rem;color:var(--text2);font-family:"DM Mono",monospace;text-align:left;border:1px solid var(--border);line-height:1.8;}
@@ -2697,7 +2706,10 @@ function renderCard(d){
       +'</div>';
   }
   var paF=d.pa
-    ?'<div class="cf full"><div class="fl">Property Appraiser</div><a class="pa-link" href="'+esc(d.pa)+'" target="_blank" rel="noopener">'+EXT+' Search '+esc(d.county)+' County Property Records</a></div>'
+    ?'<div class="cf full"><div class="fl">Property Appraiser</div><a class="pa-link" href="'+esc(d.pa)+'" target="_blank" rel="noopener">'+EXT+' Search '+esc(d.county)+' County Property Records</a>'
+     +'<div><button class="owner-btn" id="owner-btn" onclick="lookupOwner(\''+esc(d.raw).replace(/'/g,"\\'")+'\',\''+esc(d.county)+'\',\''+esc(d.pa||'')+'\')">&#128100; Lookup Owner</button></div>'
+     +'<div id="owner-result"></div>'
+     +'</div>'
     :"";
   document.getElementById("out").innerHTML='<div class="card">'
     +'<div class="card-top">'
@@ -2718,6 +2730,68 @@ function renderCard(d){
     +etaF
     +paF
     +'</div></div>';
+}
+
+function lookupOwner(address, county, paUrl){
+  var btn = document.getElementById("owner-btn");
+  var ownerDiv = document.getElementById("owner-result");
+  if(!btn || !ownerDiv) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="owner-spinner"></span>Buscando propietario...';
+  ownerDiv.innerHTML = '';
+
+  var systemPrompt = "You are a Florida real estate property lookup assistant. "
+    + "Use web search to find the current owner of the given property from the official county Property Appraiser website. "
+    + "Return ONLY a JSON object with these fields: "
+    + "{\"owner\":\"Full owner name as listed on public records\","
+    + "\"mailing_address\":\"Owner mailing address if available, or null\","
+    + "\"folio\":\"Folio/Parcel ID if found, or null\","
+    + "\"site\":\"Property Appraiser site used\","
+    + "\"found\":true or false}"
+    + " If you cannot find the property, set found:false and owner:null. Return ONLY the JSON, no other text.";
+
+  var userMsg = "Find the current property owner for this Florida address: " + address
+    + ". County: " + county + ". "
+    + "Search the official Property Appraiser website: " + paUrl
+    + ". Return the owner name exactly as listed in the public records.";
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1000,
+      system:systemPrompt,
+      tools:[{"type":"web_search_20250305","name":"web_search"}],
+      messages:[{role:"user",content:userMsg}]
+    })
+  }).then(function(r){
+    if(!r.ok) throw new Error("API error "+r.status);
+    return r.json();
+  }).then(function(d){
+    // Extract text blocks from response (may contain tool_use blocks too)
+    var txt = d.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("");
+    var m = txt.match(/\{[\s\S]*?\}/);
+    if(!m) throw new Error("No JSON in response");
+    var result = JSON.parse(m[0]);
+    if(result.found && result.owner){
+      var mailing = result.mailing_address ? '<div>Mailing: '+esc(result.mailing_address)+'</div>' : '';
+      var folio = result.folio ? '<div>Folio/Parcel: '+esc(result.folio)+'</div>' : '';
+      ownerDiv.innerHTML = '<div class="owner-result">'
+        + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPIETARIO REGISTRADO</div>'
+        + '<div class="owner-name">'+esc(result.owner)+'</div>'
+        + '<div class="owner-meta">'+folio+mailing+'<div>Fuente: '+esc(result.site||paUrl)+'</div></div>'
+        + '</div>';
+    } else {
+      ownerDiv.innerHTML = '<div class="owner-error">&#9888; No se encontró el propietario en los registros públicos del condado.<br><small>Intenta buscarlo directamente en el Property Appraiser.</small></div>';
+    }
+    btn.innerHTML = '&#128100; Lookup Owner';
+    btn.disabled = false;
+  }).catch(function(e){
+    ownerDiv.innerHTML = '<div class="owner-error">&#9888; Error al buscar propietario: '+esc(e.message)+'</div>';
+    btn.innerHTML = '&#128100; Lookup Owner';
+    btn.disabled = false;
+  });
 }
 
 document.getElementById("addr").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch();});
