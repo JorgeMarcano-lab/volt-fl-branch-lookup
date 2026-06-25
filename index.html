@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v20260625193223 -->
+<!-- v20260625193544 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,15 +75,6 @@ h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;letter-spacin
 .src-ai{background:rgba(167,139,250,0.1);color:var(--cfl);border:1px solid rgba(167,139,250,0.2);}
 .pa-link{display:inline-flex;align-items:center;gap:6px;margin-top:2px;color:var(--accent);font-size:0.85rem;font-weight:500;text-decoration:none;padding:6px 0;transition:opacity 0.15s;}
 .pa-link:hover{opacity:0.75;text-decoration:underline;}
-.owner-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 16px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:rgba(167,139,250,0.08);color:var(--cfl);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:"DM Sans",sans-serif;}
-.owner-btn:hover:not(:disabled){background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.5);}
-.owner-btn:disabled{opacity:0.5;cursor:not-allowed;}
-.owner-result{margin-top:10px;padding:10px 14px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:8px;font-size:0.85rem;}
-.owner-name{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px;}
-.owner-meta{font-size:0.72rem;color:var(--text3);font-family:"DM Mono",monospace;line-height:1.6;}
-.owner-error{margin-top:10px;padding:8px 12px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:8px;font-size:0.78rem;color:var(--sfl);}
-.owner-spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(167,139,250,0.3);border-top-color:var(--cfl);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:4px;}
-@keyframes spin{to{transform:rotate(360deg);}}
 .name-on-title-wrap{margin-top:14px;padding:12px 14px;background:rgba(232,176,0,0.06);border:1px solid rgba(232,176,0,0.25);border-radius:10px;}
 .name-on-title-label{font-size:0.62rem;font-family:"DM Mono",monospace;color:var(--accent);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;}
 .name-on-title-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.92rem;font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.15s;}
@@ -2712,10 +2703,7 @@ function renderCard(d){
       +'</div>';
   }
   var paF=d.pa
-    ?'<div class="cf full"><div class="fl">Property Appraiser</div><a class="pa-link" href="'+esc(d.pa)+'" target="_blank" rel="noopener">'+EXT+' Search '+esc(d.county)+' County Property Records</a>'
-     +'<div><button class="owner-btn" onclick="lookupOwner(\''+esc(d.raw).replace(/'/g,"\\'")+'\',\''+esc(d.county)+'\',\''+esc(d.pa||'')+'\')">&#128100; Open Owner Search</button></div>'
-     +'<div id="owner-result"></div>'
-     +'</div>'
+    ?'<div class="cf full"><div class="fl">Property Appraiser</div><a class="pa-link" href="'+esc(d.pa)+'" target="_blank" rel="noopener">'+EXT+' Search '+esc(d.county)+' County Property Records</a></div>'
     :"";
   document.getElementById("out").innerHTML='<div class="card">'
     +'<div class="card-top">'
@@ -2763,87 +2751,6 @@ function updateExtraField(field, val){
   if(window._voltLastResult) window._voltLastResult[field] = val.trim();
 }
 
-function lookupOwner(address, county, paUrl){
-  // Parse address into components for PA search URLs
-  var parts = address.match(/^(.*?),?\s*([A-Za-z\s]+),?\s*FL\s*(\d{5})/i);
-  var streetOnly = parts ? parts[1].trim() : address.split(',')[0].trim();
-  var streetEnc = encodeURIComponent(streetOnly);
-  var addrEnc   = encodeURIComponent(address);
-
-  // County-specific deep-link search URLs
-  // "direct" = URL pre-fills the search; "form" = opens search page (user pastes)
-  var paDeepLinks = {
-    "Miami-Dade": { url: "https://www.miamidade.gov/Apps/PA/propertysearch/#/?query=" + streetEnc, type: "direct" },
-    "Broward":    { url: "https://www.bcpa.net/RecAddress.asp?URL_ADDRESS=" + streetEnc, type: "direct" },
-    "Brevard":    { url: "https://www.bcpao.us/PropertySearch/#addr=" + streetEnc, type: "direct" },
-    "Sarasota":   { url: "https://www.sc-pa.com/propertysearch/index?addr=" + streetEnc, type: "direct" },
-    "Manatee":    { url: "https://www.manateepao.gov/property-search/?addr=" + streetEnc, type: "direct" },
-    "Orange":     { url: "https://ocpaweb.ocpafl.org/parcelsearch", type: "form" },
-    "Palm Beach": { url: "https://www.pbcgov.org/papa/", type: "form" },
-    "Hillsborough":{ url: "https://gis.hcpafl.org/propertysearch/#/nav/Basic%20Search", type: "form" },
-    "Pinellas":   { url: "https://www.pcpao.gov/", type: "form" },
-    "Osceola":    { url: "https://www.property-appraiser.org/search/commonsearch.aspx?mode=address", type: "form" },
-    "Seminole":   { url: "https://www.scpafl.org/", type: "form" },
-    "Duval":      { url: "https://apps.coj.net/pao_propertySearch/Basic.aspx", type: "form" },
-    "Polk":       { url: "https://www.polkflpa.gov/CamaSearch.aspx", type: "form" },
-    "Lee":        { url: "https://www.leepa.org/Search/GenericSearch.aspx?typ=addr", type: "form" },
-    "Collier":    { url: "https://www.collierappraiser.com/main_search.html", type: "form" },
-    "Volusia":    { url: "https://vcpa.vcgov.org/", type: "form" },
-    "Pasco":      { url: "https://www.pascopa.com/", type: "form" },
-    "Lake":       { url: "https://www.lakecopropappr.com/", type: "form" },
-    "Marion":     { url: "https://www.pa.marion.fl.us/", type: "form" },
-    "Alachua":    { url: "https://www.acpafl.org/", type: "form" },
-    "Saint Johns":{ url: "https://www.sjcpa.us/", type: "form" },
-    "St. Johns":  { url: "https://www.sjcpa.us/", type: "form" },
-    "Escambia":   { url: "https://www.escpa.org/", type: "form" },
-    "Leon":       { url: "https://www.leonpa.org/", type: "form" },
-    "Bay":        { url: "https://www.baypa.net/", type: "form" },
-    "St. Lucie":  { url: "https://map.paslc.gov/Search/", type: "form" },
-    "Saint Lucie":{ url: "https://map.paslc.gov/Search/", type: "form" },
-    "Martin":     { url: "https://www.pa.martin.fl.us/", type: "form" },
-    "Indian River":{ url: "https://www.ircpa.org/", type: "form" },
-    "Charlotte":  { url: "https://www.ccappraiser.com/", type: "form" },
-    "Highlands":  { url: "https://www.hcpao.org/", type: "form" },
-    "Sumter":     { url: "https://www.sumterpa.com/", type: "form" },
-    "Hernando":   { url: "https://propsearch.hernandocountypa-florida.us/home", type: "form" },
-    "Citrus":     { url: "https://www.citruspa.org/", type: "form" },
-    "Clay":       { url: "https://www.ccpao.com/", type: "form" },
-    "Nassau":     { url: "https://www.nassauflpa.com/", type: "form" },
-    "Okaloosa":   { url: "https://www.okaloosapafl.com/", type: "form" },
-    "Santa Rosa": { url: "https://www.santarosapafl.com/", type: "form" },
-    "Walton":     { url: "https://www.waltonpa.com/", type: "form" },
-    "Monroe":     { url: "https://www.mcpafl.org/", type: "form" }
-  };
-
-  var entry = paDeepLinks[county] || { url: paUrl, type: "form" };
-  var isDirect = entry.type === "direct";
-
-  // Copy address to clipboard for "form" counties (user just pastes)
-  if(!isDirect){
-    try { navigator.clipboard.writeText(streetOnly); } catch(e){}
-  }
-
-  // Open the PA search page
-  window.open(entry.url, "_blank", "noopener");
-
-  // Show feedback in the card
-  var ownerDiv = document.getElementById("owner-result");
-  if(!ownerDiv) return;
-
-  if(isDirect){
-    ownerDiv.innerHTML = '<div class="owner-result">'
-      + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPERTY APPRAISER</div>'
-      + '<div style="font-size:0.85rem;color:var(--nfl)">&#10003; Abriendo búsqueda directa para <b>'+esc(county)+' County</b></div>'
-      + '<div style="font-size:0.72rem;color:var(--text3);margin-top:4px">La búsqueda se abrió pre-cargada con la dirección en una nueva pestaña.</div>'
-      + '</div>';
-  } else {
-    ownerDiv.innerHTML = '<div class="owner-result">'
-      + '<div style="font-size:0.65rem;color:var(--text3);font-family:DM Mono,monospace;margin-bottom:4px;letter-spacing:0.05em;">PROPERTY APPRAISER</div>'
-      + '<div style="font-size:0.85rem;color:var(--accent)">&#128203; Abriendo '+esc(county)+' County PA &mdash; dirección copiada al clipboard</div>'
-      + '<div style="font-size:0.72rem;color:var(--text3);margin-top:4px;font-family:DM Mono,monospace">Pega: <span style="color:var(--text);font-weight:600">'+esc(streetOnly)+'</span></div>'
-      + '</div>';
-  }
-}
 
 document.getElementById("addr").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch();});
 document.getElementById("out").innerHTML='<div class="empty"><div class="empty-icon">&#128205;</div>Enter any Florida address for branch, AHJ, and property appraiser link.<div class="etip"><b>Try these:</b><br>6228 Imperial Dr, Panama City FL 32404<br>1426 Loxley Trail, Kissimmee FL 34746<br>2121 S Hiawassee Rd, Orlando FL 32835<br>13418 Zori Ln, Windermere FL 34786<br>500 Brickell Ave, Miami FL 33131</div></div>';
