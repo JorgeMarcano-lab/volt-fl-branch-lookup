@@ -197,7 +197,7 @@ function buildCard(inst){
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
       <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" value="${REGIONS[region][k]}"></div>
       <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
-      ${loan?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div>`
+      ${loan?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (meses)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Tasa %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
             :`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
@@ -314,8 +314,8 @@ function calc(){
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
     const comm=solarComm+battComm;
     const cash=contract*W+adderResidual;
-    let financed=cash,df=0;
-    if(loan){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);}
+    let financed=cash,df=0,term=0,tasa=0;
+    if(loan){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;}
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
@@ -327,7 +327,7 @@ function calc(){
     const rebateCap=Math.min(cap25,cap12);
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>BATT_PRICE_CAP,
       rebateCapExceeded,rebateCap,
       solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
@@ -382,6 +382,8 @@ function renderCmp(res,bestId){
       ['Comision total',(inst,r)=>money(r.comm),{a:1,bold:1}],
       ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
       ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
+      ['Term (meses)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
+      ['Tasa %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
       ['Financiera / Escalator',(inst,r)=>r.loan?fin(inst.id):esc(inst.id)],
       ['Pago mensual',(inst,r)=>pay(inst.id)]
     ]}
@@ -608,6 +610,8 @@ function genPDF(){
         comision_solar:Math.round(r.solarComm),comision_total:Math.round(r.comm),
         total_cash:Math.round(r.cash),
         cash_df:(r.loan&&r.df>0)?Math.round(r.financed):null,
+        term:(r.loan&&r.term>0)?r.term:null,
+        tasa:(r.loan&&r.tasa>0)?r.tasa:null,
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
         escalator:!r.loan?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
@@ -702,7 +706,7 @@ function renderClientPDF(p){
     ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
     ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
-    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
+    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (meses)',o=>o.term?o.term+'m':null],['Tasa %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
