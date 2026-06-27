@@ -499,7 +499,7 @@ function parsePDFText(text, filename){
   tableLines.slice(headerIdx+1).forEach(line=>{
     const cells=line.split('\t');
     const label=cells[0]?.trim();
-    if(!label||label==='Proyecto'||label==='Adders solares'||label==='Adders no solares'||label==='Bateria'||label==='Resultados'||label==='Batería') return;
+    if(!label||label==='Proyecto'||label==='Adders solares'||label==='Adders no solares'||label==='Resultados') return;
     if(!data[label]) data[label]=[];
     for(let c=1;c<=numOpts;c++) data[label].push((cells[c]||'').trim());
   });
@@ -549,6 +549,10 @@ function parsePDFText(text, filename){
       const df=Math.round((1-cash/cashDF)*10000)/100;
       $('df-'+id).value=df;
     }
+
+    // Term y Tasa
+    const termTxt=get('Term (meses)',col); if(termTxt&&termTxt!=='—'&&$('term-'+id)) $('term-'+id).value=parseFloat(termTxt)||0;
+    const tasaTxt=get('Tasa %',col); if(tasaTxt&&tasaTxt!=='—'&&$('tasa-'+id)) $('tasa-'+id).value=parseFloat(tasaTxt)||0;
 
     // Size
     const kw=parseFloat(get('Tamano (kW)',col)||get('Tamaño (kW)',col));
