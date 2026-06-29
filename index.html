@@ -804,7 +804,7 @@ const DATA=[
 ['32571','Milton','Santa Rosa','NFL','City of Milton Building Department','https://www.santarosapafl.com'],
 ['32583','Milton','Santa Rosa','NFL','City of Milton Building Department','https://www.santarosapafl.com'],
 ['32008','Branford','Suwannee','NFL','Town of Branford Building Department','https://www.suwanneepa.com'],
-['32060','Live Oak','Suwannee','NFL','City of Live Oak Building Department','https://www.suwanneepa.com'],
+['32060','Live Oak','Suwannee','NFL','Suwannee County Building Department','https://www.suwanneepa.com'],
 ['32062','Mc Alpin','Suwannee','NFL','Suwannee County Building Department','https://www.suwanneepa.com'],
 ['32064','Live Oak','Suwannee','NFL','City of Live Oak Building Department','https://www.suwanneepa.com'],
 ['32071','O Brien','Suwannee','NFL','Suwannee County Building Department','https://www.suwanneepa.com'],
@@ -1134,7 +1134,7 @@ const ZIP_JURIS={
   "32055":["Columbia","municipal","City of Lake City Building Department"],
   "32058":["Bradford","county-unincorporated","Bradford County Building Department"],
   "32059":["Madison","county-unincorporated","Madison County Building Department"],
-  "32060":["Suwannee","municipal","City of Live Oak Building Department"],
+  "32060":["Suwannee","mixed","City of Live Oak Building Department or Suwannee County Building Department"],
   "32062":["Suwannee","county-unincorporated","Suwannee County Building Department"],
   "32063":["Baker","municipal","City of Macclenny Building Department"],
   "32064":["Suwannee","municipal","City of Live Oak Building Department"],
@@ -2233,6 +2233,8 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 32060 - Live Oak/Suwannee mixed
+  '233rd rd': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', note:'233rd Rd is unincorporated Suwannee County'},
   // 33868 - Polk City
   'kalamata': {ahj:'City of Polk City Building Department', ahj_type:'municipal', city:'Polk City', note:'Kalamata Dr is within Polk City limits'},
   // 33844 - Polk County mixed ZIP
@@ -2312,8 +2314,6 @@ const STREET_OVERRIDES = {
   'monica joy': {ahj:'Seminole County Building Department', ahj_type:'county-unincorporated', city:'Seminole County', note:'Monica Joy Cir is outside Longwood city limits - Seminole County unincorporated'},
   // 32024 - Lake City/Columbia vs Suwannee County
   '47th dr': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', county:'Suwannee', pa:'https://www.suwanneepa.com/', note:'47th Dr area crosses into Suwannee County'},
-  // 32060 - Live Oak / Suwannee County mixed
-  '233rd rd': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', county:'Suwannee', pa:'https://www.suwanneepa.com/', note:'233rd Rd is outside Live Oak city limits - Suwannee County unincorporated'},
   // 33068 - North Lauderdale vs Margate
   'sw 64th avenue': {ahj:'City of North Lauderdale Building Department', ahj_type:'municipal', city:'North Lauderdale', note:'SW 64th Ave is inside North Lauderdale city limits'},
   'southwest 64th avenue': {ahj:'City of North Lauderdale Building Department', ahj_type:'municipal', city:'North Lauderdale', note:'SW 64th Ave is inside North Lauderdale city limits'},
