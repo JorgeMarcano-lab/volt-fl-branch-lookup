@@ -1927,7 +1927,7 @@ const ZIP_JURIS={
   "34112":["Collier","municipal","City of Naples Building Department"],
   "34113":["Collier","municipal","City of Naples Building Department"],
   "34114":["Collier","municipal","City of Naples Building Department"],
-  "34116":["Collier","municipal","City of Naples Building Department"],
+  "34116":["Collier","mixed","Collier County Building Plan Review & Inspection"],
   "34117":["Collier","municipal","City of Naples Building Department"],
   "34119":["Collier","mixed","Collier County Building Plan Review & Inspection"],
   "34120":["Collier","municipal","City of Naples Building Department"],
@@ -2467,6 +2467,8 @@ const STREET_OVERRIDES = {
   'island club': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Island Club Way is outside Orlando city limits - Orange County unincorporated'},
   'haines circle': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', note:'Haines Circle is outside Orlando city limits - Orange County unincorporated'},
   'autumn green': {ahj:'City of Orlando Building and Permitting', ahj_type:'municipal', city:'Orlando', note:'Autumn Green Dr is inside Orlando city limits'},
+  // 34116 - Naples mixed ZIP (Golden Gate City unincorporated vs City of Naples)
+  '19th pl sw': {ahj:'Collier County Building Plan Review & Inspection', ahj_type:'county-unincorporated', city:'Collier County', note:'19th Pl SW is unincorporated Collier County (Golden Gate City area)'},
 };
 
 function checkStreetOverride(address, zip){
