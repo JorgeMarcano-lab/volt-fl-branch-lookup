@@ -195,7 +195,7 @@ function buildCard(inst){
       </span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
-      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" value="${REGIONS[region][k]}"></div>
+      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="0.00"></div>
       <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
       ${loan?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (meses)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Tasa %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
             :`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`}
@@ -629,7 +629,7 @@ function genPDF(){
 }
 
 // --- INIT ---
-function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));instances.forEach(inst=>{const rl=$('rl-'+inst.id);if(rl){rl.value=REGIONS[region][inst.k];rl.dataset.region=region;}});return true;}
+function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));return true;}
 
 function loadHandoff(){
   let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
