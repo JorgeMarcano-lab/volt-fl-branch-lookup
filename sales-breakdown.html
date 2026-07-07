@@ -303,7 +303,8 @@ function calc(){
     const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
     const adderDiv=purchase?CARVE_LOAN:(W>0?W:CARVE_LOAN);
-    const adderCarve=(W>0)?adder23*(W/adderDiv):adder23;
+    const carveRatio=(W>0&&adderDiv>0)?Math.min(W/adderDiv,1):1;
+    const adderCarve=adder23*carveRatio;
     const adderResidual=adder23-adderCarve;
     let battPriceThis=0,battComm=0,battTxt='$0';
     if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
