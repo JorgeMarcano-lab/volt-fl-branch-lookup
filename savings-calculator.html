@@ -277,6 +277,7 @@
             <span>%</span>
           </div>
         </div>
+        <div class="hint" id="loanDeferHint" style="display:none;font-size:11.5px;color:#8a94a3;">Primeros 6 meses sin pago ($0); el pago mensual inicial aplica a partir del mes 7.</div>
       </div>
 
       <div id="loanTieredFields" style="display:none;">
@@ -427,7 +428,8 @@ function getOptionConfig(){
   }
   const pay = parseFloat(els.loanPay.value)||0;
   const esc = finco==='Sungage Sunrise' ? (parseFloat(els.loanEsc.value)||0)/100 : 0;
-  return { type:'escalating', pay, esc, label: finco+' (Loan)' };
+  const deferMonths = finco==='Climate First Bank' ? 6 : 0; // primeros 6 meses en $0
+  return { type:'escalating', pay, esc, deferMonths, label: finco+' (Loan)' };
 }
 
 function calc(utilStart, utilRate, term, opt){
@@ -448,7 +450,8 @@ function calc(utilStart, utilRate, term, opt){
     } else { // 'escalating' — also covers fixed payments when esc = 0
       if(y===1){ optMonthly = opt.pay; }
       else { optMonthly = rows[y-2].optMonthly*(1+opt.esc); }
-      optAnnual = optMonthly*12;
+      const deferMonths = (y===1 && opt.deferMonths) ? opt.deferMonths : 0;
+      optAnnual = optMonthly*(12-deferMonths);
     }
     rows.push({year:y, utilAnnual, utilMonthly, optAnnual, optMonthly});
   }
@@ -529,6 +532,7 @@ function updateOptionVisibility(){
     document.getElementById('loanSimpleFields').style.display = brightstart ? 'none' : '';
     document.getElementById('loanTieredFields').style.display = brightstart ? '' : 'none';
     document.getElementById('loanEscField').style.display = (els.loanFinco.value==='Sungage Sunrise') ? '' : 'none';
+    document.getElementById('loanDeferHint').style.display = (els.loanFinco.value==='Climate First Bank') ? '' : 'none';
   }
 }
 
@@ -638,10 +642,12 @@ function getOptionAssumptions(opt){
       ['Pago mes 37 en adelante', fmt$2(opt.pay2)+'/mes'],
     ];
   }
-  return [
+  const rows = [
     ['Pago mensual inicial', fmt$2(opt.pay)+'/mes'],
     ['Escalador anual', (opt.esc*100).toFixed(2)+'%'],
   ];
+  if(opt.deferMonths) rows.splice(1,0,['Primeros '+opt.deferMonths+' meses', 'Sin pago ($0)']);
+  return rows;
 }
 
 async function generatePDF(){
