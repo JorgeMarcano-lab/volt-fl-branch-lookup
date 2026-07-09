@@ -66,6 +66,7 @@ select{cursor:pointer}
     <div class="vlt-fld"><label class="vlt-lbl">Name on Title</label><input class="vlt-num" type="text" id="projNameOnTitle" placeholder="(auto desde Branch Lookup)"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="ej. 5 años, 2019, Unknown..."></div>
     <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="ej. Solar 2021, Roof 2019, None..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Pago Mensual promedio actual</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="ej. 1787.85"></div>
   </div>
   <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
   <div id="baseFields"></div>
@@ -88,11 +89,13 @@ select{cursor:pointer}
         <i class="ti ti-upload" aria-hidden="true"></i> Cargar PDF
         <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
       </label>
+      <select id="cardOptSel" class="vlt-btn" style="background:var(--color-background-primary);color:var(--color-text-secondary);border-color:var(--color-border-secondary);padding:6px 10px;font-size:12px;cursor:pointer" title="Elige la opción para la tarjeta de ahorro"></select>
+      <button id="savingsCardBtn" class="vlt-btn" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)"><i class="ti ti-share-2" aria-hidden="true"></i> Tarjeta de ahorro</button>
       <span id="loadStatus" style="font-size:11px;color:var(--color-text-tertiary)"></span>
     </span>
   </div>
   <div style="overflow-x:auto"><div id="cmp"></div></div>
-  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón <b>Generar PDF</b> descarga el documento. El botón <b>Cargar PDF</b> permite reabrir un PDF generado anteriormente y recarga todos los campos automáticamente.</div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón <b>Generar PDF</b> descarga el documento. El botón <b>Cargar PDF</b> permite reabrir un PDF generado anteriormente y recarga todos los campos automáticamente. El botón <b>Tarjeta de ahorro</b> genera una imagen con el ahorro estimado del cliente para la opción elegida en el selector.</div>
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
@@ -345,7 +348,7 @@ function calc(){
     card.style.border=(id===bestId)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
     $('comm-'+id).style.color=(id===bestId)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
   });
-  lastRes=res;lastBest=bestId;renderCmp(res,bestId);
+  lastRes=res;lastBest=bestId;renderCmp(res,bestId);refreshCardOptSel();
 }
 
 function renderCmp(res,bestId){
@@ -691,6 +694,108 @@ buildChips();
 document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
 document.getElementById('applyAll').addEventListener('click',applyBaseline);
 document.getElementById('pdfBtn').addEventListener('click',genPDF);
+
+// ===================== TARJETA DE AHORRO (imagen PNG) =====================
+function refreshCardOptSel(){
+  const sel=$('cardOptSel'); if(!sel) return;
+  const prev=sel.value;
+  const eligible=instances.filter(inst=>$('pay1-'+inst.id));
+  sel.innerHTML=eligible.map(inst=>{const o=OPTIONS.find(x=>x.k===inst.k);return `<option value="${inst.id}">${o.n}</option>`;}).join('');
+  if(eligible.some(inst=>inst.id===prev)) sel.value=prev;
+}
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
+  const words=text.split(' ');let line='',yy=y;
+  words.forEach(w=>{const test=line+w+' ';if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line.trim(),x,yy);line=w+' ';yy+=lineHeight;}else line=test;});
+  ctx.fillText(line.trim(),x,yy);return yy;
+}
+function buildSavingsCard(instId){
+  const inst=instances.find(x=>x.id===instId); if(!inst) return null;
+  const r=lastRes[inst.id]; if(!r) return null;
+  const o=r.o;
+  const utilBill=parseFloat($('projUtilBill')?.value)||0;
+  const pago=parseFloat($('pay1-'+inst.id)?.value)||0;
+  const ahorroMensual=utilBill-pago;
+  const ahorroAnual=ahorroMensual*12;
+  const pct=utilBill>0?(ahorroMensual/utilBill):0;
+  const name=($('projNameOnTitle')?.value||'').trim()||($('projAddr')?.value||'').trim();
+
+  const W=1200,H=675;
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  const FONT='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+
+  const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'#1f6feb');grad.addColorStop(1,'#122a52');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle='#fff';roundRectPath(ctx,60,54,56,56,12);ctx.fill();
+  ctx.fillStyle='#1f6feb';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`800 30px ${FONT}`;
+  ctx.fillText('V',60+28,54+30);
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#fff';ctx.font=`800 26px ${FONT}`;
+  ctx.fillText('VOLT',130,54+32);
+  ctx.font=`400 14px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.75)';
+  ctx.fillText('Ahorro estimado en energía solar',130,54+53);
+
+  ctx.font=`400 20px ${FONT}`;ctx.fillStyle='#fff';
+  ctx.fillText(name?('Propuesta para '+name):'Propuesta de ahorro solar',60,172);
+
+  if(utilBill>0){
+    ctx.font=`800 88px ${FONT}`;ctx.fillStyle=ahorroAnual>=0?'#5fe3a1':'#ff8a80';
+    ctx.fillText(money(ahorroAnual),58,278);
+    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('de ahorro estimado al año vs. tu factura de utility actual',60,316);
+  } else {
+    ctx.font=`700 30px ${FONT}`;ctx.fillStyle='#fff';
+    ctx.fillText(money(pago)+'/mes',58,278);
+    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('pago mensual estimado de la opción',60,316);
+  }
+
+  ctx.strokeStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(60,356);ctx.lineTo(W-60,356);ctx.stroke();
+
+  const cols=utilBill>0?[
+    ['% DE AHORRO MENSUAL',(pct*100).toFixed(1)+'%'],
+    ['PAGO MENSUAL OPCIÓN',money(pago)+'/mes'],
+    ['OPCIÓN EVALUADA',o.n],
+  ]:[
+    ['UTILITY ACTUAL','—'],
+    ['PAGO MENSUAL OPCIÓN',money(pago)+'/mes'],
+    ['OPCIÓN EVALUADA',o.n],
+  ];
+  const colW=(W-120)/3;
+  cols.forEach((c,i)=>{
+    const x=60+i*colW;
+    ctx.font=`600 13px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(c[0],x,398);
+    ctx.font=`700 28px ${FONT}`;ctx.fillStyle='#fff';wrapCanvasText(ctx,c[1],x,434,colW-24,32);
+  });
+
+  ctx.font=`400 12.5px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.55)';
+  wrapCanvasText(ctx,'Estimación basada en los datos ingresados por el equipo de ventas. No constituye una garantía financiera; las condiciones reales del contrato/financiamiento y la factura de utility pueden variar.',60,H-46,W-120,17);
+
+  return {canvas,name,utilBill};
+}
+function downloadSavingsCard(){
+  const sel=$('cardOptSel');
+  if(!sel||!sel.value){alert('Agrega y selecciona al menos una opción (con pago mensual) para generar la tarjeta.');return;}
+  const btn=$('savingsCardBtn');const originalLabel=btn.innerHTML;btn.textContent='Generando...';btn.disabled=true;
+  try{
+    const built=buildSavingsCard(sel.value);
+    if(!built){alert('No se pudo generar la tarjeta para la opción seleccionada.');btn.innerHTML=originalLabel;btn.disabled=false;return;}
+    built.canvas.toBlob(blob=>{
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');
+      const fileSafeName=(built.name||'Cliente').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
+      a.href=url;a.download=`VOLT_Ahorro_Estimado_${fileSafeName}.png`;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+      btn.innerHTML=originalLabel;btn.disabled=false;
+    },'image/png',1.0);
+  }catch(err){
+    console.error(err);alert('Ocurrió un error generando la tarjeta de ahorro.');
+    btn.innerHTML=originalLabel;btn.disabled=false;
+  }
+}
+document.getElementById('savingsCardBtn').addEventListener('click',downloadSavingsCard);
 // Call loadHandoff with multiple fallbacks to ensure it runs
 try { loadHandoff(); } catch(e){}
 setTimeout(function(){ try { loadHandoff(); } catch(e){} }, 100);
