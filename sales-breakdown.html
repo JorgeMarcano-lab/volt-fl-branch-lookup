@@ -695,7 +695,9 @@ buildChips();
 
 document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
 document.getElementById('applyAll').addEventListener('click',applyBaseline);
-document.getElementById(// ===================== SIMULADOR DE AHORRO (handoff) =====================
+document.getElementById('pdfBtn').addEventListener('click',genPDF);
+
+// ===================== SIMULADOR DE AHORRO (handoff) =====================
 function refreshCardOptSel(){
   const sel=$('cardOptSel'); if(!sel) return;
   const prev=sel.value;
@@ -741,7 +743,7 @@ function openSavingsCalculator(){
   try{ sessionStorage.setItem('voltSavingsHandoff', JSON.stringify(payload)); }catch(e){}
   window.open('savings-calculator.html','_blank');
 }
-document.getElementById('savingsCardBtn').addEventListener('click',openSavingsCalculator);ddEventListener('click',downloadSavingsCard);
+document.getElementById('savingsCardBtn').addEventListener('click',openSavingsCalculator);
 // Call loadHandoff with multiple fallbacks to ensure it runs
 try { loadHandoff(); } catch(e){}
 setTimeout(function(){ try { loadHandoff(); } catch(e){} }, 100);
