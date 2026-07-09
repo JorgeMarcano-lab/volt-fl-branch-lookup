@@ -67,6 +67,8 @@ select{cursor:pointer}
     <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="ej. 5 años, 2019, Unknown..."></div>
     <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="ej. Solar 2021, Roof 2019, None..."></div>
     <div class="vlt-fld"><label class="vlt-lbl">Pago Mensual promedio actual</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="ej. 1787.85"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Incremento anual de tarifa (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Plazo comparación (años)</label><input class="vlt-num" type="number" id="projTerm" step="1" min="1" max="30" value="25"></div>
   </div>
   <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
   <div id="baseFields"></div>
@@ -711,16 +713,31 @@ function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
   words.forEach(w=>{const test=line+w+' ';if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line.trim(),x,yy);line=w+' ';yy+=lineHeight;}else line=test;});
   ctx.fillText(line.trim(),x,yy);return yy;
 }
+function calcMultiYear(utilStart, utilRate, term, pay, esc){
+  let prevUtil=null, prevOpt=null, totalUtil=0, totalOpt=0, breakevenYear=null;
+  for(let y=1;y<=term;y++){
+    const ua = y===1 ? utilStart*12 : prevUtil*(1+utilRate);
+    const oa = y===1 ? pay*12 : prevOpt*(1+esc);
+    totalUtil += ua; totalOpt += oa;
+    if(breakevenYear===null && oa < ua) breakevenYear = y;
+    prevUtil = ua; prevOpt = oa;
+  }
+  const savings = totalUtil-totalOpt;
+  const pct = totalUtil>0 ? savings/totalUtil : 0;
+  return {totalUtil, totalOpt, savings, pct, breakevenYear};
+}
 function buildSavingsCard(instId){
   const inst=instances.find(x=>x.id===instId); if(!inst) return null;
   const r=lastRes[inst.id]; if(!r) return null;
   const o=r.o;
   const utilBill=parseFloat($('projUtilBill')?.value)||0;
+  const utilRate=(parseFloat($('projUtilRate')?.value)||0)/100;
+  const term=parseInt($('projTerm')?.value)||25;
   const pago=parseFloat($('pay1-'+inst.id)?.value)||0;
-  const ahorroMensual=utilBill-pago;
-  const ahorroAnual=ahorroMensual*12;
-  const pct=utilBill>0?(ahorroMensual/utilBill):0;
-  const name=($('projNameOnTitle')?.value||'').trim()||($('projAddr')?.value||'').trim();
+  const isLease=o.t==='Lease';
+  const esc=isLease?(parseFloat($('esc-'+inst.id)?.value)||0)/100:0;
+  const address=($('projAddr')?.value||'').trim()||($('projNameOnTitle')?.value||'').trim();
+  const my=utilBill>0?calcMultiYear(utilBill,utilRate,term,pago,esc):null;
 
   const W=1200,H=675;
   const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
@@ -739,42 +756,50 @@ function buildSavingsCard(instId){
   ctx.fillText('Ahorro estimado en energía solar',130,54+53);
 
   ctx.font=`400 20px ${FONT}`;ctx.fillStyle='#fff';
-  ctx.fillText(name?('Propuesta para '+name):'Propuesta de ahorro solar',60,172);
+  ctx.fillText(address?('Propuesta para '+address):'Propuesta de ahorro solar',60,168);
+  ctx.font=`400 14px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.65)';
+  ctx.fillText(o.n+' · '+o.t,60,192);
 
-  if(utilBill>0){
-    ctx.font=`800 88px ${FONT}`;ctx.fillStyle=ahorroAnual>=0?'#5fe3a1':'#ff8a80';
-    ctx.fillText(money(ahorroAnual),58,278);
-    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
-    ctx.fillText('de ahorro estimado al año vs. tu factura de utility actual',60,316);
+  if(my){
+    ctx.font=`800 84px ${FONT}`;ctx.fillStyle=my.savings>=0?'#5fe3a1':'#ff8a80';
+    ctx.fillText(money(my.savings),58,296);
+    ctx.font=`400 20px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('de ahorro total estimado en '+term+' años vs. tu factura de utility actual',60,332);
   } else {
     ctx.font=`700 30px ${FONT}`;ctx.fillStyle='#fff';
-    ctx.fillText(money(pago)+'/mes',58,278);
-    ctx.font=`400 21px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
-    ctx.fillText('pago mensual estimado de la opción',60,316);
+    ctx.fillText(money(pago)+'/mes',58,296);
+    ctx.font=`400 20px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('pago mensual estimado — ingresa el pago de utility para calcular el ahorro',60,332);
   }
 
-  ctx.strokeStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(60,356);ctx.lineTo(W-60,356);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(60,368);ctx.lineTo(W-60,368);ctx.stroke();
 
-  const cols=utilBill>0?[
-    ['% DE AHORRO MENSUAL',(pct*100).toFixed(1)+'%'],
-    ['PAGO MENSUAL OPCIÓN',money(pago)+'/mes'],
-    ['OPCIÓN EVALUADA',o.n],
+  const escTxt=isLease?((esc*100).toFixed(2)+'%/año'):'Pago fijo';
+  const cols=my?[
+    ['% DE AHORRO TOTAL',(my.pct*100).toFixed(1)+'%'],
+    ['AHORRA DESDE',my.breakevenYear?('Año '+my.breakevenYear):('Después del año '+term)],
+    ['PAGO MENSUAL INICIAL',money(pago)+'/mes'],
+    ['ESCALATOR OPCIÓN',escTxt],
   ]:[
-    ['UTILITY ACTUAL','—'],
-    ['PAGO MENSUAL OPCIÓN',money(pago)+'/mes'],
-    ['OPCIÓN EVALUADA',o.n],
+    ['PAGO MENSUAL INICIAL',money(pago)+'/mes'],
+    ['ESCALATOR OPCIÓN',escTxt],
+    ['TIPO DE OPCIÓN',o.t],
   ];
-  const colW=(W-120)/3;
+  const colW=(W-120)/cols.length;
   cols.forEach((c,i)=>{
     const x=60+i*colW;
-    ctx.font=`600 13px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(c[0],x,398);
-    ctx.font=`700 28px ${FONT}`;ctx.fillStyle='#fff';wrapCanvasText(ctx,c[1],x,434,colW-24,32);
+    ctx.font=`600 12.5px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(c[0],x,410);
+    ctx.font=`700 22px ${FONT}`;ctx.fillStyle='#fff';wrapCanvasText(ctx,c[1],x,444,colW-20,26);
   });
 
-  ctx.font=`400 12.5px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.55)';
-  wrapCanvasText(ctx,'Estimación basada en los datos ingresados por el equipo de ventas. No constituye una garantía financiera; las condiciones reales del contrato/financiamiento y la factura de utility pueden variar.',60,H-46,W-120,17);
+  ctx.font=`400 12.5px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.6)';
+  const assumTxt=my?('Supuestos: incremento anual utility '+(utilRate*100).toFixed(2)+'%  ·  plazo comparado '+term+' años'):'Ingresa el pago mensual de utility para ver el ahorro proyectado.';
+  ctx.fillText(assumTxt,60,500);
 
-  return {canvas,name,utilBill};
+  ctx.font=`400 12px ${FONT}`;ctx.fillStyle='rgba(255,255,255,.5)';
+  wrapCanvasText(ctx,'Estimación basada en los datos ingresados por el equipo de ventas. No constituye una garantía financiera; las condiciones reales del contrato/financiamiento y la factura de utility pueden variar.',60,H-40,W-120,16);
+
+  return {canvas,name:address,utilBill};
 }
 function downloadSavingsCard(){
   const sel=$('cardOptSel');
