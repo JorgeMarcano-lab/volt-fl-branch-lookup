@@ -100,7 +100,7 @@ select{cursor:pointer}
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
-Comisión solar (J27) = (Lender − Redline)×W − adders solares (÷23,370 loan / ÷tamaño lease) − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
+Comisión solar (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
 </div>
 </div>
 
@@ -117,7 +117,6 @@ const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY; campo Precio total baterias se compara contra CAP×Cantidad
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 05272026 — $3.50/W precio solar máximo (sin adders, batería ni DF)
-const CARVE_LOAN=23370;     // Adder Sheet 05272026 — divisor fijo para adder carve en opciones loan/Compra
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
@@ -306,10 +305,8 @@ function calc(){
     let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
     const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
-    const adderDiv=purchase?CARVE_LOAN:(W>0?W:CARVE_LOAN);
-    const carveRatio=(W>0&&adderDiv>0)?Math.min(W/adderDiv,1):1;
-    const adderCarve=adder23*carveRatio;
-    const adderResidual=adder23-adderCarve;
+    const adderCarve=adder23; // adder completo se resta de comision (sin carve parcial); Contrato x W ya es precio todo incluido
+    const adderResidual=0;
     let battPriceThis=0,battComm=0,battTxt='$0';
     if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
       if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Bateria PW3 N/A para esta opcion');}
