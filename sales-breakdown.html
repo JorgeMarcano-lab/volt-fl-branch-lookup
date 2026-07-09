@@ -68,7 +68,6 @@ select{cursor:pointer}
     <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="ej. Solar 2021, Roof 2019, None..."></div>
     <div class="vlt-fld"><label class="vlt-lbl">Pago Mensual promedio actual</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="ej. 1787.85"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Incremento anual de tarifa (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Plazo comparación (años)</label><input class="vlt-num" type="number" id="projTerm" step="1" min="1" max="30" value="25"></div>
   </div>
   <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
   <div id="baseFields"></div>
@@ -711,7 +710,9 @@ function buildSavingsHandoff(instId){
   const o=r.o;
   const utilStart=$('projUtilBill')?.value||'0';
   const utilRate=$('projUtilRate')?.value||'4.00';
-  let term=parseInt($('projTerm')?.value)||25; term=Math.min(30,Math.max(5,term));
+  const termMonths=parseFloat($('term-'+inst.id)?.value)||0;
+  let term=termMonths>0?Math.round(termMonths/12):25;
+  term=Math.min(30,Math.max(5,term));
   const custName=($('projAddr')?.value||'').trim()||($('projNameOnTitle')?.value||'').trim();
   const pago=$('pay1-'+inst.id)?.value||'0';
   const payload={utilStart,utilRate,term:String(term),custName};
@@ -727,7 +728,7 @@ function buildSavingsHandoff(instId){
     payload.loanFinco=finco;
     if(finco==='Sungage Brightstart'){
       payload.loanPay1=pago;
-      payload.loanPay2=pago;
+      payload.loanPay2=$('pay2-'+inst.id)?.value||pago;
     } else {
       payload.loanPay=pago;
       if(finco==='Sungage Sunrise') payload.loanEsc='2.90';
