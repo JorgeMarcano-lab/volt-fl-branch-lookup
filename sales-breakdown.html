@@ -100,7 +100,7 @@ select{cursor:pointer}
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
-Comisión solar (J27) = (Lender − Redline)×W − adders solares (÷23,370 loan / ÷tamaño lease) − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W + residual. Paneles base según el Adder Sheet 05272026 por región.
+Comisión solar (J27) = (Lender − Redline)×W − adders solares (÷23,370 loan / ÷tamaño lease) − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
 </div>
 </div>
 
@@ -320,7 +320,7 @@ function calc(){
     const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
     const comm=solarComm+battComm;
-    const cash=contract*W+adderResidual;
+    const cash=contract*W; // Contrato/Lender x W = precio TOTAL todo incluido; adders/bateria solo afectan comision, no el precio
     let financed=cash,df=0,term=0,tasa=0;
     if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;}
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
