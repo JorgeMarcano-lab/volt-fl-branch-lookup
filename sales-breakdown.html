@@ -115,7 +115,7 @@ const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
-const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY (todas las opciones excepto Tesla Program)
+const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY; campo Precio total baterias se compara contra CAP×Cantidad
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 05272026 — $3.50/W precio solar máximo (sin adders, batería ni DF)
 const CARVE_LOAN=23370;     // Adder Sheet 05272026 — divisor fijo para adder carve en opciones loan/Compra
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
@@ -167,7 +167,7 @@ function detailFields(id){
     <div class="vlt-grid">
       <div class="vlt-fld"><label class="vlt-lbl">Tipo</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
       <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
-      <div class="vlt-fld"><label class="vlt-lbl">Precio/bateria ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Precio total baterias ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
     </div>
   </div>
@@ -313,7 +313,7 @@ function calc(){
     let battPriceThis=0,battComm=0,battTxt='$0';
     if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
       if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Bateria PW3 N/A para esta opcion');}
-      else{battPriceThis=cfg.battQty*cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
+      else{battPriceThis=cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
         if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
         else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
     if($('bt-'+id))$('bt-'+id).textContent=battTxt;
@@ -335,7 +335,7 @@ function calc(){
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
     res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
-      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>BATT_PRICE_CAP,
+      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
       solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
       solarEffectiveWatt:W>0?((cash-adder23-otrosFull-battPriceThis)/W):0};
@@ -407,7 +407,7 @@ function renderCmp(res,bestId){
       sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
         if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
         // Battery price cap: fondo rojo si precio/bat > $18,000 (Adder Sheet)
-        if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const battExcess=r.cfg.battQty*r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
+        if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
         // Offset cap: > 115% resaltado en rojo
@@ -582,7 +582,8 @@ function parsePDFText(text, filename){
     const batTxt=get('Bateria',col)||get('Batería',col);
     if(batTxt&&batTxt!=='—'){
       const bq=batTxt.match(/x(\d+)/); if(bq&&$('battQty-'+id)) $('battQty-'+id).value=bq[1];
-      const bp=batTxt.match(/@ \$?([\d,]+)/); if(bp&&$('battPrice-'+id)) $('battPrice-'+id).value=bp[1].replace(/,/g,'');
+      const priceTxt=get('Precio bateria',col)||get('Precio total baterias',col)||get('Precio total baterías',col);
+      const bpNum=parseMoney(priceTxt); if(bpNum&&$('battPrice-'+id)) $('battPrice-'+id).value=bpNum;
       const bt=batTxt.includes('Enphase')?'enphase':'pw3'; if($('battType-'+id)) $('battType-'+id).value=bt;
       syncOptBatt(id); fillBattRedline(id);
     }
@@ -614,7 +615,7 @@ function genPDF(){
         adder_superficie:r.roofAmt>0?(SURF_NAME[c.surface]+' Roof '+money(r.roofAmt)):null,
         ground_mount:r.gmAmt>0?money(r.gmAmt):null,trenching:r.gmFixed>0?money(r.gmFixed):null,
         sales_rebate:c.rebate>0?money(c.rebate):null,
-        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty+' @ $'+c.battPrice):null,
+        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty):null,
         com_bateria:c.battQty>0?Math.round(r.battComm):null,
         adders_no_solares:c.nsItems.join('; ')||null,
         redline:r.redline,contrato:r.contract,
@@ -681,7 +682,7 @@ $('baseFields').innerHTML=(function(){
   <div class="vlt-grid" style="margin-top:8px">
     <div class="vlt-fld"><label class="vlt-lbl">Tipo bateria</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Cantidad bat.</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Precio/bat. ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Precio total bat. ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="b_rebate" value="0" step="50" min="0"></div>
   </div>`;
 })();
@@ -779,7 +780,7 @@ function renderClientPDF(p){
         else if(row[0]==='Comisión solar (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
         // Cap warnings: texto detallado + rojo en PDF
         if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ! cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Precio bateria'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battQty*o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Precio bateria'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         if(row[0]==='Contrato $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         cells.push(c);});
       body.push(cells);});
