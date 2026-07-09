@@ -170,10 +170,12 @@
   @media print{
     header .btnrow, .footerbar, .no-print{display:none !important;}
     body{background:#fff;}
-    .wrap{grid-template-columns:1fr;}
+    .wrap{display:block !important;}
+    .wrap > .card:first-child{display:none !important;}
     .tablewrap{max-height:none !important; overflow:visible !important;}
     table{page-break-inside:auto;}
     tr{page-break-inside:avoid; page-break-after:auto;}
+    details{page-break-inside:auto;}
   }
 </style>
 </head>
