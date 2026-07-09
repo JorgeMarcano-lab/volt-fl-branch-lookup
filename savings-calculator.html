@@ -171,6 +171,9 @@
     header .btnrow, .footerbar, .no-print{display:none !important;}
     body{background:#fff;}
     .wrap{grid-template-columns:1fr;}
+    .tablewrap{max-height:none !important; overflow:visible !important;}
+    table{page-break-inside:auto;}
+    tr{page-break-inside:avoid; page-break-after:auto;}
   }
 </style>
 </head>
@@ -598,7 +601,13 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   updateOptionVisibility();
   render();
 });
-document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+document.getElementById('printBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('details').forEach(d=>{ d.open = true; });
+  window.print();
+});
+window.addEventListener('beforeprint', ()=>{
+  document.querySelectorAll('details').forEach(d=>{ d.open = true; });
+});
 
 // --- Executive Summary PDF -------------------------------------------------
 // Builds a branded one/two-page PDF from the CURRENT inputs on screen.
