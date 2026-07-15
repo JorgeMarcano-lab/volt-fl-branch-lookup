@@ -165,7 +165,7 @@ function detailFields(id){
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Bateria</div>
     <div class="vlt-grid">
       <div class="vlt-fld"><label class="vlt-lbl">Tipo</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
-      <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
+      <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label><input class="vlt-num" type="number" id="battQty-${id}" value="0" min="0" step="1"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Precio total baterias ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
     </div>
@@ -678,7 +678,7 @@ $('baseFields').innerHTML=(function(){
   </div>
   <div class="vlt-grid" style="margin-top:8px">
     <div class="vlt-fld"><label class="vlt-lbl">Tipo bateria</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Cantidad bat.</label>${sel('battQty',[['0','0'],['1','1'],['2','2'],['3','3'],['4','4']],'0')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Cantidad bat.</label><input class="vlt-num" type="number" id="b_battQty" value="0" min="0" step="1"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Precio total bat. ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="b_rebate" value="0" step="50" min="0"></div>
   </div>`;
