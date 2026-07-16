@@ -1255,7 +1255,7 @@ const ZIP_JURIS={
   "32324":["Gadsden","municipal","City of Chattahoochee Building Department"],
   "32327":["Wakulla","county-unincorporated","Wakulla County Building Department"],
   "32328":["Franklin","county-unincorporated","Franklin County Building Department"],
-  "32331":["Madison","county-unincorporated","Madison County Building Department"],
+  "32331":["Madison","mixed","Madison County Building Department"],
   "32332":["Gadsden","municipal","City of Gretna Building Department"],
   "32333":["Gadsden","municipal","Town of Havana Building Department"],
   "32334":["Liberty","county-unincorporated","Liberty County Building Department"],
@@ -2267,6 +2267,8 @@ const STREET_OVERRIDES = {
   'snead': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'West Palm Beach', note:'Snead Cir is unincorporated Palm Beach County'},
   // 32773 - Sanford/unincorporated Seminole mixed ZIP
   'eaglewoods': {ahj:'Seminole County Building Department', ahj_type:'county-unincorporated', city:'Sanford', note:'Eaglewoods Trail is unincorporated Seminole County, outside Sanford city limits'},
+  // 32331 - Greenville ZIP crosses Madison and Jefferson counties
+  'ashville highlands': {ahj:'Jefferson County Building Department', ahj_type:'county-unincorporated', city:'Greenville', county:'Jefferson', note:'Ashville Highlands Dr is in Jefferson County (not Madison)'},
   // 33150 - Miami-Dade mixed (Miami Shores, El Portal, Miami, unincorporated)
   'northwest 105th': {ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'NW 105th St is unincorporated Miami-Dade'},
   'nw 105th': {ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'NW 105th St is unincorporated Miami-Dade'},
@@ -2654,7 +2656,7 @@ function askClaude(raw, zip, rec, out, btn){
       "Hernando":"https://propsearch.hernandocountypa-florida.us/home","Highlands":"https://www.hcpao.org",
       "Hillsborough":"https://www.hcpafl.org","Holmes":"https://www.holmespa.com",
       "Indian River":"https://www.ircpa.org","Jackson":"https://www.jacksonpa.com",
-      "Jefferson":"https://www.jeffersonpa.net","Lafayette":"https://www.lafayettepa.net",
+      "Jefferson":"https://qpublic.schneidercorp.com/Application.aspx?App=JeffersonCountyFL&PageType=Search","Lafayette":"https://www.lafayettepa.net",
       "Lake":"https://www.lakecopropappr.com/","Lee":"https://www.leepa.org",
       "Leon":"https://www.leonpa.org","Levy":"https://www.levypa.org",
       "Liberty":"https://www.libertypa.org","Madison":"https://qpublic.schneidercorp.com/Application.aspx?App=MadisonCountyFL&Layer=Parcels&PageType=Search",
