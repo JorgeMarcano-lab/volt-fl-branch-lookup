@@ -356,6 +356,7 @@ function renderCmp(res,bestId){
   const fin=id=>$('co-'+id)?$('co-'+id).value:'';
   const esc=id=>$('esc-'+id)?($('esc-'+id).value+'%'):'';
   const pay=id=>{const p=$('pay1-'+id);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
+  const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
     {title:'Proyecto',rows:[
       ['Tipo',(inst,r)=>r.o.t,{a:1}],
@@ -389,7 +390,8 @@ function renderCmp(res,bestId){
       ['Term (meses)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
       ['Tasa %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
       ['Financiera / Escalator',(inst,r)=>r.loan?fin(inst.id):(r.o.t==='Lease'?esc(inst.id):'—')],
-      ['Pago mensual',(inst,r)=>pay(inst.id)]
+      ['Pago Mensual Año 1',(inst,r)=>pay(inst.id)],
+      ['Pago Mensual Mes 37+',(inst,r)=>pay2(inst.id)]
     ]}
   ];
   const ncol=1+sel.length;
@@ -543,8 +545,13 @@ function parsePDFText(text, filename){
     if(optDef.t==='Lease'&&finEsc&&$('esc-'+id)) $('esc-'+id).value=parseFloat(finEsc)||2.99;
 
     // Pago mensual
-    const pago=get('Pago mensual (ref.)',col)||get('Pago mensual',col);
+    const pago=get('Pago Mensual Año 1 (ref.)',col)||get('Pago mensual (ref.)',col)||get('Pago mensual',col);
     if(pago&&$('pay1-'+id)) $('pay1-'+id).value=parseFloat(pago.replace(/[$,]/g,''))||0;
+    const bsFin=$('co-'+id)?.value==='Sungage Brightstart';
+    if($('p2w-'+id))$('p2w-'+id).style.display=bsFin?'block':'none';
+    if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bsFin?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';
+    const pago37=get('Pago Mensual Mes 37+ (ref.)',col);
+    if(bsFin&&pago37&&pago37!=='—'&&$('pay2-'+id)) $('pay2-'+id).value=parseFloat(pago37.replace(/[$,]/g,''))||0;
 
     // Cash + DF → derive DF %
     const cash=parseMoney(get('TOTAL / Cash',col)||get('TOTAL / Precio Cash',col));
@@ -624,6 +631,7 @@ function genPDF(){
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
         escalator:(!r.loan&&r.o.t==='Lease')?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
+        pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
         rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
         battCapExceeded:r.battCapExceeded||false,
         solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
@@ -765,7 +773,7 @@ function renderClientPDF(p){
     ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
     ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
-    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (meses)',o=>o.term?o.term+'m':null],['Tasa %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago mensual (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null]]]
+    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (meses)',o=>o.term?o.term+'m':null],['Tasa %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago Mensual Año 1 (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Pago Mensual Mes 37+ (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
