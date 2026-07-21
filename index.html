@@ -1893,7 +1893,7 @@ const ZIP_JURIS={
   "33928":["Lee","county-unincorporated","Lee County Building Department"],
   "33931":["Lee","municipal","Town of Fort Myers Beach Building Department"],
   "33931":["Lee","municipal","Town of Fort Myers Beach Building Department"],
-  "33935":["Hendry","municipal","City of Labelle Building Department"],
+  "33935":["Hendry","mixed","City of Labelle Building Department"],
   "33936":["Lee","county-unincorporated","Lee County Building Department"],
   "33946":["Charlotte","county-unincorporated","Charlotte County Building Department"],
   "33947":["Charlotte","county-unincorporated","Charlotte County Building Department"],
@@ -2494,6 +2494,8 @@ const STREET_OVERRIDES = {
   // 33157 - Cutler Bay (SW 200th St corridor within Town of Cutler Bay limits)
   'sw 200th st': {ahj:'Town of Cutler Bay Building Department', ahj_type:'municipal', city:'Cutler Bay', note:'SW 200th St address in Cutler Bay - confirmed via FL DOR PointMatch (jurisdiction: CUTLER BAY)'},
   'southwest 200th st': {ahj:'Town of Cutler Bay Building Department', ahj_type:'municipal', city:'Cutler Bay', note:'SW 200th St address in Cutler Bay - confirmed via FL DOR PointMatch (jurisdiction: CUTLER BAY)'},
+// 33935 - LaBelle/Port LaBelle mixed (Hendry vs Glades)
+'bucknell': {ahj:'Glades County Building Department', ahj_type:'county-unincorporated', city:'Glades County', county:'Glades', note:'Bucknell Ln is unincorporated Glades County (Port LaBelle), not City of Labelle in Hendry County - confirmed via Census Bureau geocoder'},
 };
 
 function checkStreetOverride(address, zip){
@@ -2537,7 +2539,7 @@ function doSearch(){
       var ovBranch = rec ? rec.branch : '?';
       // Get correct PA if county changed
       if(streetOv.county && streetOv.county !== ovCounty){
-        var countyPaMap={'Polk':'https://www.polkflpa.gov/CamaSearch.aspx','Osceola':'https://www.property-appraiser.org','Orange':'https://ocpaweb.ocpafl.org/parcelsearch','Hillsborough':'https://www.hcpafl.org','Miami-dade':'https://www.miamidade.gov/pa','Broward':'https://www.bcpa.net','Palm Beach':'https://www.pbcgov.org/papa','Pinellas':'https://www.pcpao.gov','Manatee':'https://www.manateepao.gov','Sarasota':'https://www.sc-pa.com','Lee':'https://www.leepa.org','Collier':'https://www.collierappraiser.com'};
+        var countyPaMap={'Polk':'https://www.polkflpa.gov/CamaSearch.aspx','Osceola':'https://www.property-appraiser.org','Orange':'https://ocpaweb.ocpafl.org/parcelsearch','Hillsborough':'https://www.hcpafl.org','Miami-dade':'https://www.miamidade.gov/pa','Broward':'https://www.bcpa.net','Palm Beach':'https://www.pbcgov.org/papa','Pinellas':'https://www.pcpao.gov','Manatee':'https://www.manateepao.gov','Sarasota':'https://www.sc-pa.com','Lee':'https://www.leepa.org','Collier':'https://www.collierappraiser.com','Glades':'https://www.gladespa.com'};
         ovCounty = streetOv.county;
         ovPa = countyPaMap[ovCounty] || ovPa;
       }
