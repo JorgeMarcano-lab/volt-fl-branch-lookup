@@ -1060,7 +1060,7 @@ const DATA=[
 ['34974','Okeechobee','Okeechobee','SFL','City of Okeechobee Building Department','https://www.okeechobeepa.com'],
 ['33401','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
 ['33403','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
-['33404','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
+['33404','Riviera Beach','Palm Beach','SFL','City of Riviera Beach Building Department','https://www.pbcgov.org/papa'],
 ['33405','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
 ['33406','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
 ['33407','West Palm Beach','Palm Beach','SFL','City of West Palm Beach Building Department','https://www.pbcgov.org/papa'],
@@ -2233,8 +2233,6 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
-  // 33404 - Riviera Beach vs West Palm Beach mixed ZIP
-  'w 21st st, riviera beach': {ahj:'City of Riviera Beach Building Department', ahj_type:'municipal', city:'Riviera Beach', note:'W 21st St is within Riviera Beach city limits'},
   // 32060 - Live Oak/Suwannee mixed
   '233rd rd': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', note:'233rd Rd is unincorporated Suwannee County'},
   // 34655 - New Port Richey mixed (City of New Port Richey vs Pasco County unincorporated)
