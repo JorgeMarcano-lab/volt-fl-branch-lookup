@@ -2233,6 +2233,8 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 33404 - Riviera Beach vs West Palm Beach mixed ZIP
+  'w 21st st, riviera beach': {ahj:'City of Riviera Beach Building Department', ahj_type:'municipal', city:'Riviera Beach', note:'W 21st St is within Riviera Beach city limits'},
   // 32060 - Live Oak/Suwannee mixed
   '233rd rd': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', note:'233rd Rd is unincorporated Suwannee County'},
   // 34655 - New Port Richey mixed (City of New Port Richey vs Pasco County unincorporated)
