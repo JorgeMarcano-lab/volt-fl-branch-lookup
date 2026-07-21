@@ -1859,7 +1859,7 @@ const ZIP_JURIS={
   "33852":["Highlands","municipal","Town of Lake Placid Building Department"],
   "33853":["Polk","county-unincorporated","Polk County Building Division"],
   "33857":["Highlands","county-unincorporated","Highlands County Building Department"],
-  "33859":["Polk","municipal","City of Lake Wales Building Department"],
+  "33859":["Polk","mixed","City of Lake Wales Building Department"],
   "33860":["Polk","county-unincorporated","Polk County Building Division"],
   "33865":["Hardee","county-unincorporated","Polk County Building Division"],
   "33867":["Polk","county-unincorporated","Osceola County Building Department"],
@@ -2496,6 +2496,8 @@ const STREET_OVERRIDES = {
   'southwest 200th st': {ahj:'Town of Cutler Bay Building Department', ahj_type:'municipal', city:'Cutler Bay', note:'SW 200th St address in Cutler Bay - confirmed via FL DOR PointMatch (jurisdiction: CUTLER BAY)'},
 // 33935 - LaBelle/Port LaBelle mixed (Hendry vs Glades)
 'bucknell': {ahj:'Glades County Building Department', ahj_type:'county-unincorporated', city:'Glades County', county:'Glades', note:'Bucknell Ln is unincorporated Glades County (Port LaBelle), not City of Labelle in Hendry County - confirmed via Census Bureau geocoder'},
+// 33859 - Lake Wales mixed (Mountain Lake Cutoff Rd corridor unincorporated Polk)
+'mountain lake cutoff': {ahj:'Polk County Building Division', ahj_type:'county-unincorporated', city:'Polk County', note:'Mountain Lake Cutoff Rd is unincorporated Polk County - confirmed via FL DOR PointMatch (jurisdiction: UNINCORPORATED POLK)'},
 };
 
 function checkStreetOverride(address, zip){
