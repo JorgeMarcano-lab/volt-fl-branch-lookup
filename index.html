@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1784386603 -->
+<!-- v1785003687 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1869,7 +1869,7 @@ const ZIP_JURIS={
   "33873":["Hardee","municipal","City of Wauchula Building Department"],
   "33875":["Highlands","municipal","City of Sebring Building Department"],
   "33876":["Highlands","municipal","City of Sebring Building Department"],
-  "33880":["Polk","municipal","City of Winter Haven Building Department"],
+  "33880":["Polk","mixed","City of Winter Haven Building Department"],
   "33881":["Polk","municipal","City of Winter Haven Building Department"],
   "33884":["Polk","county-unincorporated","Polk County Building Division"],
   "33888":["Polk","municipal","City of Winter Haven Building Department"],
@@ -2233,6 +2233,8 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 33880 - Winter Haven mixed (109 Palmetto Ridge Dr confirmed unincorporated Polk via PointMatch 2026-07-25)
+  'palmetto ridge': {ahj:'Polk County Building Division', ahj_type:'county-unincorporated', city:'Polk County', note:'Palmetto Ridge Dr is unincorporated Polk County'},
   // 32060 - Live Oak/Suwannee mixed
   '233rd rd': {ahj:'Suwannee County Building Department', ahj_type:'county-unincorporated', city:'Suwannee County', note:'233rd Rd is unincorporated Suwannee County'},
   // 34655 - New Port Richey mixed (City of New Port Richey vs Pasco County unincorporated)
