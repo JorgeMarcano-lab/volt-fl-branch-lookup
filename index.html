@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785011862 -->
+<!-- v1785160802 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1008,7 +1008,7 @@ const DATA=[
 ['33150','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33154','Miami Beach','Miami-dade','SFL','City of Miami Beach Building Department','https://www.miamidade.gov/pa'],
 ['33154','Miami Beach','Miami-dade','SFL','City of Miami Beach Building Department','https://www.miamidade.gov/pa'],
-['33155','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
+['33155','Miami','Miami-dade','SFL','Miami-Dade County Building Department','https://www.miamidade.gov/pa'],
 ['33156','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33157','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33158','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
@@ -1588,7 +1588,7 @@ const ZIP_JURIS={
   "33150":["Miami-dade","mixed","Village of Miami Shores Building Department"],
   "33154":["Miami-dade","municipal","City of Miami Beach Building Department"],
   "33154":["Miami-dade","municipal","City of Miami Beach Building Department"],
-  "33155":["Miami-dade","county-unincorporated","Miami-Dade County Building Department"],
+  "33155":["Miami-dade","mixed","Miami-Dade County Building Department"],
   "33156":["Miami-dade","municipal","Village of Pinecrest Building Department"],
   "33157":["Miami-dade","mixed","Miami-Dade County Building Department"],
   "33158":["Miami-dade","municipal","City of Miami Building Department"],
@@ -2233,6 +2233,15 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // === SW 57th Ave / Red Rd (33155, 33144) is the Coral Gables municipal boundary ===
+  // ODD numbers = east side = City of Coral Gables. EVEN numbers = west side = unincorporated Miami-Dade.
+  // Verified 2026-07-27 via FL DOR PointMatch: 1605/1609/1701/1715 RED RD 33155 = CORAL GABLES;
+  // 1600/1714 RED RD 33155 = UNINCORPORATED MIAMI-DADE; 2000/2024/2246/2840 SW 57TH AVE 33155 = UNINCORPORATED MIAMI-DADE;
+  // 815-925 RED RD 33144 = CORAL GABLES. Miami-Dade PA folio 03-4118-002-1310 = 2675 RED RD, CORAL GABLES SEC D REV.
+  'sw 57th ave': [{zips:['33155','33144'], parity:'odd', ahj:'City of Coral Gables Building Department', ahj_type:'municipal', city:'Coral Gables', note:'Odd house numbers on SW 57th Ave / Red Rd are the EAST side of the road = inside City of Coral Gables limits'}, {zips:['33155'], parity:'even', ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'Even house numbers on SW 57th Ave / Red Rd are the WEST side of the road = unincorporated Miami-Dade'}],
+  'sw 57 ave': [{zips:['33155','33144'], parity:'odd', ahj:'City of Coral Gables Building Department', ahj_type:'municipal', city:'Coral Gables', note:'Odd house numbers on SW 57th Ave / Red Rd are the EAST side of the road = inside City of Coral Gables limits'}, {zips:['33155'], parity:'even', ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'Even house numbers on SW 57th Ave / Red Rd are the WEST side of the road = unincorporated Miami-Dade'}],
+  'red rd': [{zips:['33155','33144'], parity:'odd', ahj:'City of Coral Gables Building Department', ahj_type:'municipal', city:'Coral Gables', note:'Odd house numbers on SW 57th Ave / Red Rd are the EAST side of the road = inside City of Coral Gables limits'}, {zips:['33155'], parity:'even', ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'Even house numbers on SW 57th Ave / Red Rd are the WEST side of the road = unincorporated Miami-Dade'}],
+  'red road': [{zips:['33155','33144'], parity:'odd', ahj:'City of Coral Gables Building Department', ahj_type:'municipal', city:'Coral Gables', note:'Odd house numbers on SW 57th Ave / Red Rd are the EAST side of the road = inside City of Coral Gables limits'}, {zips:['33155'], parity:'even', ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', note:'Even house numbers on SW 57th Ave / Red Rd are the WEST side of the road = unincorporated Miami-Dade'}],
   // 32073 - Orange Park mixed (464 Fox Ln confirmed unincorporated Clay via PointMatch 2026-07-25)
   'fox ln': {ahj:'Clay County Building Department', ahj_type:'county-unincorporated', city:'Clay County', note:'Fox Ln is unincorporated Clay County'},
   // 33880 - Winter Haven mixed (109 Palmetto Ridge Dr confirmed unincorporated Polk via PointMatch 2026-07-25)
@@ -2506,9 +2515,23 @@ const STREET_OVERRIDES = {
 
 function checkStreetOverride(address, zip){
   var addrLower = address.toLowerCase();
+  var numMatch = addrLower.match(/^\s*(\d+)/);
+  var houseNum = numMatch ? parseInt(numMatch[1],10) : null;
+  var zipStr = zip ? String(zip) : "";
   for(var street in STREET_OVERRIDES){
-    if(addrLower.indexOf(street) >= 0){
-      return STREET_OVERRIDES[street];
+    if(addrLower.indexOf(street) < 0) continue;
+    var val = STREET_OVERRIDES[street];
+    var variants = Object.prototype.toString.call(val) === "[object Array]" ? val : [val];
+    for(var i=0;i<variants.length;i++){
+      var ov = variants[i];
+      if(ov.zips && ov.zips.indexOf(zipStr) < 0) continue;
+      if(ov.parity){
+        if(houseNum === null) continue;
+        var isOdd = (houseNum % 2) === 1;
+        if(ov.parity === "odd" && !isOdd) continue;
+        if(ov.parity === "even" && isOdd) continue;
+      }
+      return ov;
     }
   }
   return null;
