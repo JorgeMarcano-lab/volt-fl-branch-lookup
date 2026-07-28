@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785160802 -->
+<!-- v1785247878 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1093,7 +1093,7 @@ const DATA=[
 ['33460','Lake Worth Beach','Palm Beach','SFL','City of Lake Worth Beach Building Department','https://www.pbcgov.org/papa'],
 ['33461','Lake Worth','Palm Beach','SFL','City of Lake Worth Beach Building Department','https://www.pbcgov.org/papa'],
 ['33462','Lake Worth','Palm Beach','SFL','City of Lake Worth Beach Building Department','https://www.pbcgov.org/papa'],
-['33463','Lake Worth','Palm Beach','SFL','City of Lake Worth Beach Building Department','https://www.pbcgov.org/papa'],
+['33463','Lake Worth','Palm Beach','SFL','Palm Beach County Building Division','https://www.pbcgov.org/papa'],
 ['33464','Boca Raton','Palm Beach','SFL','City of Boca Raton Building Department','https://www.pbcgov.org/papa'],
 ['33467','Lake Worth','Palm Beach','SFL','City of Lake Worth Beach Building Department','https://www.pbcgov.org/papa'],
 ['33469','Jupiter','Palm Beach','SFL','Town of Jupiter Building Department','https://www.pbcgov.org/papa'],
@@ -1699,7 +1699,7 @@ const ZIP_JURIS={
   "33460":["Palm Beach","municipal","City of Lake Worth Beach Building Department"],
   "33461":["Palm Beach","mixed","Village of Palm Springs Building Department"],
   "33462":["Palm Beach","municipal","City of West Palm Beach Building Department"],
-  "33463":["Palm Beach","mixed","City of Greenacres Building Department"],
+  "33463":["Palm Beach","mixed","Palm Beach County Building Division"],
   "33464":["Palm Beach","municipal","City of Boca Raton Building Department"],
   "33467":["Palm Beach","municipal","City of Lake Worth Beach Building Department"],
   "33469":["Palm Beach","municipal","Town of Jupiter Building Department"],
@@ -2233,6 +2233,10 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 33463 - Sandhurst Cir (Lake Worth/Greenacres area) is unincorporated Palm Beach County, not Greenacres or Lake Worth Beach.
+  // Verified 2026-07-28 via FL DOR PointMatch: all 52 SANDHURST addresses in ZIP 33463 return UNINCORPORATED PALM BEACH
+  // (incl. 5337 SANDHURST CIR N, city LAKE WORTH). ZIP 33463 split: 11,380 unincorporated / 8,859 Greenacres / 1 Lake Worth Beach.
+  'sandhurst cir': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33463'], note:'Sandhurst Cir in 33463 is unincorporated Palm Beach County'},
   // === SW 57th Ave / Red Rd (33155, 33144) is the Coral Gables municipal boundary ===
   // ODD numbers = east side = City of Coral Gables. EVEN numbers = west side = unincorporated Miami-Dade.
   // Verified 2026-07-27 via FL DOR PointMatch: 1605/1609/1701/1715 RED RD 33155 = CORAL GABLES;
