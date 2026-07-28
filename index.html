@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785247878 -->
+<!-- v1785249416 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -401,7 +401,7 @@ const DATA=[
 ['34747','Kissimmee','Osceola','CFL','City of Kissimmee Building Department','https://www.property-appraiser.org'],
 ['34758','Kissimmee','Osceola','CFL','Osceola County Building Department','https://www.property-appraiser.org'],
 ['34769','Saint Cloud','Osceola','CFL','City of St. Cloud Building Department','https://www.property-appraiser.org'],
-['34771','Saint Cloud','Osceola','CFL','City of St. Cloud Building Department','https://www.property-appraiser.org'],
+['34771','Saint Cloud','Osceola','CFL','Osceola County Building Department','https://www.property-appraiser.org'],
 ['34772','Saint Cloud','Osceola','CFL','City of St. Cloud Building Department','https://www.property-appraiser.org'],
 ['34773','Saint Cloud','Osceola','CFL','City of St. Cloud Building Department','https://www.property-appraiser.org'],
 ['33523','Dade City','Pasco','CFL','City of Dade City Building Department','https://www.pascopa.com'],
@@ -2069,8 +2069,8 @@ const ZIP_JURIS={
   "34761":["Orange","municipal","City of Ocoee Building Department"],
   "34762":["Sumter","county-unincorporated","Sumter County Building Department"],
   "34769":["Osceola","municipal","City of St. Cloud Building Department"],
-  "34771":["Osceola","municipal","City of St. Cloud Building Department"],
-  "34772":["Osceola","municipal","City of St. Cloud Building Department"],
+  "34771":["Osceola","mixed","Osceola County Building Department"],
+  "34772":["Osceola","mixed","City of St. Cloud Building Department"],
   "34773":["Osceola","municipal","City of St. Cloud Building Department"],
   "34785":["Sumter","municipal","City of Wildwood Building Department"],
   "34786":["Orange","county-unincorporated","Orange County Building Division"],
@@ -2233,6 +2233,9 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 34772 / 34771 - Masser Rd (St Cloud area) is unincorporated Osceola County, not City of St. Cloud.
+  // Confirmed by Jorge 2026-07-28; not present in FL DOR PointMatch. ZIP 34772 split per DOR: 13,843 ST CLOUD / 3,623 UNINCORPORATED OSCEOLA.
+  'masser': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', zips:['34772','34771'], note:'Masser Rd is unincorporated Osceola County (confirmed 2026-07-28)'},
   // 33463 - Sandhurst Cir (Lake Worth/Greenacres area) is unincorporated Palm Beach County, not Greenacres or Lake Worth Beach.
   // Verified 2026-07-28 via FL DOR PointMatch: all 52 SANDHURST addresses in ZIP 33463 return UNINCORPORATED PALM BEACH
   // (incl. 5337 SANDHURST CIR N, city LAKE WORTH). ZIP 33463 split: 11,380 unincorporated / 8,859 Greenacres / 1 Lake Worth Beach.
