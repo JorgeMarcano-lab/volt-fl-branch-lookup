@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785250694 -->
+<!-- v1785423383 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -367,7 +367,7 @@ const DATA=[
 ['32819','Orlando','Orange','CFL','City of Orlando Building and Permitting','https://ocpaweb.ocpafl.org/parcelsearch'],
 ['32820','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
 ['32821','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
-['32822','Orlando','Orange','CFL','City of Orlando Building and Permitting','https://ocpaweb.ocpafl.org/parcelsearch'],
+['32822','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
 ['32824','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
 ['32825','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
 ['32826','Orlando','Orange','CFL','Orange County Building Division','https://ocpaweb.ocpafl.org/parcelsearch'],
@@ -1451,7 +1451,7 @@ const ZIP_JURIS={
   "32819":["Orange","county-unincorporated","Orange County Building Division"],
   "32820":["Orange","county-unincorporated","Orange County Building Division"],
   "32821":["Orange","county-unincorporated","Orange County Building Division"],
-  "32822":["Orange","mixed","City of Orlando Building and Permitting"],
+  "32822":["Orange","mixed","Orange County Building Division"],
   "32824":["Orange","mixed","Orange County Building Division"],
   "32825":["Orange","county-unincorporated","Orange County Building Division"],
   "32826":["Orange","county-unincorporated","Orange County Building Division"],
@@ -2233,6 +2233,10 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 32822 - Budapest Way (Ventura area, Orlando) is unincorporated Orange County.
+  // Verified 2026-07-29 via FL DOR PointMatch: all 22 BUDAPEST WAY addresses in 32822 = UNINCORPORATED ORANGE, 0 in ORLANDO.
+  // ZIP 32822 split: 11,378 unincorporated Orange (65.5%) vs 5,991 Orlando (34.5%) - default flipped to the county.
+  'budapest': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', zips:['32822'], note:'Budapest Way in 32822 is unincorporated Orange County'},
   // 34772 / 34771 - Masser Rd (St Cloud area) is unincorporated Osceola County, not City of St. Cloud.
   // Confirmed by Jorge 2026-07-28; not present in FL DOR PointMatch. ZIP 34772 split per DOR: 13,843 ST CLOUD / 3,623 UNINCORPORATED OSCEOLA.
   'masser': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', zips:['34772','34771'], note:'Masser Rd is unincorporated Osceola County (confirmed 2026-07-28)'},
