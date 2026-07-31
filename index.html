@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785515865 -->
+<!-- v1785516070 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2569,6 +2569,11 @@ function checkStreetOverride(address, zip){
   }
   return null;
 }
+function hasZipScopedOverride(address, zip){
+  var o = checkStreetOverride(address, zip);
+  return !!(o && o.zips && o.zips.indexOf(String(zip)) >= 0);
+}
+
 
 function doSearch(){
   var raw=document.getElementById("addr").value.trim();
@@ -2592,7 +2597,7 @@ function doSearch(){
   // entry format: [county, type, ahj]
   // type: 'municipal', 'county-unincorporated', 'mixed'
 
-  if(!entry || entry[1]==="mixed"){
+  if(!entry || entry[1]==="mixed" || hasZipScopedOverride(raw, zip)){
     // Check street override FIRST before calling AI
     var streetOv = checkStreetOverride(raw, zip);
     if(streetOv){
