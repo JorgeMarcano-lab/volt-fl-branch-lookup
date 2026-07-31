@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785423383 -->
+<!-- v1785457222 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2237,6 +2237,9 @@ const STREET_OVERRIDES = {
   // Verified 2026-07-29 via FL DOR PointMatch: all 22 BUDAPEST WAY addresses in 32822 = UNINCORPORATED ORANGE, 0 in ORLANDO.
   // ZIP 32822 split: 11,378 unincorporated Orange (65.5%) vs 5,991 Orlando (34.5%) - default flipped to the county.
   'budapest': {ahj:'Orange County Building Division', ahj_type:'county-unincorporated', city:'Orange County', zips:['32822'], note:'Budapest Way in 32822 is unincorporated Orange County'},
+  // 34771 - Groveline Rd (Weslyn Park / Sunbridge) is inside City of St. Cloud limits, not unincorporated Osceola.
+  // Verified 2026-07-30 via FL DOR PointMatch: all 126 GROVELINE RD addresses in 34771 = ST CLOUD jurisdiction (Place: ST CLOUD, Fire/Police 849), 0 unincorporated.
+  'groveline': {ahj:'City of St. Cloud Building Department', ahj_type:'municipal', city:'Saint Cloud', zips:['34771'], note:'Groveline Rd is inside City of St. Cloud (verified 2026-07-30 via FL DOR PointMatch)'},
   // 34772 / 34771 - Masser Rd (St Cloud area) is unincorporated Osceola County, not City of St. Cloud.
   // Confirmed by Jorge 2026-07-28; not present in FL DOR PointMatch. ZIP 34772 split per DOR: 13,843 ST CLOUD / 3,623 UNINCORPORATED OSCEOLA.
   'masser': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', zips:['34772','34771'], note:'Masser Rd is unincorporated Osceola County (confirmed 2026-07-28)'},
