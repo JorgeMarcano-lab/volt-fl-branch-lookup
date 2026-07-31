@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785457222 -->
+<!-- v1785461766 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2233,6 +2233,16 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // === SW 37th Ave (33312) cruza el limite Fort Lauderdale / Hollywood ===
+  // Ciudad postal FORT LAUDERDALE, pero la jurisdiccion de permisos del tramo 4937-5099 es HOLLYWOOD.
+  // Verificado 2026-07-31 via FL DOR PointMatch: SW 37TH en 33312 = 416 direcciones
+  // (200 FORT LAUDERDALE, 20 HOLLYWOOD). Las 11 de SW 37TH AVE en HOLLYWOOD van de 4937 a 5099.
+  // La paridad NO las separa (113/1301/1911/1921 son impares y son Fort Lauderdale) -> se usa from/to.
+  'sw 37th ave': {from:4937, to:5099, zips:['33312'], ahj:'City of Hollywood Building Department', ahj_type:'municipal', city:'Hollywood', note:'SW 37th Ave 4937-5099 in 33312 is inside City of Hollywood limits (verified 2026-07-31 via FL DOR PointMatch)'},
+  'southwest 37th ave': {from:4937, to:5099, zips:['33312'], ahj:'City of Hollywood Building Department', ahj_type:'municipal', city:'Hollywood', note:'SW 37th Ave 4937-5099 in 33312 is inside City of Hollywood limits (verified 2026-07-31 via FL DOR PointMatch)'},
+  'sw 37 ave': {from:4937, to:5099, zips:['33312'], ahj:'City of Hollywood Building Department', ahj_type:'municipal', city:'Hollywood', note:'SW 37th Ave 4937-5099 in 33312 is inside City of Hollywood limits (verified 2026-07-31 via FL DOR PointMatch)'},
+  'sw 37th avenue': {from:4937, to:5099, zips:['33312'], ahj:'City of Hollywood Building Department', ahj_type:'municipal', city:'Hollywood', note:'SW 37th Ave 4937-5099 in 33312 is inside City of Hollywood limits (verified 2026-07-31 via FL DOR PointMatch)'},
+
   // 32822 - Budapest Way (Ventura area, Orlando) is unincorporated Orange County.
   // Verified 2026-07-29 via FL DOR PointMatch: all 22 BUDAPEST WAY addresses in 32822 = UNINCORPORATED ORANGE, 0 in ORLANDO.
   // ZIP 32822 split: 11,378 unincorporated Orange (65.5%) vs 5,991 Orlando (34.5%) - default flipped to the county.
@@ -2544,6 +2554,13 @@ function checkStreetOverride(address, zip){
         var isOdd = (houseNum % 2) === 1;
         if(ov.parity === "odd" && !isOdd) continue;
         if(ov.parity === "even" && isOdd) continue;
+      }
+      if(ov.from || ov.to){
+        var hnM = addrLower.match(/\d+/);
+        var hn = hnM ? parseInt(hnM[0],10) : NaN;
+        if(isNaN(hn)) continue;
+        if(ov.from && hn < ov.from) continue;
+        if(ov.to && hn > ov.to) continue;
       }
       return ov;
     }
