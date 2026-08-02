@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785525987 -->
+<!-- v1785634655 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2258,6 +2258,9 @@ const STREET_OVERRIDES = {
   // (incl. 5337 SANDHURST CIR N, city LAKE WORTH). ZIP 33463 split: 11,380 unincorporated / 8,859 Greenacres / 1 Lake Worth Beach.
   'sandhurst cir': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33463'], note:'Sandhurst Cir in 33463 is unincorporated Palm Beach County'},
   'bahama ct': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bahama Ct in 33407 is unincorporated Palm Beach County (verified 2026-07-31, PointMatch 21/21)'},
+  // 33407 - Andros Dr es un bolson unincorporated dentro de un ZIP mayoritariamente West Palm Beach
+  // (censo PointMatch 33407: 7,655 West Palm Beach vs 694 unincorporated -> el default del ZIP se queda).
+  'andros dr': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Andros Dr in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 23/23)'},
   'bahama court': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bahama Ct in 33407 is unincorporated Palm Beach County (verified 2026-07-31, PointMatch 21/21)'},
   // === SW 57th Ave / Red Rd (33155, 33144) is the Coral Gables municipal boundary ===
   // ODD numbers = east side = City of Coral Gables. EVEN numbers = west side = unincorporated Miami-Dade.
