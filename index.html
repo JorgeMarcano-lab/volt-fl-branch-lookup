@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785634655 -->
+<!-- v1785635399 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2261,6 +2261,39 @@ const STREET_OVERRIDES = {
   // 33407 - Andros Dr es un bolson unincorporated dentro de un ZIP mayoritariamente West Palm Beach
   // (censo PointMatch 33407: 7,655 West Palm Beach vs 694 unincorporated -> el default del ZIP se queda).
   'andros dr': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Andros Dr in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 23/23)'},
+
+  // === Bolson unincorporated del ZIP 33407 (barrido completo 2026-08-01) ===
+  // PointMatch: 694 de 8,349 direcciones del ZIP son UNINCORPORATED PALM BEACH, en 23 calles.
+  // Las 23 son 100% unincorporated (verificado calle por calle contra el total sin filtro de
+  // jurisdiccion: cero splits). El ZIP sigue municipal porque West Palm Beach es 7,655 de 8,349.
+  // Los alias 'lane' / 'boulevard' / 'road' / 'court' son necesarios: ln/blvd/rd/ct NO son prefijo
+  // de la forma larga, a diferencia de dr/cir/pl/ave/st.
+  'aruba way': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Aruba Way in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 11/11)'},
+  'barbados way': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Barbados Way in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 33/33)'},
+  'bermuda cir': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bermuda Cir in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 44/44)'},
+  'bimini cir': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bimini Cir in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 24/24)'},
+  'canal ln': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Canal Ln in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 1/1)'},
+  'caribbean blvd': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Caribbean Blvd in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 44/44)'},
+  'cayman cir': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Cayman Cir in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 29/29)'},
+  'eadie pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Eadie Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 90/90)'},
+  'gramercy dr': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Gramercy Dr in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 17/17)'},
+  'harriet pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Harriet Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 28/28)'},
+  'haverhill rd': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Haverhill Rd in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 35/35)'},
+  'helene pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Helene Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 28/28)'},
+  'lake arjaro dr': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Lake Arjaro Dr in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 58/58)'},
+  'marcia pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Marcia Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 52/52)'},
+  'marion pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Marion Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 26/26)'},
+  'mary ln': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Mary Ln in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 9/9)'},
+  'parke ave': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Parke Ave in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 12/12)'},
+  'pat pl': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Pat Pl in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 26/26)'},
+  'rae ave': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Rae Ave in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 20/20)'},
+  'tortuga dr': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Tortuga Dr in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 30/30)'},
+  '45th st': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'45th St in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 33/33)'},
+  'canal lane': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Canal Lane in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 1/1)'},
+  'caribbean boulevard': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Caribbean Boulevard in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 44/44)'},
+  'haverhill road': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Haverhill Road in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 35/35)'},
+  'mary lane': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Mary Lane in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 9/9)'},
+  'bahama court': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bahama Court in 33407 is unincorporated Palm Beach County (verified 2026-08-01, PointMatch 21/21)'},
   'bahama court': {ahj:'Palm Beach County Building Division', ahj_type:'county-unincorporated', city:'Palm Beach County', zips:['33407'], note:'Bahama Ct in 33407 is unincorporated Palm Beach County (verified 2026-07-31, PointMatch 21/21)'},
   // === SW 57th Ave / Red Rd (33155, 33144) is the Coral Gables municipal boundary ===
   // ODD numbers = east side = City of Coral Gables. EVEN numbers = west side = unincorporated Miami-Dade.
