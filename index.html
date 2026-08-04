@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1785878525 -->
+<!-- v1785878798 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2233,6 +2233,13 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // 33033 - ZIP genuinamente mixto 51/49 (8,453 unincorporated Miami-Dade vs 8,087
+  // Homestead, PointMatch 2026-08-04). No hay default 'correcto': se deja Homestead y se
+  // van agregando calles verificadas. NE 21st Ct: 24/24 Homestead, cero unincorporated.
+  'ne 21st ct': {ahj:'City of Homestead Building Department', ahj_type:'municipal', city:'Homestead', zips:['33033'], note:'NE 21st Ct in 33033 is inside City of Homestead limits (verified 2026-08-04 via FL DOR PointMatch, 24/24)'},
+  'ne 21st court': {ahj:'City of Homestead Building Department', ahj_type:'municipal', city:'Homestead', zips:['33033'], note:'NE 21st Ct in 33033 is inside City of Homestead limits (verified 2026-08-04 via FL DOR PointMatch, 24/24)'},
+  'ne 21 ct': {ahj:'City of Homestead Building Department', ahj_type:'municipal', city:'Homestead', zips:['33033'], note:'NE 21st Ct in 33033 is inside City of Homestead limits (verified 2026-08-04 via FL DOR PointMatch, 24/24)'},
+  'ne 21 court': {ahj:'City of Homestead Building Department', ahj_type:'municipal', city:'Homestead', zips:['33033'], note:'NE 21st Ct in 33033 is inside City of Homestead limits (verified 2026-08-04 via FL DOR PointMatch, 24/24)'},
   // 34746 - Perennial Ln (Kissimmee) es unincorporated Osceola. PointMatch NO tiene
   // registro de la calle (subdivision nueva); confirmado por Jorge 2026-08-03.
   // Key sin sufijo a proposito: cubre 'Ln', 'Lane' y 'Ln.' de una sola vez.
