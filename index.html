@@ -1013,7 +1013,7 @@ const DATA=[
 ['33157','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33158','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33160','North Miami Beach','Miami-dade','SFL','City of North Miami Beach Building Department','https://www.miamidade.gov/pa'],
-['33161','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
+['33161','North Miami','Miami-dade','SFL','City of North Miami Building Department','https://www.miamidade.gov/pa'],
 ['33162','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
 ['33165','Miami','Miami-dade','SFL','Miami-Dade County Building Department','https://www.miamidade.gov/pa'],
 ['33166','Miami','Miami-dade','SFL','City of Miami Building Department','https://www.miamidade.gov/pa'],
@@ -2233,6 +2233,8 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  'ne 118th st': [{ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', zips:['33161'], from:20, to:371, note:'NE 118th St 20-371 es unincorporated Miami-Dade (PointMatch)'},{ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', zips:['33161'], from:1235, to:1590, note:'NE 118th St 1235-1590 es unincorporated Miami-Dade (PointMatch); 515-1105 es Biscayne Park'}],
+  'northeast 118th st': [{ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', zips:['33161'], from:20, to:371, note:'NE 118th St 20-371 es unincorporated Miami-Dade (PointMatch)'},{ahj:'Miami-Dade County Building Department', ahj_type:'county-unincorporated', city:'Miami-Dade County', zips:['33161'], from:1235, to:1590, note:'NE 118th St 1235-1590 es unincorporated Miami-Dade (PointMatch); 515-1105 es Biscayne Park'}],
   // 33033 - ZIP genuinamente mixto 51/49 (8,453 unincorporated Miami-Dade vs 8,087
   // Homestead, PointMatch 2026-08-04). No hay default 'correcto': se deja Homestead y se
   // van agregando calles verificadas. NE 21st Ct: 24/24 Homestead, cero unincorporated.
