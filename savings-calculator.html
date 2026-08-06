@@ -3,33 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#141414">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>VOLT | Solar Savings Calculator</title>
 <!-- Used only by the "Descargar resumen ejecutivo (PDF)" button. Requires internet access once;
      if it fails to load (e.g. offline), that button automatically falls back to the print dialog. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
   :root{
-    --volt-blue:#2F6199;
-    --volt-blue-dark:#20456e;
-    --volt-blue-light:#eaf1f8;
-    --volt-green:#1a9c5a;
-    --volt-gray:#3f3f3f;
-    --volt-red:#c0392b;
-    --volt-amber:#b7791f;
-    --border:#dde3ea;
-    --bg:#f4f6f9;
+    /* ── Volt Home corporate dark (Commercial Sales Dashboard) ──
+       Se conservan los nombres --volt-blue/--volt-red porque el chart
+       los lee con getComputedStyle. Ahora apuntan a la paleta corporativa. */
+    --volt-blue:#f4c537;          /* acento corporativo (línea "opción") */
+    --volt-blue-dark:#c79e1f;
+    --volt-blue-light:rgba(244,197,55,0.13);
+    --volt-green:#34d399;
+    --volt-gray:#a8a8a8;
+    --volt-red:#f87171;           /* línea "utility" */
+    --volt-amber:#f4c537;
+    --border:#2a2a2a;
+    --border2:#383838;
+    --bg:#141414;
+    --surface:#1e1e1e;
+    --surface2:#232323;
+    --ink:#141414;
+    --text:#f2f2f2;
+    --text2:#a8a8a8;
+    --text3:#909090;
+    /* branch identity */
+    --cfl:#a78bfa;--nfl:#34d399;--sfl:#fb923c;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);
-    color:#1c1c1c;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
   }
   header{
-    background:var(--volt-blue);
-    color:#fff;
-    padding:22px 32px;
+    background:#1a1a1a;
+    border-bottom:2px solid var(--volt-blue);
+    color:var(--text);
+    padding:20px 32px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -43,12 +60,12 @@
   }
   header .brand .logo{
     width:40px;height:40px;border-radius:10px;
-    background:#fff;
+    background:var(--volt-blue);
     display:flex;align-items:center;justify-content:center;
-    font-weight:800;color:var(--volt-blue);font-size:18px;
+    font-weight:800;color:var(--ink);font-size:18px;
   }
-  header h1{margin:0;font-size:20px;font-weight:700;}
-  header p{margin:2px 0 0;font-size:13px;opacity:.85;}
+  header h1{margin:0;font-size:19px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;}
+  header p{margin:3px 0 0;font-size:11px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;}
   .wrap{
     max-width:1180px;
     margin:24px auto;
@@ -61,45 +78,48 @@
     .wrap{grid-template-columns:1fr;}
   }
   .card{
-    background:#fff;
+    background:var(--surface);
     border:1px solid var(--border);
-    border-radius:14px;
+    border-radius:12px;
     padding:20px;
-    box-shadow:0 1px 3px rgba(0,0,0,.04);
   }
   .card h2{
     margin:0 0 14px;
-    font-size:14px;
+    font-size:11.5px;
     text-transform:uppercase;
-    letter-spacing:.04em;
+    letter-spacing:.16em;
     color:var(--volt-blue);
-    font-weight:700;
+    font-weight:800;
+    border-left:3px solid var(--volt-blue);
+    padding-left:10px;
   }
   .field{margin-bottom:16px;}
   .field label{
     display:flex; justify-content:space-between; align-items:baseline;
-    font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;
+    font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;
   }
-  .field label span.hint{font-weight:400;color:#8a94a3;font-size:11px;}
+  .field label span.hint{font-weight:400;color:var(--text3);font-size:11px;}
   .field input[type=number],
   .field select{
     width:100%;
     padding:9px 10px;
-    border:1px solid var(--border);
+    border:1px solid var(--border2);
     border-radius:8px;
     font-size:15px;
     font-weight:600;
-    color:#111;
-    background:#fff;
+    color:var(--text);
+    background:#191919;
   }
   .field select{cursor:pointer;font-size:14px;}
+  option{background:#1e1e1e;color:#f2f2f2;}
   .field input[type=range]{width:100%;accent-color:var(--volt-blue);}
-  .field .rangeval{font-size:12px;color:#6b7280;margin-top:4px;}
+  .field .rangeval{font-size:12px;color:var(--text2);margin-top:4px;}
   .field input:focus, .field select:focus{outline:2px solid var(--volt-blue);outline-offset:1px;}
   .input-suffix{
     display:flex; align-items:center;
-    border:1px solid var(--border); border-radius:8px;
+    border:1px solid var(--border2); border-radius:8px;
     overflow:hidden;
+    background:#191919;
   }
   .input-suffix input[type=number]{
     border:none; border-radius:0; flex:1; min-width:0;
@@ -107,13 +127,14 @@
   .input-suffix input[type=number]:focus{outline:none;}
   .input-suffix:focus-within{outline:2px solid var(--volt-blue); outline-offset:1px;}
   .input-suffix span{
-    padding:0 12px; color:#6b7280; font-weight:700; font-size:14px;
-    background:#f7f8fa; align-self:stretch; display:flex; align-items:center;
-    border-left:1px solid var(--border);
+    padding:0 12px; color:var(--text2); font-weight:700; font-size:14px;
+    background:#242424; align-self:stretch; display:flex; align-items:center;
+    border-left:1px solid var(--border2);
   }
   .field-row{display:flex;gap:10px;}
   .field-row .field{flex:1;}
-  #custName{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;}
+  #custName{width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:8px;font-size:14px;background:#191919;color:var(--text);}
+  input::placeholder{color:#6a6a6a;}
   .btnrow{display:flex;gap:8px;margin-top:6px;}
   button{
     cursor:pointer;
@@ -122,13 +143,14 @@
     padding:10px 14px;
     font-size:13px;
     font-weight:700;
+    font-family:inherit;
   }
-  .btn-primary{background:var(--volt-blue);color:#fff;}
-  .btn-primary:hover{background:var(--volt-blue-dark);}
-  .btn-secondary{background:#eef1f5;color:#374151;}
-  .btn-secondary:hover{background:#e3e7ed;}
+  .btn-primary{background:var(--volt-blue);color:var(--ink);}
+  .btn-primary:hover{background:#ffd759;box-shadow:0 4px 18px rgba(244,197,55,.2);}
+  .btn-secondary{background:#2a2a2a;color:#d4d4d4;border:1px solid var(--border2);}
+  .btn-secondary:hover{background:#333333;color:#ffffff;}
   .opt-block{
-    border-top:1px dashed var(--border);
+    border-top:1px dashed var(--border2);
     margin-top:6px;
     padding-top:14px;
   }
@@ -141,35 +163,48 @@
   @media (max-width:900px){.stats{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:480px){.stats{grid-template-columns:1fr;}}
   .stat{
-    background:#fff;
+    background:var(--surface);
     border:1px solid var(--border);
-    border-radius:14px;
+    border-radius:12px;
     padding:16px;
     text-align:center;
   }
-  .stat .label{font-size:11.5px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
-  .stat .value{font-size:23px;font-weight:800;margin-top:6px;}
-  .stat.savings .value{color:var(--volt-green);}
+  .stat .label{font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.14em;}
+  .stat .value{font-size:24px;font-weight:800;margin-top:8px;color:var(--volt-blue);}
+  .stat.savings .value{color:var(--volt-blue);}
   .stat.pct .value{color:var(--volt-blue);}
-  .stat.breakeven .value{color:var(--volt-amber);font-size:19px;}
-  .stat.month .value{font-size:14px;color:#374151;margin-top:8px;line-height:1.5;}
-  .stat.month .value b{font-size:17px;}
+  .stat.breakeven .value{color:var(--volt-blue);font-size:20px;}
+  .stat.month .value{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6;font-weight:500;}
+  .stat.month .value b{font-size:16px;color:var(--volt-blue);font-weight:800;}
   canvas{width:100%;height:340px;display:block;}
-  .legend{display:flex;gap:22px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;}
+  .legend{display:flex;gap:22px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;color:var(--text2);}
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
   th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);}
   th:first-child,td:first-child{text-align:left;}
-  thead th{background:var(--volt-blue-light);color:var(--volt-blue-dark);font-weight:700;position:sticky;top:0;}
-  tbody tr:hover{background:#fafbfc;}
+  thead th{background:#1a1a1a;color:var(--volt-blue);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.12em;position:sticky;top:0;border-bottom:2px solid var(--volt-blue);}
+  tbody tr:hover{background:#262626;}
   .tablewrap{max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;}
-  details summary{cursor:pointer;font-weight:700;color:var(--volt-blue);font-size:14px;margin-bottom:10px;}
-  .disclaimer{font-size:11.5px;color:#8a94a3;line-height:1.5;margin-top:18px;border-top:1px solid var(--border);padding-top:12px;}
+  details summary{cursor:pointer;font-weight:800;color:var(--volt-blue);font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em;}
+  .disclaimer{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:18px;border-top:1px solid var(--border);padding-top:12px;}
   .footerbar{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  /* branch identity helpers */
+  .br-CFL{color:var(--cfl);font-weight:700;}
+  .br-NFL{color:var(--nfl);font-weight:700;}
+  .br-SFL{color:var(--sfl);font-weight:700;}
   @media print{
     header .btnrow, .footerbar, .no-print{display:none !important;}
-    body{background:#fff;}
+    body{background:#fff !important;color:#111 !important;}
+    header{background:#fff !important;color:#111 !important;border-bottom:2px solid #c79e1f !important;}
+    header h1{color:#111 !important;}
+    header p{color:#666 !important;}
+    .card,.stat{background:#fff !important;border-color:#ddd !important;}
+    .card h2,.stat .value,.stat.month .value b,details summary,thead th{color:#8a6b00 !important;}
+    .field label,.stat.month .value{color:#333 !important;}
+    thead th{background:#faf3d6 !important;border-bottom-color:#c79e1f !important;}
+    th,td{border-bottom-color:#e5e5e5 !important;}
+    .disclaimer,.field label span.hint,.stat .label{color:#777 !important;}
     .wrap{display:block !important;}
     .wrap > .card:first-child{display:none !important;}
     .tablewrap{max-height:none !important; overflow:visible !important;}
@@ -277,7 +312,7 @@
             <span>%</span>
           </div>
         </div>
-        <div class="hint" id="loanDeferHint" style="display:none;font-size:11.5px;color:#8a94a3;">Primeros 6 meses sin pago ($0); el pago mensual inicial aplica a partir del mes 7.</div>
+        <div class="hint" id="loanDeferHint" style="display:none;font-size:11.5px;color:var(--text3);">Primeros 6 meses sin pago ($0); el pago mensual inicial aplica a partir del mes 7.</div>
       </div>
 
       <div id="loanTieredFields" style="display:none;">
@@ -298,7 +333,7 @@
         <label>Precio total (cash) <span class="hint">USD</span></label>
         <input type="number" id="cashPrice" value="45000" step="100" min="0">
       </div>
-      <div class="hint" style="font-size:11.5px;color:#8a94a3;">Se paga por completo en el año 1; sin pagos posteriores.</div>
+      <div class="hint" style="font-size:11.5px;color:var(--text3);">Se paga por completo en el año 1; sin pagos posteriores.</div>
     </div>
 
     <h2 style="margin-top:22px;">Plazo</h2>
@@ -336,7 +371,7 @@
       <button class="btn-secondary" id="savingsCardBtn">Generar tarjeta de ahorro (imagen)</button>
     </div>
 
-    <div style="font-size:11.5px;color:#8a94a3;margin:-10px 0 20px;">
+    <div style="font-size:11.5px;color:var(--text3);margin:-10px 0 20px;">
       <b>Ahorra desde</b>: el año a partir del cual lo que el cliente paga por la opción elegida ya es menor que lo que hubiera pagado a la utility ese mismo año — de ahí en adelante, cada año es puro ahorro.
     </div>
 
@@ -489,7 +524,7 @@ function drawChart(rows, optLabel){
   const n = rows.length;
 
   // grid + y labels
-  ctx.strokeStyle = '#e5e9ef'; ctx.fillStyle='#8a94a3'; ctx.font='11px -apple-system,sans-serif';
+  ctx.strokeStyle = '#2a2a2a'; ctx.fillStyle='#909090'; ctx.font='11px -apple-system,sans-serif';
   const steps=5;
   for(let i=0;i<=steps;i++){
     const val = maxVal*i/steps;
@@ -577,7 +612,7 @@ function render(){
       <td>${fmt$2(row.utilAnnual)}</td>
       <td>${optMonthlyTxt}</td>
       <td>${fmt$2(row.optAnnual)}</td>
-      <td style="color:${yearSavings>=0?'#1a9c5a':'#c0392b'}">${fmt$2(yearSavings)}</td>
+      <td style="color:${yearSavings>=0?'#34d399':'#f87171'}">${fmt$2(yearSavings)}</td>
     </tr>`;
   }).join('');
 
@@ -620,12 +655,12 @@ window.addEventListener('beforeprint', ()=>{
 // This never navigates away or reloads the page, so the calculator stays
 // fully editable — you can tweak the numbers and download a new PDF anytime.
 function drawVoltLogo(doc, x, y){
-  doc.setFillColor(47,97,153); // --volt-blue
+  doc.setFillColor(26,26,26); // Volt ink
   doc.roundedRect(x, y, 10, 10, 2, 2, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(13);
   doc.setTextColor(255,255,255);
   doc.text('V', x+5, y+7.2, {align:'center'});
-  doc.setTextColor(47,97,153); doc.setFontSize(15);
+  doc.setTextColor(26,26,26); doc.setFontSize(15);
   doc.text('VOLT', x+14, y+7.5);
 }
 
@@ -688,9 +723,9 @@ async function generatePDF(){
     const r = calc(utilStart, utilRate, term, opt);
 
     // Assumptions box
-    doc.setFillColor(234,241,248);
+    doc.setFillColor(250,243,214);
     doc.roundedRect(marginX, y, pageW-marginX*2, 26, 2, 2, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(32,69,110);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,90,10);
     const colW = (pageW-marginX*2)/4;
     const assumptions = [
       ['Pago utility actual', fmt$2(utilStart)+'/mes'],
@@ -733,7 +768,7 @@ async function generatePDF(){
     const chartImg = canvas.toDataURL('image/png', 1.0);
     const chartW = pageW-marginX*2;
     const chartH = chartW*(canvas.height/canvas.width);
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(47,97,153);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(120,90,10);
     doc.text('Costo anual: Utility vs. '+opt.label, marginX, y+4);
     y += 8;
     doc.addImage(chartImg, 'PNG', marginX, y, chartW, Math.min(chartH, 85));
@@ -761,9 +796,9 @@ async function generatePDF(){
       {label:'Ahorro anual', x:marginX+152, w:32, key:'savings'},
     ];
     function tableHeader(yy){
-      doc.setFillColor(234,241,248);
+      doc.setFillColor(250,243,214);
       doc.rect(marginX, yy-5, pageW-marginX*2, 7, 'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(32,69,110);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(120,90,10);
       cols.forEach(c=>doc.text(c.label, c.x, yy));
       return yy+7;
     }
@@ -775,7 +810,7 @@ async function generatePDF(){
       const vals = {year:row.year, utilMonthly:fmt$2(row.utilMonthly), utilAnnual:fmt$2(row.utilAnnual),
                     optMonthly: row.optMonthly===null?'—':fmt$2(row.optMonthly), optAnnual:fmt$2(row.optAnnual), savings:fmt$2(yearSavings)};
       cols.forEach(c=>{
-        if(c.key==='savings') doc.setTextColor(yearSavings>=0?26:192, yearSavings>=0?156:57, yearSavings>=0?90:43);
+        if(c.key==='savings') doc.setTextColor(yearSavings>=0?21:176, yearSavings>=0?128:32, yearSavings>=0?61:32);
         else doc.setTextColor(40,40,40);
         doc.text(String(vals[c.key]), c.x, y2);
       });
@@ -838,13 +873,13 @@ function buildSavingsCard(){
 
   // Background
   const grad = ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0,'#2F6199'); grad.addColorStop(1,'#16304d');
+  grad.addColorStop(0,'#242424'); grad.addColorStop(1,'#0d0d0d');
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
   // Logo mark
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#f4c537';
   roundRectPath(ctx, 60, 54, 56, 56, 12); ctx.fill();
-  ctx.fillStyle = '#2F6199';
+  ctx.fillStyle = '#141414';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `800 30px ${FONT}`;
   ctx.fillText('V', 60+28, 54+30);
@@ -863,7 +898,7 @@ function buildSavingsCard(){
 
   // Big savings number
   ctx.font = `800 88px ${FONT}`;
-  ctx.fillStyle = '#5fe3a1';
+  ctx.fillStyle = '#f4c537';
   ctx.fillText(fmt$(r.savings), 58, 278);
 
   ctx.font = `400 21px ${FONT}`;
@@ -871,8 +906,10 @@ function buildSavingsCard(){
   ctx.fillText('de ahorro estimado en '+term+' años vs. tu utility actual', 60, 316);
 
   // Divider
-  ctx.strokeStyle = 'rgba(255,255,255,.22)';
+  ctx.strokeStyle = '#f4c537';
+  ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(60,356); ctx.lineTo(W-60,356); ctx.stroke();
+  ctx.lineWidth = 1;
 
   // Stat columns
   const cols = [
@@ -884,7 +921,7 @@ function buildSavingsCard(){
   cols.forEach((c,i)=>{
     const x = 60+i*colW;
     ctx.font = `600 13px ${FONT}`;
-    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.fillStyle = '#a5a5a5';
     ctx.fillText(c[0], x, 398);
     ctx.font = `700 28px ${FONT}`;
     ctx.fillStyle = '#fff';
@@ -938,7 +975,7 @@ function loadHandoffSB(){
   render();
   const note = document.createElement('div');
   note.style.cssText = 'max-width:1180px;margin:14px auto 0;padding:0 20px;';
-  note.innerHTML = '<div style="background:var(--volt-blue-light);color:var(--volt-blue-dark);border:1px solid var(--volt-blue);border-radius:8px;padding:10px 14px;font-size:13px;">Datos cargados desde Sales Breakdown'+(els.custName.value?(': <b>'+els.custName.value+'</b>'):'')+'. Puedes editar cualquier campo.</div>';
+  note.innerHTML = '<div style="background:var(--volt-blue-light);color:var(--volt-blue);border:1px solid var(--volt-blue);border-radius:8px;padding:10px 14px;font-size:13px;">Datos cargados desde Sales Breakdown'+(els.custName.value?(': <b>'+els.custName.value+'</b>'):'')+'. Puedes editar cualquier campo.</div>';
   document.body.insertBefore(note, document.querySelector('.wrap'));
 }
 
