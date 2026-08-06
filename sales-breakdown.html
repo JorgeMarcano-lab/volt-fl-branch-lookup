@@ -4,20 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Sales Breakdown Widget</title>
+<meta name="theme-color" content="#141414">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.5.0/iconfont/tabler-icons.min.css">
 <style>
 :root{
-  --color-text-primary:#1a1d23;--color-text-secondary:#5b6470;--color-text-tertiary:#8a94a0;
-  --color-text-info:#1f6feb;--color-text-danger:#c0392b;
-  --color-background-primary:#ffffff;--color-background-secondary:#f4f6f9;--color-background-info:#e7f0ff;
-  --color-border-tertiary:#e3e7ee;--color-border-secondary:#cfd5de;--color-border-info:#1f6feb;
-  --border-radius-md:8px;--border-radius-lg:14px;
+  /* ── Volt Home corporate dark (Commercial Sales Dashboard) ── */
+  --color-text-primary:#f2f2f2;--color-text-secondary:#a8a8a8;--color-text-tertiary:#909090;
+  --color-text-info:#f4c537;--color-text-danger:#f87171;
+  --color-background-primary:#1e1e1e;--color-background-secondary:#232323;--color-background-info:rgba(244,197,55,0.12);
+  --color-border-tertiary:#2a2a2a;--color-border-secondary:#383838;--color-border-info:#f4c537;
+  --border-radius-md:8px;--border-radius-lg:12px;
+  --bg:#141414;--surface:#1e1e1e;--accent:#f4c537;--ink:#141414;
+  --cfl:#a78bfa;--cfl-bg:rgba(167,139,250,0.14);--cfl-bd:rgba(167,139,250,0.45);
+  --nfl:#34d399;--nfl-bg:rgba(52,211,153,0.14);--nfl-bd:rgba(52,211,153,0.45);
+  --sfl:#fb923c;--sfl-bg:rgba(251,146,60,0.14);--sfl-bd:rgba(251,146,60,0.45);
 }
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--color-text-primary);background:#eef1f5;margin:0;padding:24px}
+body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--color-text-primary);background:var(--bg);margin:0;padding:24px;-webkit-font-smoothing:antialiased}
 #vlt-root{max-width:1080px;margin:0 auto;background:transparent}
-input,select{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);color:var(--color-text-primary);width:100%}
+input,select,textarea{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--color-border-secondary);border-radius:6px;background:#191919;color:var(--color-text-primary);width:100%}
+input::placeholder,textarea::placeholder{color:#6a6a6a}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 select{cursor:pointer}
+option{background:#1e1e1e;color:#f2f2f2}
+::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.5)}
+a{color:var(--accent)}
+/* ── Volt corporate header ── */
+.vlt-hdr{max-width:1080px;margin:0 auto 20px;text-align:center;padding-bottom:14px;border-bottom:2px solid var(--accent)}
+.vlt-hdr .wm{font-size:10px;letter-spacing:0.38em;color:var(--accent);font-weight:700;text-transform:uppercase}
+.vlt-hdr h1{margin:6px 0 4px;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.01em}
+.vlt-hdr .sub{font-size:11px;letter-spacing:0.16em;color:var(--color-text-tertiary);text-transform:uppercase}
+/* ── section header bar (report style) ── */
+.vlt-sec{background:var(--color-background-primary);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:9px 14px;margin:0 0 12px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent)}
+.vlt-stitle{display:inline-flex;align-items:center;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);border-left:3px solid var(--accent);padding-left:10px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -26,36 +47,49 @@ select{cursor:pointer}
 </head>
 <body>
 
+<div class="vlt-hdr">
+  <div class="wm">&#9889; Volt Home</div>
+  <h1>Sales Breakdown</h1>
+  <div class="sub">Comparador de comisiones &middot; Solar FL</div>
+</div>
+
 <div id="vlt-root" style="padding:1rem 0;">
 <h2 class="sr-only">Comparador de comisiones solar Volt — Sales Breakdown.</h2>
 <div id="handoffBanner" style="display:none;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between;gap:12px">
   <span id="handoffBannerText"></span>
-  <a href="index.html" id="backToLookupBtn" style="display:none;flex-shrink:0;padding:6px 14px;background:#1f6feb;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">← Cambiar dirección</a>
+  <a href="index.html" id="backToLookupBtn" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--accent);color:var(--ink);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">← Cambiar dirección</a>
 </div>
 <style>
 .vlt-lbl{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
 .vlt-fld{margin-bottom:12px}
 .vlt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.vlt-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:10px}
+.vlt-card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:10px}
 .vlt-num{width:100%;}
-.vlt-seg{display:inline-flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
-.vlt-seg button{border:none;border-radius:0;padding:6px 14px;background:transparent;font-size:13px;cursor:pointer}
+.vlt-seg{display:inline-flex;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.vlt-seg button{border:none;border-radius:0;padding:6px 14px;background:transparent;color:var(--color-text-secondary);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.04em}
 .vlt-seg button.on{background:var(--color-background-info);color:var(--color-text-info)}
-.vlt-chip{border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+/* branch identity on the region switch */
+.vlt-seg button[data-r="SFL"].on{background:var(--sfl-bg);color:var(--sfl);box-shadow:inset 0 -2px 0 var(--sfl)}
+.vlt-seg button[data-r="CFL"].on{background:var(--cfl-bg);color:var(--cfl);box-shadow:inset 0 -2px 0 var(--cfl)}
+.vlt-seg button[data-r="NFL"].on{background:var(--nfl-bg);color:var(--nfl);box-shadow:inset 0 -2px 0 var(--nfl)}
+.vlt-chip{border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s}
+.vlt-chip:hover{border-color:var(--accent)}
 .vlt-chip.on{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
 .vlt-row{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-bottom:8px}
 .vlt-rep{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end}
-.vlt-btn{border:0.5px solid var(--color-border-info);background:var(--color-background-info);color:var(--color-text-info);border-radius:var(--border-radius-md);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.vlt-btn{border:1px solid var(--color-border-info);background:var(--accent);color:var(--ink);border-radius:var(--border-radius-md);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:background .15s,box-shadow .15s}
+.vlt-btn:hover{background:#ffd759;box-shadow:0 4px 18px rgba(244,197,55,0.20)}
 .vlt-tbl{border-collapse:collapse;font-size:12px;min-width:100%}
-.vlt-tbl th,.vlt-tbl td{border:0.5px solid var(--color-border-tertiary);padding:7px 10px;text-align:left;white-space:nowrap}
-.vlt-tbl th{background:var(--color-background-secondary);font-weight:500}
-.vlt-tbl td:first-child,.vlt-tbl th:first-child{position:sticky;left:0;background:var(--color-background-secondary);font-weight:500;color:var(--color-text-secondary)}
-.vlt-bhdr td{position:static;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;border-top:2px solid var(--color-border-secondary)}
+.vlt-tbl th,.vlt-tbl td{border:1px solid var(--color-border-tertiary);padding:8px 11px;text-align:left;white-space:nowrap}
+.vlt-tbl th{background:#1a1a1a;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);border-bottom:2px solid var(--accent)}
+.vlt-tbl td:first-child,.vlt-tbl th:first-child{position:sticky;left:0;background:#1a1a1a;font-weight:600;color:var(--color-text-secondary)}
+.vlt-tbl tbody tr:hover td{background:#262626}
+.vlt-bhdr td{position:static;background:#1a1a1a;font-weight:800;color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:0.16em;border-top:2px solid var(--accent)}
 </style>
 
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:1rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <span style="font-size:15px;font-weight:500"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Proyecto</span>
+    <span class="vlt-stitle"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Proyecto</span>
     <span class="vlt-seg" id="regSeg"><button data-r="SFL" class="on">South FL</button><button data-r="CFL">Central FL</button></span>
   </div>
   <div class="vlt-grid" style="margin-bottom:6px">
@@ -75,7 +109,7 @@ select{cursor:pointer}
 </div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-  <span style="font-size:15px;font-weight:500">Opciones a comparar</span>
+  <span class="vlt-stitle">Opciones a comparar</span>
   <span style="font-size:11px;color:var(--color-text-tertiary)">Cada opción tiene sus propios detalles</span>
 </div>
 <div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
@@ -83,10 +117,10 @@ select{cursor:pointer}
 
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <span style="font-size:15px;font-weight:500"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Resumen comparativo</span>
+    <span class="vlt-stitle"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Resumen comparativo</span>
     <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generar PDF</button>
-      <label class="vlt-btn" style="cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)" title="Cargar un PDF generado anteriormente por este widget">
+      <label class="vlt-btn" style="cursor:pointer;background:#2a2a2a;color:#d4d4d4;border-color:#3a3a3a" title="Cargar un PDF generado anteriormente por este widget">
         <i class="ti ti-upload" aria-hidden="true"></i> Cargar PDF
         <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
       </label>
@@ -406,13 +440,13 @@ function renderCmp(res,bestId){
       sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
         if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
         // Battery price cap: fondo rojo si precio/bat > $18,000 (Adder Sheet)
-        if(label==='Precio bateria'&&r.battCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
+        if(label==='Precio bateria'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
-        if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
+        if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
         // Offset cap: > 115% resaltado en rojo
-        if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:#fdecea;color:#c0392b;font-weight:600;';}
+        if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
-        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:#fdecea;color:#c0392b;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
+        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
