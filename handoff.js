@@ -1,18 +1,18 @@
 /* Volt - Branch Lookup -> Sales Breakdown handoff v7
-   Lee datos de window._voltLastResult en lugar del DOM
+   Reads data from window._voltLastResult instead of the DOM
 */
 (function(){
   var SALES_URL = 'sales-breakdown.html';
 
   var btn = document.createElement('button');
   btn.id = 'proceedBtn';
-  btn.textContent = 'Proceder con el Proyecto \u2192';
+  btn.textContent = 'Continue to Project \u2192';
   btn.style.cssText = [
     'display:none',
     'margin:18px auto 0',
     'padding:13px 22px',
-    'background:#e8b000',
-    'color:#0d0f14',
+    'background:#f4c537',
+    'color:#141414',
     'border:none',
     'border-radius:10px',
     'font-size:0.95rem',
@@ -23,14 +23,11 @@
     'width:100%',
     'max-width:400px'
   ].join(';');
-  btn.onmouseover = function(){ this.style.background = '#ffc82e'; };
-  btn.onmouseout  = function(){ this.style.background = '#e8b000'; };
+  btn.onmouseover = function(){ this.style.background = '#ffd759'; };
+  btn.onmouseout  = function(){ this.style.background = '#f4c537'; };
 
   btn.onclick = function(){
     var d = window._voltLastResult || {};
-    // DEBUG - remove after testing
-    console.log('_voltLastResult:', JSON.stringify(d));
-    console.log('sessionStorage before save:', JSON.stringify({ahj:d.ahj, branch:d.branch, zip:d.zip}));
     var raw = (document.getElementById('addr') || {}).value || d.raw || '';
 
     // Get ETA from AHJ_ETA map if available
