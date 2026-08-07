@@ -3574,16 +3574,16 @@ function renderCard(d){
     +paF
     +'<div class="name-on-title-wrap">'
     +'<div class="name-on-title-label">NAME ON TITLE</div>'
-    +'<textarea class="name-on-title-input" id="nameOnTitle" placeholder="Pega el nombre del propietario..." rows="1" oninput="updateNameOnTitle(this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
+    +'<textarea class="name-on-title-input" id="nameOnTitle" placeholder="Paste the owner name..." rows="1" oninput="updateNameOnTitle(this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'<div class="name-on-title-saved" id="notSaved"></div>'
     +'</div>'
     +'<div class="name-on-title-wrap" style="margin-top:8px;background:rgba(52,211,153,0.06);border-color:var(--border);border-left-color:var(--nfl)">'
     +'<div class="name-on-title-label" style="color:var(--nfl)">ROOF AGE</div>'
-    +'<textarea class="name-on-title-input" id="roofAge" placeholder="ej. 5 años, 2019, Unknown..." rows="1" oninput="updateExtraField(\'roofAge\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
+    +'<textarea class="name-on-title-input" id="roofAge" placeholder="e.g. 5 years, 2019, Unknown..." rows="1" oninput="updateExtraField(\'roofAge\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'</div>'
     +'<div class="name-on-title-wrap" style="margin-top:8px;background:rgba(167,139,250,0.06);border-color:var(--border);border-left-color:var(--cfl)">'
     +'<div class="name-on-title-label" style="color:var(--cfl)">PREVIOUS PERMITS</div>'
-    +'<textarea class="name-on-title-input" id="prevPermits" placeholder="ej. Solar 2021, Roof 2019, None..." rows="1" oninput="updateExtraField(\'prevPermits\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
+    +'<textarea class="name-on-title-input" id="prevPermits" placeholder="e.g. Solar 2021, Roof 2019, None..." rows="1" oninput="updateExtraField(\'prevPermits\',this.value);autoResizeTA(this)" autocomplete="off"></textarea>'
     +'</div>'
     +'</div></div>';
 }
@@ -3596,7 +3596,7 @@ function updateNameOnTitle(val){
   if(window._voltLastResult) window._voltLastResult.nameOnTitle = val.trim();
   var saved = document.getElementById("notSaved");
   if(!saved) return;
-  if(val.trim()){ saved.textContent = "✓ Guardado en handoff"; saved.style.opacity = "1"; }
+  if(val.trim()){ saved.textContent = "✓ Saved to handoff"; saved.style.opacity = "1"; }
   else { saved.textContent = ""; }
 }
 
