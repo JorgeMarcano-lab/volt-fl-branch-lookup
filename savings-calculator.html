@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>VOLT | Solar Savings Calculator</title>
-<!-- Used only by the "Descargar resumen ejecutivo (PDF)" button. Requires internet access once;
+<!-- Used only by the "Download executive summary (PDF)" button. Requires internet access once;
      if it fails to load (e.g. offline), that button automatically falls back to the print dialog. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
@@ -15,12 +15,12 @@
     /* ── Volt Home corporate dark (Commercial Sales Dashboard) ──
        Se conservan los nombres --volt-blue/--volt-red porque el chart
        los lee con getComputedStyle. Ahora apuntan a la paleta corporativa. */
-    --volt-blue:#f4c537;          /* acento corporativo (línea "opción") */
+    --volt-blue:#f4c537;          /* corporate accent (the "option" line) */
     --volt-blue-dark:#c79e1f;
     --volt-blue-light:rgba(244,197,55,0.13);
     --volt-green:#34d399;
     --volt-gray:#a8a8a8;
-    --volt-red:#f87171;           /* línea "utility" */
+    --volt-red:#f87171;           /* the "utility" line */
     --volt-amber:#f4c537;
     --border:#2a2a2a;
     --border2:#383838;
@@ -135,7 +135,11 @@
   .field-row .field{flex:1;}
   #custName{width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:8px;font-size:14px;background:#191919;color:var(--text);}
   input::placeholder{color:#6a6a6a;}
-  .btnrow{display:flex;gap:8px;margin-top:6px;}
+  .btnrow{display:flex;gap:8px;margin-top:6px;align-items:center;}
+  .lang-seg{display:inline-flex;align-items:center;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin-right:4px;}
+  .lang-seg .lang-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:0 10px;}
+  .lang-seg button{border:none;border-radius:0;background:transparent;color:var(--text2);font-size:12px;font-weight:700;padding:8px 12px;letter-spacing:.06em;}
+  .lang-seg button.on{background:var(--volt-blue);color:var(--ink);}
   button{
     cursor:pointer;
     border:none;
@@ -221,13 +225,16 @@
     <div class="logo">V</div>
     <div>
       <h1>VOLT Solar Savings Calculator</h1>
-      <p>Herramienta para el equipo de ventas — comparación Utility vs. Opción de compra</p>
+      <p>Sales team tool — Utility vs. purchase option comparison</p>
     </div>
   </div>
   <div class="btnrow no-print">
-    <button class="btn-secondary" id="resetBtn">Restablecer valores</button>
-    <button class="btn-secondary" id="printBtn">Imprimir</button>
-    <button class="btn-primary" id="pdfBtn">Descargar resumen ejecutivo (PDF)</button>
+    <span class="lang-seg" id="langSeg" title="Language of the client-facing PDF and savings card">
+      <span class="lang-lbl">Client docs</span><button data-l="en" class="on">EN</button><button data-l="es">ES</button>
+    </span>
+    <button class="btn-secondary" id="resetBtn">Reset values</button>
+    <button class="btn-secondary" id="printBtn">Print</button>
+    <button class="btn-primary" id="pdfBtn">Download executive summary (PDF)</button>
   </div>
 </header>
 
@@ -235,31 +242,31 @@
 
   <!-- INPUTS -->
   <div class="card no-print">
-    <h2>Datos del cliente</h2>
+    <h2>Customer details</h2>
     <div class="field">
-      <label>Nombre del cliente <span class="hint">opcional</span></label>
-      <input type="text" id="custName" placeholder="Ej: Juan Pérez">
+      <label>Customer name <span class="hint">optional</span></label>
+      <input type="text" id="custName" placeholder="e.g. John Smith">
     </div>
 
-    <h2 style="margin-top:22px;">Utility (situación actual)</h2>
+    <h2 style="margin-top:22px;">Utility (current situation)</h2>
     <div class="field">
-      <label>Pago mensual actual <span class="hint">USD</span></label>
+      <label>Current monthly payment <span class="hint">USD</span></label>
       <input type="number" id="utilStart" value="1787.85" step="1" min="0">
     </div>
     <div class="field">
-      <label>Incremento anual de tarifa <span class="hint">editable</span></label>
+      <label>Annual rate increase <span class="hint">editable</span></label>
       <div class="input-suffix">
         <input type="number" id="utilRate" min="0" max="30" step="0.01" value="4.00">
         <span>%</span>
       </div>
     </div>
 
-    <h2 style="margin-top:22px;">Opción de compra</h2>
+    <h2 style="margin-top:22px;">Purchase option</h2>
     <div class="field">
-      <label>Tipo de opción <span class="hint">según Sales Breakdown</span></label>
+      <label>Option type <span class="hint">per Sales Breakdown</span></label>
       <select id="optType">
         <option value="lease">Lease</option>
-        <option value="loan">Loan (financiado)</option>
+        <option value="loan">Loan (financed)</option>
         <option value="cash">Cash</option>
       </select>
     </div>
@@ -267,7 +274,7 @@
     <!-- LEASE -->
     <div id="leaseFields" class="opt-block">
       <div class="field">
-        <label>Proveedor</label>
+        <label>Provider</label>
         <select id="leaseProvider">
           <option value="LightReach">LightReach</option>
           <option value="Skylight">Skylight</option>
@@ -275,11 +282,11 @@
         </select>
       </div>
       <div class="field">
-        <label>Pago mensual del lease <span class="hint">USD</span></label>
+        <label>Lease monthly payment <span class="hint">USD</span></label>
         <input type="number" id="leasePay" value="2033.32" step="1" min="0">
       </div>
       <div class="field">
-        <label>Incremento anual del pago <span class="hint">2 decimales, ej. 2.99%</span></label>
+        <label>Annual payment increase <span class="hint">2 decimals, e.g. 2.99%</span></label>
         <div class="input-suffix">
           <input type="number" id="leaseEsc" min="0" max="20" step="0.01" value="2.99">
           <span>%</span>
@@ -290,7 +297,7 @@
     <!-- LOAN -->
     <div id="loanFields" class="opt-block" style="display:none;">
       <div class="field">
-        <label>Financiera</label>
+        <label>Finance Co.</label>
         <select id="loanFinco">
           <option value="Sungage Sunrise">Sungage Sunrise</option>
           <option value="Sungage Brightstart">Sungage Brightstart</option>
@@ -302,26 +309,26 @@
 
       <div id="loanSimpleFields">
         <div class="field">
-          <label>Pago mensual inicial <span class="hint">USD</span></label>
+          <label>Initial monthly payment <span class="hint">USD</span></label>
           <input type="number" id="loanPay" value="2033.32" step="1" min="0">
         </div>
         <div class="field" id="loanEscField">
-          <label>Escalador anual <span class="hint">2 decimales, ej. 2.90%</span></label>
+          <label>Annual escalator <span class="hint">2 decimals, e.g. 2.90%</span></label>
           <div class="input-suffix">
             <input type="number" id="loanEsc" min="0" max="20" step="0.01" value="2.90">
             <span>%</span>
           </div>
         </div>
-        <div class="hint" id="loanDeferHint" style="display:none;font-size:11.5px;color:var(--text3);">Primeros 6 meses sin pago ($0); el pago mensual inicial aplica a partir del mes 7.</div>
+        <div class="hint" id="loanDeferHint" style="display:none;font-size:11.5px;color:var(--text3);">First 6 months with no payment ($0); the initial monthly payment starts in month 7.</div>
       </div>
 
       <div id="loanTieredFields" style="display:none;">
         <div class="field">
-          <label>Pago meses 1–36 <span class="hint">USD</span></label>
+          <label>Payment months 1–36 <span class="hint">USD</span></label>
           <input type="number" id="loanPay1" value="1900" step="1" min="0">
         </div>
         <div class="field">
-          <label>Pago mes 37 en adelante <span class="hint">USD</span></label>
+          <label>Payment month 37 onward <span class="hint">USD</span></label>
           <input type="number" id="loanPay2" value="2200" step="1" min="0">
         </div>
       </div>
@@ -330,20 +337,20 @@
     <!-- CASH -->
     <div id="cashFields" class="opt-block" style="display:none;">
       <div class="field">
-        <label>Precio total (cash) <span class="hint">USD</span></label>
+        <label>Total price (cash) <span class="hint">USD</span></label>
         <input type="number" id="cashPrice" value="45000" step="100" min="0">
       </div>
-      <div class="hint" style="font-size:11.5px;color:var(--text3);">Se paga por completo en el año 1; sin pagos posteriores.</div>
+      <div class="hint" style="font-size:11.5px;color:var(--text3);">Paid in full in year 1; no further payments.</div>
     </div>
 
-    <h2 style="margin-top:22px;">Plazo</h2>
+    <h2 style="margin-top:22px;">Term</h2>
     <div class="field">
-      <label>Duración del contrato <span id="termLbl" class="hint">25 años</span></label>
+      <label>Contract length <span id="termLbl" class="hint">25 years</span></label>
       <input type="range" id="term" min="5" max="30" step="1" value="25">
     </div>
 
     <div class="disclaimer">
-      Esta calculadora es una estimación basada en los supuestos ingresados (pagos iniciales, tasas de incremento y plazo). No constituye una garantía financiera. Las tarifas reales de la utility, la producción solar y las condiciones del contrato/financiamiento pueden variar.
+      This calculator is an estimate based on the assumptions entered (initial payments, increase rates and term). It is not a financial guarantee. Actual utility rates, solar production and contract/financing terms may vary.
     </div>
   </div>
 
@@ -351,56 +358,56 @@
   <div>
     <div class="stats">
       <div class="stat savings">
-        <div class="label">Ahorro total del contrato</div>
+        <div class="label">Total contract savings</div>
         <div class="value" id="statSavings">$0</div>
       </div>
       <div class="stat pct">
-        <div class="label">% de ahorro vs. utility</div>
+        <div class="label">% savings vs. utility</div>
         <div class="value" id="statPct">0%</div>
       </div>
-      <div class="stat breakeven" title="Año a partir del cual el pago de la opción elegida ya es menor que el de la utility ese mismo año">
-        <div class="label">Ahorra desde</div>
+      <div class="stat breakeven" title="The year in which the chosen option's payment becomes lower than the utility payment for that same year">
+        <div class="label">Saves from</div>
         <div class="value" id="statBreakeven">—</div>
       </div>
       <div class="stat month">
-        <div class="label">Costo acumulado al final</div>
-        <div class="value">Utility: <b id="statTotalUtil">$0</b><br><span id="statOptLbl">Opción</span>: <b id="statTotalOpt">$0</b></div>
+        <div class="label">Cumulative cost at the end</div>
+        <div class="value">Utility: <b id="statTotalUtil">$0</b><br><span id="statOptLbl">Option</span>: <b id="statTotalOpt">$0</b></div>
       </div>
     </div>
     <div class="statsActions no-print" style="display:flex;justify-content:flex-end;margin:-6px 0 14px;">
-      <button class="btn-secondary" id="savingsCardBtn">Generar tarjeta de ahorro (imagen)</button>
+      <button class="btn-secondary" id="savingsCardBtn">Generate savings card (image)</button>
     </div>
 
     <div style="font-size:11.5px;color:var(--text3);margin:-10px 0 20px;">
-      <b>Ahorra desde</b>: el año a partir del cual lo que el cliente paga por la opción elegida ya es menor que lo que hubiera pagado a la utility ese mismo año — de ahí en adelante, cada año es puro ahorro.
+      <b>Saves from</b>: the year in which what the customer pays for the chosen option becomes lower than what they would have paid the utility that same year — from then on, every year is pure savings.
     </div>
 
     <div class="card" id="customerHeader" style="display:none;margin-bottom:20px;">
-      <h2 style="margin:0;">Propuesta para: <span id="custNameOut"></span></h2>
+      <h2 style="margin:0;">Proposal for: <span id="custNameOut"></span></h2>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <h2 id="chartTitle">Costo anual: “Cost of do nothing” vs. Opción</h2>
+      <h2 id="chartTitle">Annual cost: “Cost of doing nothing” vs. Option</h2>
       <canvas id="chart"></canvas>
       <div class="legend">
-        <span><i class="dot" style="background:var(--volt-red)"></i>Utility (sin solar)</span>
-        <span><i class="dot" style="background:var(--volt-blue)"></i><span id="legendOptLbl">Opción</span></span>
+        <span><i class="dot" style="background:var(--volt-red)"></i>Utility (no solar)</span>
+        <span><i class="dot" style="background:var(--volt-blue)"></i><span id="legendOptLbl">Option</span></span>
       </div>
     </div>
 
     <div class="card">
       <details>
-        <summary>Ver detalle año a año</summary>
+        <summary>View year-by-year detail</summary>
         <div class="tablewrap">
           <table>
             <thead>
               <tr>
-                <th>Año</th>
-                <th>Utility mensual</th>
-                <th>Utility anual</th>
-                <th>Opción mensual</th>
-                <th>Opción anual</th>
-                <th>Ahorro anual</th>
+                <th>Year</th>
+                <th>Utility monthly</th>
+                <th>Utility annual</th>
+                <th>Option monthly</th>
+                <th>Option annual</th>
+                <th>Annual savings</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -416,6 +423,58 @@
 const fmt$ = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const fmt$2 = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtPct = n => (n*100).toLocaleString('en-US',{maximumFractionDigits:1})+'%';
+
+/* ─────────── Client-facing document language (PDF + savings card) ───────────
+   The app UI is always English; only the deliverables the customer sees are
+   translated, because a good share of Florida customers are Spanish-speaking. */
+let docLang = 'en';
+const DOC = {
+  en: {
+    locale:'en-US', perMonth:'/mo', yearsWord:'years',
+    execTitle:'Executive Summary \u2014 Solar Savings',
+    proposalFor:n=>'Proposal for: '+n, proposalGeneric:'Solar savings proposal',
+    generatedOn:d=>'Generated on '+d,
+    utilityPayment:'Current utility payment', utilityIncrease:'Annual utility increase',
+    optionEvaluated:(l,t)=>'Option evaluated: '+l+'   \u00b7   Term: '+t+' years',
+    year:n=>'Year '+n, afterYear:n=>'After year '+n,
+    totalSavings:'Total contract savings', savingsPct:'% savings vs. utility',
+    savesFrom:'Saves from', totalCost:'Total utility / option cost',
+    annualCost:l=>'Annual cost: Utility vs. '+l,
+    yearDetail:l=>'Year-by-year detail \u2014 '+l,
+    cols:['Year','Utility monthly','Utility annual','Option monthly','Option annual','Annual savings'],
+    cashPrice:'Total price (cash)', laterPayments:'Later payments', none:'None (one-time payment)',
+    pay136:'Payment months 1\u201336', pay37:'Payment month 37 onward',
+    initialPay:'Initial monthly payment', escalator:'Annual escalator',
+    firstMonths:m=>'First '+m+' months', noPayment:'No payment ($0)',
+    cardTagline:'Estimated solar savings', cardSub:t=>'in estimated savings over '+t+' years vs. your current utility',
+    cardCols:['% SAVINGS','SAVES FROM','OPTION EVALUATED'],
+    disclaimer:'Estimate based on the assumptions entered by the sales team. It is not a financial guarantee; actual utility rates, solar production and contract/financing terms may vary.',
+    clientWord:'Client', pdfName:'VOLT_Executive_Summary', cardName:'VOLT_Estimated_Savings'
+  },
+  es: {
+    locale:'es-MX', perMonth:'/mes', yearsWord:'a\u00f1os',
+    execTitle:'Resumen Ejecutivo \u2014 Ahorro Solar',
+    proposalFor:n=>'Propuesta para: '+n, proposalGeneric:'Propuesta de ahorro solar',
+    generatedOn:d=>'Generado el '+d,
+    utilityPayment:'Pago utility actual', utilityIncrease:'Incremento anual utility',
+    optionEvaluated:(l,t)=>'Opci\u00f3n evaluada: '+l+'   \u00b7   Plazo: '+t+' a\u00f1os',
+    year:n=>'A\u00f1o '+n, afterYear:n=>'Despu\u00e9s del a\u00f1o '+n,
+    totalSavings:'Ahorro total del contrato', savingsPct:'% de ahorro vs. utility',
+    savesFrom:'Ahorra desde', totalCost:'Costo total utility / opci\u00f3n',
+    annualCost:l=>'Costo anual: Utility vs. '+l,
+    yearDetail:l=>'Detalle a\u00f1o a a\u00f1o \u2014 '+l,
+    cols:['A\u00f1o','Utility mensual','Utility anual','Opci\u00f3n mensual','Opci\u00f3n anual','Ahorro anual'],
+    cashPrice:'Precio total (cash)', laterPayments:'Pagos posteriores', none:'Ninguno (pago \u00fanico)',
+    pay136:'Pago meses 1\u201336', pay37:'Pago mes 37 en adelante',
+    initialPay:'Pago mensual inicial', escalator:'Escalador anual',
+    firstMonths:m=>'Primeros '+m+' meses', noPayment:'Sin pago ($0)',
+    cardTagline:'Ahorro estimado en energ\u00eda solar', cardSub:t=>'de ahorro estimado en '+t+' a\u00f1os vs. tu utility actual',
+    cardCols:['% DE AHORRO','AHORRA DESDE','OPCI\u00d3N EVALUADA'],
+    disclaimer:'Estimaci\u00f3n basada en los supuestos ingresados por el equipo de ventas. No constituye una garant\u00eda financiera; las tarifas reales de la utility, la producci\u00f3n solar y las condiciones del contrato/financiamiento pueden variar.',
+    clientWord:'Cliente', pdfName:'VOLT_Resumen_Ejecutivo', cardName:'VOLT_Ahorro_Estimado'
+  }
+};
+const D = () => DOC[docLang];
 
 const els = {
   utilStart: document.getElementById('utilStart'),
@@ -584,7 +643,7 @@ function render(){
   const term = parseInt(els.term.value);
   const opt = getOptionConfig();
 
-  document.getElementById('termLbl').textContent = term+' años';
+  document.getElementById('termLbl').textContent = term+' years';
 
   const r = calc(utilStart, utilRate, term, opt);
 
@@ -593,8 +652,8 @@ function render(){
   document.getElementById('statTotalUtil').textContent = fmt$(r.totalUtil);
   document.getElementById('statTotalOpt').textContent = fmt$(r.totalOpt);
   document.getElementById('statOptLbl').textContent = opt.label;
-  document.getElementById('statBreakeven').textContent = r.breakevenYear ? ('Año '+r.breakevenYear) : ('Después del año '+term);
-  document.getElementById('chartTitle').textContent = 'Costo anual: "Cost of do nothing" vs. '+opt.label;
+  document.getElementById('statBreakeven').textContent = r.breakevenYear ? ('Year '+r.breakevenYear) : ('After year '+term);
+  document.getElementById('chartTitle').textContent = 'Annual cost: "Cost of doing nothing" vs. '+opt.label;
   document.getElementById('legendOptLbl').textContent = opt.label;
 
   const name = els.custName.value.trim();
@@ -667,33 +726,33 @@ function drawVoltLogo(doc, x, y){
 function getOptionAssumptions(opt){
   if(opt.type==='cash'){
     return [
-      ['Precio total (cash)', fmt$2(opt.price)],
-      ['Pagos posteriores', 'Ninguno (pago único)'],
+      [D().cashPrice, fmt$2(opt.price)],
+      [D().laterPayments, D().none],
     ];
   }
   if(opt.type==='tiered'){
     return [
-      ['Pago meses 1–36', fmt$2(opt.pay1)+'/mes'],
-      ['Pago mes 37 en adelante', fmt$2(opt.pay2)+'/mes'],
+      [D().pay136, fmt$2(opt.pay1)+D().perMonth],
+      [D().pay37, fmt$2(opt.pay2)+D().perMonth],
     ];
   }
   const rows = [
-    ['Pago mensual inicial', fmt$2(opt.pay)+'/mes'],
-    ['Escalador anual', (opt.esc*100).toFixed(2)+'%'],
+    [D().initialPay, fmt$2(opt.pay)+D().perMonth],
+    [D().escalator, (opt.esc*100).toFixed(2)+'%'],
   ];
-  if(opt.deferMonths) rows.splice(1,0,['Primeros '+opt.deferMonths+' meses', 'Sin pago ($0)']);
+  if(opt.deferMonths) rows.splice(1,0,[D().firstMonths(opt.deferMonths), D().noPayment]);
   return rows;
 }
 
 async function generatePDF(){
   const pdfBtn = document.getElementById('pdfBtn');
   if(typeof window.jspdf === 'undefined'){
-    alert('No se pudo cargar el generador de PDF (requiere conexión a internet la primera vez). Se abrirá el diálogo de impresión como alternativa: elige "Guardar como PDF".');
+    alert('Could not load the PDF generator (needs an internet connection the first time). The print dialog will open instead: choose "Save as PDF".');
     window.print();
     return;
   }
   const originalLabel = pdfBtn.textContent;
-  pdfBtn.textContent = 'Generando PDF...'; pdfBtn.disabled = true;
+  pdfBtn.textContent = 'Generating PDF...'; pdfBtn.disabled = true;
   try{
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:'mm', format:'letter'});
@@ -703,16 +762,16 @@ async function generatePDF(){
 
     drawVoltLogo(doc, marginX, y);
     doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(90,98,110);
-    doc.text('Resumen Ejecutivo — Ahorro Solar', pageW-marginX, y+7, {align:'right'});
+    doc.text(D().execTitle, pageW-marginX, y+7, {align:'right'});
     y += 18;
     doc.setDrawColor(221,227,234); doc.line(marginX, y, pageW-marginX, y);
     y += 10;
 
     const name = els.custName.value.trim();
     doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(20,20,20);
-    doc.text(name ? ('Propuesta para: '+name) : 'Propuesta de ahorro solar', marginX, y);
+    doc.text(name ? D().proposalFor(name) : D().proposalGeneric, marginX, y);
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(140,148,160);
-    doc.text('Generado el '+new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}), marginX, y+6);
+    doc.text(D().generatedOn(new Date().toLocaleDateString(D().locale,{year:'numeric',month:'long',day:'numeric'})), marginX, y+6);
     y += 16;
 
     // Recompute from current on-screen inputs
@@ -728,8 +787,8 @@ async function generatePDF(){
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,90,10);
     const colW = (pageW-marginX*2)/4;
     const assumptions = [
-      ['Pago utility actual', fmt$2(utilStart)+'/mes'],
-      ['Incremento anual utility', (utilRate*100).toFixed(2)+'%'],
+      [D().utilityPayment, fmt$2(utilStart)+D().perMonth],
+      [D().utilityIncrease, (utilRate*100).toFixed(2)+'%'],
       ...getOptionAssumptions(opt),
     ];
     assumptions.forEach((a,i)=>{
@@ -740,16 +799,16 @@ async function generatePDF(){
       doc.text(a[1], cx, y+17, {maxWidth:colW-8});
     });
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,98,110);
-    doc.text('Opción evaluada: '+opt.label+'   ·   Plazo: '+term+' años', marginX+8, y+23);
+    doc.text(D().optionEvaluated(opt.label, term), marginX+8, y+23);
     y += 34;
 
     // Key stats
-    const breakevenTxt = r.breakevenYear ? ('Año '+r.breakevenYear) : ('Después del año '+term);
+    const breakevenTxt = r.breakevenYear ? D().year(r.breakevenYear) : D().afterYear(term);
     const stats = [
-      ['Ahorro total del contrato', fmt$(r.savings), [26,156,90]],
-      ['% de ahorro vs. utility', fmtPct(r.savingsPct), [47,97,153]],
-      ['Ahorra desde', breakevenTxt, [183,121,31]],
-      ['Costo total utility / opción', fmt$(r.totalUtil)+' / '+fmt$(r.totalOpt), [40,40,40]],
+      [D().totalSavings, fmt$(r.savings), [21,128,61]],
+      [D().savingsPct, fmtPct(r.savingsPct), [120,90,10]],
+      [D().savesFrom, breakevenTxt, [120,90,10]],
+      [D().totalCost, fmt$(r.totalUtil)+' / '+fmt$(r.totalOpt), [40,40,40]],
     ];
     const statW = (pageW-marginX*2-15)/4;
     stats.forEach((s,i)=>{
@@ -769,31 +828,31 @@ async function generatePDF(){
     const chartW = pageW-marginX*2;
     const chartH = chartW*(canvas.height/canvas.width);
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(120,90,10);
-    doc.text('Costo anual: Utility vs. '+opt.label, marginX, y+4);
+    doc.text(D().annualCost(opt.label), marginX, y+4);
     y += 8;
     doc.addImage(chartImg, 'PNG', marginX, y, chartW, Math.min(chartH, 85));
     y += Math.min(chartH, 85) + 10;
 
     doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(140,148,160);
-    doc.text('Estimación basada en los supuestos indicados. No constituye una garantía financiera; las tarifas reales de la utility, la producción solar y las condiciones del contrato/financiamiento pueden variar.', marginX, y, {maxWidth:pageW-marginX*2});
+    doc.text(D().disclaimer, marginX, y, {maxWidth:pageW-marginX*2});
 
     // Page 2: year-by-year detail
     doc.addPage();
     let y2 = 16;
     drawVoltLogo(doc, marginX, y2);
     doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(90,98,110);
-    doc.text('Detalle año a año — '+opt.label, pageW-marginX, y2+7, {align:'right'});
+    doc.text(D().yearDetail(opt.label), pageW-marginX, y2+7, {align:'right'});
     y2 += 16;
     doc.setDrawColor(221,227,234); doc.line(marginX, y2, pageW-marginX, y2);
     y2 += 8;
 
     const cols = [
-      {label:'Año', x:marginX, w:14, key:'year'},
-      {label:'Utility mensual', x:marginX+16, w:32, key:'utilMonthly'},
-      {label:'Utility anual', x:marginX+50, w:32, key:'utilAnnual'},
-      {label:'Opción mensual', x:marginX+84, w:32, key:'optMonthly'},
-      {label:'Opción anual', x:marginX+118, w:32, key:'optAnnual'},
-      {label:'Ahorro anual', x:marginX+152, w:32, key:'savings'},
+      {label:D().cols[0], x:marginX, w:14, key:'year'},
+      {label:D().cols[1], x:marginX+16, w:32, key:'utilMonthly'},
+      {label:D().cols[2], x:marginX+50, w:32, key:'utilAnnual'},
+      {label:D().cols[3], x:marginX+84, w:32, key:'optMonthly'},
+      {label:D().cols[4], x:marginX+118, w:32, key:'optAnnual'},
+      {label:D().cols[5], x:marginX+152, w:32, key:'savings'},
     ];
     function tableHeader(yy){
       doc.setFillColor(250,243,214);
@@ -817,13 +876,13 @@ async function generatePDF(){
       y2 += 6;
     });
 
-    const fileSafeName = (name || 'Cliente')
+    const fileSafeName = (name || D().clientWord)
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // strip accents (base + combining marks -> plain)
       .replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
-    doc.save(`VOLT_Resumen_Ejecutivo_${fileSafeName}.pdf`);
+    doc.save(`${D().pdfName}_${fileSafeName}.pdf`);
   } catch(err){
     console.error(err);
-    alert('Ocurrió un error generando el PDF. Se abrirá el diálogo de impresión como alternativa.');
+    alert('Something went wrong generating the PDF. The print dialog will open instead.');
     window.print();
   } finally {
     pdfBtn.textContent = originalLabel; pdfBtn.disabled = false;
@@ -889,12 +948,12 @@ function buildSavingsCard(){
   ctx.fillText('VOLT', 130, 54+32);
   ctx.font = `400 14px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,.75)';
-  ctx.fillText('Ahorro estimado en energía solar', 130, 54+53);
+  ctx.fillText(D().cardTagline, 130, 54+53);
 
   // Customer line
   ctx.font = `400 20px ${FONT}`;
   ctx.fillStyle = '#fff';
-  ctx.fillText(name ? ('Propuesta para '+name) : 'Propuesta de ahorro solar', 60, 172);
+  ctx.fillText(name ? D().proposalFor(name).replace(':','') : D().proposalGeneric, 60, 172);
 
   // Big savings number
   ctx.font = `800 88px ${FONT}`;
@@ -903,7 +962,7 @@ function buildSavingsCard(){
 
   ctx.font = `400 21px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.fillText('de ahorro estimado en '+term+' años vs. tu utility actual', 60, 316);
+  ctx.fillText(D().cardSub(term), 60, 316);
 
   // Divider
   ctx.strokeStyle = '#f4c537';
@@ -913,9 +972,9 @@ function buildSavingsCard(){
 
   // Stat columns
   const cols = [
-    ['% DE AHORRO', fmtPct(r.savingsPct)],
-    ['AHORRA DESDE', r.breakevenYear ? ('Año '+r.breakevenYear) : ('Después del año '+term)],
-    ['OPCIÓN EVALUADA', opt.label],
+    [D().cardCols[0], fmtPct(r.savingsPct)],
+    [D().cardCols[1], r.breakevenYear ? D().year(r.breakevenYear) : D().afterYear(term)],
+    [D().cardCols[2], opt.label],
   ];
   const colW = (W-120)/3;
   cols.forEach((c,i)=>{
@@ -931,7 +990,7 @@ function buildSavingsCard(){
   // Footer disclaimer
   ctx.font = `400 12.5px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,.55)';
-  wrapCanvasText(ctx, 'Estimación basada en los supuestos ingresados por el equipo de ventas. No constituye una garantía financiera; las tarifas reales de la utility, la producción solar y las condiciones del contrato/financiamiento pueden variar.', 60, H-46, W-120, 17);
+  wrapCanvasText(ctx, D().disclaimer, 60, H-46, W-120, 17);
 
   return { canvas, name };
 }
@@ -939,28 +998,36 @@ function buildSavingsCard(){
 function downloadSavingsCard(){
   const btn = document.getElementById('savingsCardBtn');
   const originalLabel = btn.textContent;
-  btn.textContent = 'Generando...'; btn.disabled = true;
+  btn.textContent = 'Generating...'; btn.disabled = true;
   try{
     const { canvas, name } = buildSavingsCard();
     canvas.toBlob(blob=>{
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const fileSafeName = (name || 'Cliente')
+      const fileSafeName = (name || D().clientWord)
         .normalize('NFD').replace(new RegExp('[̀-ͯ]','g'),'')
         .replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
       a.href = url;
-      a.download = `VOLT_Ahorro_Estimado_${fileSafeName}.png`;
+      a.download = `${D().cardName}_${fileSafeName}.png`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
       btn.textContent = originalLabel; btn.disabled = false;
     }, 'image/png', 1.0);
   } catch(err){
     console.error(err);
-    alert('Ocurrió un error generando la tarjeta de ahorro.');
+    alert('Something went wrong generating the savings card.');
     btn.textContent = originalLabel; btn.disabled = false;
   }
 }
 document.getElementById('savingsCardBtn').addEventListener('click', downloadSavingsCard);
+
+// Language switch for the client-facing PDF + savings card
+document.getElementById('langSeg').addEventListener('click', function(e){
+  const b = e.target.closest('button[data-l]');
+  if(!b) return;
+  docLang = b.dataset.l;
+  [...this.querySelectorAll('button[data-l]')].forEach(x=>x.classList.toggle('on', x===b));
+});
 
 // --- Handoff desde Sales Breakdown (sessionStorage) ------------------------
 function loadHandoffSB(){
@@ -975,7 +1042,7 @@ function loadHandoffSB(){
   render();
   const note = document.createElement('div');
   note.style.cssText = 'max-width:1180px;margin:14px auto 0;padding:0 20px;';
-  note.innerHTML = '<div style="background:var(--volt-blue-light);color:var(--volt-blue);border:1px solid var(--volt-blue);border-radius:8px;padding:10px 14px;font-size:13px;">Datos cargados desde Sales Breakdown'+(els.custName.value?(': <b>'+els.custName.value+'</b>'):'')+'. Puedes editar cualquier campo.</div>';
+  note.innerHTML = '<div style="background:var(--volt-blue-light);color:var(--volt-blue);border:1px solid var(--volt-blue);border-radius:8px;padding:10px 14px;font-size:13px;">Data loaded from Sales Breakdown'+(els.custName.value?(': <b>'+els.custName.value+'</b>'):'')+'. You can edit any field.</div>';
   document.body.insertBefore(note, document.querySelector('.wrap'));
 }
 
