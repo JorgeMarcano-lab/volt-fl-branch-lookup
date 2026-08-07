@@ -50,14 +50,14 @@ a{color:var(--accent)}
 <div class="vlt-hdr">
   <div class="wm">&#9889; Volt Home</div>
   <h1>Sales Breakdown</h1>
-  <div class="sub">Comparador de comisiones &middot; Solar FL</div>
+  <div class="sub">Commission comparator &middot; Solar FL</div>
 </div>
 
 <div id="vlt-root" style="padding:1rem 0;">
 <h2 class="sr-only">Comparador de comisiones solar Volt — Sales Breakdown.</h2>
 <div id="handoffBanner" style="display:none;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between;gap:12px">
   <span id="handoffBannerText"></span>
-  <a href="index.html" id="backToLookupBtn" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--accent);color:var(--ink);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">← Cambiar dirección</a>
+  <a href="index.html" id="backToLookupBtn" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--accent);color:var(--ink);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">← Change address</a>
 </div>
 <style>
 .vlt-lbl{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
@@ -89,52 +89,52 @@ a{color:var(--accent)}
 
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:1rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <span class="vlt-stitle"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Proyecto</span>
+    <span class="vlt-stitle"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Project</span>
     <span class="vlt-seg" id="regSeg"><button data-r="SFL" class="on">South FL</button><button data-r="CFL">Central FL</button></span>
   </div>
   <div class="vlt-grid" style="margin-bottom:6px">
-    <div class="vlt-fld"><label class="vlt-lbl">Dirección del proyecto</label><input class="vlt-num" type="text" id="projAddr" placeholder="123 Main St, Miami, FL 33101"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Sucursal / Branch</label><input class="vlt-num" type="text" id="projBranch" placeholder="(auto desde Branch Lookup)"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">AHJ</label><input class="vlt-num" type="text" id="projAHJ" placeholder="(auto desde Branch Lookup)"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Permit ETA (días hábiles)</label><input class="vlt-num" type="text" id="projEta" placeholder="ej. 21"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Name on Title</label><input class="vlt-num" type="text" id="projNameOnTitle" placeholder="(auto desde Branch Lookup)"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="ej. 5 años, 2019, Unknown..."></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="ej. Solar 2021, Roof 2019, None..."></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Pago Mensual promedio actual</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="ej. 1787.85"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Incremento anual de tarifa (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Project address</label><input class="vlt-num" type="text" id="projAddr" placeholder="123 Main St, Miami, FL 33101"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Branch</label><input class="vlt-num" type="text" id="projBranch" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">AHJ</label><input class="vlt-num" type="text" id="projAHJ" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Permit ETA (business days)</label><input class="vlt-num" type="text" id="projEta" placeholder="e.g. 21"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Name on Title</label><input class="vlt-num" type="text" id="projNameOnTitle" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="e.g. 5 years, 2019, Unknown..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="e.g. Solar 2021, Roof 2019, None..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Current average monthly bill</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="e.g. 1787.85"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Annual utility rate increase (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
   </div>
-  <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (valores por defecto)</div>
+  <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (default values)</div>
   <div id="baseFields"></div>
-  <button id="applyAll" class="vlt-chip" style="margin-top:8px"><i class="ti ti-copy" aria-hidden="true"></i> Aplicar baseline a todas las opciones</button>
+  <button id="applyAll" class="vlt-chip" style="margin-top:8px"><i class="ti ti-copy" aria-hidden="true"></i> Apply baseline to all options</button>
 </div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-  <span class="vlt-stitle">Opciones a comparar</span>
-  <span style="font-size:11px;color:var(--color-text-tertiary)">Cada opción tiene sus propios detalles</span>
+  <span class="vlt-stitle">Options to compare</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary)">Each option has its own details</span>
 </div>
 <div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
 <div id="opts"></div>
 
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <span class="vlt-stitle"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Resumen comparativo</span>
+    <span class="vlt-stitle"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Comparison summary</span>
     <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generar PDF</button>
-      <label class="vlt-btn" style="cursor:pointer;background:#2a2a2a;color:#d4d4d4;border-color:#3a3a3a" title="Cargar un PDF generado anteriormente por este widget">
-        <i class="ti ti-upload" aria-hidden="true"></i> Cargar PDF
+      <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generate PDF</button>
+      <label class="vlt-btn" style="cursor:pointer;background:#2a2a2a;color:#d4d4d4;border-color:#3a3a3a" title="Load a PDF previously generated by this widget">
+        <i class="ti ti-upload" aria-hidden="true"></i> Load PDF
         <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
       </label>
-      <select id="cardOptSel" class="vlt-btn" style="background:var(--color-background-primary);color:var(--color-text-secondary);border-color:var(--color-border-secondary);padding:6px 10px;font-size:12px;cursor:pointer" title="Elige la opción para la tarjeta de ahorro"></select>
-      <button id="savingsCardBtn" class="vlt-btn" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)"><i class="ti ti-calculator" aria-hidden="true"></i> Simulador de ahorro</button>
+      <select id="cardOptSel" class="vlt-btn" style="background:var(--color-background-primary);color:var(--color-text-secondary);border-color:var(--color-border-secondary);padding:6px 10px;font-size:12px;cursor:pointer" title="Choose the option for the savings card"></select>
+      <button id="savingsCardBtn" class="vlt-btn" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)"><i class="ti ti-calculator" aria-hidden="true"></i> Savings simulator</button>
       <span id="loadStatus" style="font-size:11px;color:var(--color-text-tertiary)"></span>
     </span>
   </div>
   <div style="overflow-x:auto"><div id="cmp"></div></div>
-  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">El botón <b>Generar PDF</b> descarga el documento. El botón <b>Cargar PDF</b> permite reabrir un PDF generado anteriormente y recarga todos los campos automáticamente. El botón <b>Simulador de ahorro</b> abre el VOLT Solar Savings Calculator en una pestaña nueva con los datos de la opción elegida en el selector, listos para editar.</div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px"><b>Generate PDF</b> downloads the document. <b>Load PDF</b> reopens a previously generated PDF and refills every field automatically. <b>Savings simulator</b> opens the VOLT Solar Savings Calculator in a new tab, preloaded with the option chosen in the selector and ready to edit.</div>
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
-Comisión solar (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Com. batería (J28) = precio − redline. Comisión total = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
+Solar commission (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Battery comm. (J28) = precio − redline. Total commission = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
 </div>
 </div>
 
@@ -142,15 +142,15 @@ Comisión solar (J27) = (Lender − Redline)×W − adders solares − Tier 2 �
 const VOLT_LOGO='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABIAFUDASIAAhEBAxEB/8QAGwABAAIDAQEAAAAAAAAAAAAAAAYHAwQFAgH/xABAEAABAwMBBQQGBgcJAAAAAAABAgMEAAURBgcSITFBE1FhcRQiIzKBkRUWQlJU0TQ4VqGxstI1cnR1gpKTweH/xAAaAQEAAwEBAQAAAAAAAAAAAAAAAQQFBgMC/8QAKhEAAgEDAgQEBwAAAAAAAAAAAAECAwQRBSESMUFxEyJRgQYyYZGx4fD/2gAMAwEAAhEDEQA/AL/pSlAKj94nB2ciEg5QnJc8TjgK6tympgQlvHBVyQO9XSohbkOS7mhO9layolSvLJNc/rV404WlP5pNZ7Z5e5btqezqS5I9vQAcqaOD908q0nWnGV7rqFIVzwoYqcxrczHwojfX949PKssmIxMa7N9sLT0zzHkapS+HZTg5cXDL06f3Y9VeJPGMogkWSuJJbfb95BzjvHUVPY76JMdDzZyhYyKitzsK4aS6wvtGs+6feH51n03P7N1UJw4CjlGeh6ivjSatWwuXa3Cwpcu/75fYm4jGrDxIdCT0pSuwM4UpSgFKUoCKanW8ZraFjDITlHieta2n/wC2WfJX8DUlu8AT4KkpHtUesg+Pd8aitpeMa5tuFOd3II5dK4vUKMrfU4VZvyyknns1le34NOjJToOK5pE5pWCPLZkpy2rj1SeYrK44hpBW4oJSOZJwBXYxqQlHji9jNaaeDUuv6Ef7wqOPpaSUuE7jgIKVJ97PTzrau1+bebLEVO8M5Lh5fAVisEJUuYZb2VIaPDPVX/n5Vyl9Vhe3qpUPNnCz0X19i/Si6dPinsShkrUyguDCykbw7jXulK61LCwZ7FKUqQKUpQCo1dIHo91RJQPZvZz4Kx/3z+dSWvDjTbyChxCVpPRQyKpX1nG7pcD5p5TPWlUdOWSIOzkMK9md5wfdPL41pyp0maR27pUByTyA+FTT6Ng/hGP+MU+jYP4Rj/YKwqmh3U04+Kkn03LSuqa34SCstLfeQ02MrWcAVOGkNWqAhsAlKeHAcSeprK3CisrC2o7SFjkpKADWVSErTuqSCO41f0zSXZKUspzfJ+h5V7jxcLGwQsOIC08jXqvgAAAAAA5AV9raWcblUUpSpBBtI63m3fVd603eYkeLPt6st9ipRDqM4KvW80HyVXW1zqpGjtKybsUIceSUtsNLJAW4o8AcdMZJ8BUG2msr0nrOxa7ioPZJcEWeE/aRg4J807w80prNrWDI1ntH01ZNwqsjTBuTrg4peTnH9Kf9ZqAWBpmfcLnpyDPukZqNLkNB1TLRJCArikceOcYz41DbxtSedvL1m0fZHr7LYOHnkK3WUHODx68eGcgdxNSLaBOftez+9Soiih5EVQQpPNOcJyPIGufsntUS27O7WuM2kOS2vSHljmtau/yGB8KA4be1K9WKWy3rXSr1sivK3UzGFdohJ8Rx/cc+BqzmH2pUduQw4l1lxIWhaDkKSRkEHurTvlqiXqyTLdNbSuO+0pKgRy4cCO4g8QfCoLsOmvytn5ZeWVpiS3GGlH7mEqx81GgOrM1pMjbVYGk0xGDFkxi8p8qO+DurOAOX2B86mtVLdP1kbL/l5/kdq2qkET1vfdSWRmErTti+llurWHk8fZgAYPA9Tmod9fdpv7A/uX+dW7VW6jlSG9vel46JDyWFw1FTSXCEKOHeac4PIVANX6+bTf2B/n/OlW3gUoDkaqsLWpdMz7Q9gekNEIUfsLHFKvgoCuLswZuTWhLa3eGA3LYSthG8PXDaVkJB+XyApSpBJ7nbo93tcq3Sk70eS0ppwDnhQwceNVFZ79fNkiV2PUFskz7EhajDuEVOd1JOcEHhz44JBBJxkYpSoYNi7bSLlreI7ZNEWWcpySns3Z0hIQhlB4E5BIBx1J4dATVg6M0wzpDS8S0NLDi2wVPOgY33FcVHy6DwApSiBWGtr9D0xt0tt3npeVGYt4CwykKV6wdSMAkdTXfO3jSQBPo914D8Mn+qlKjILLZdS+w28jO6tIUM88EZqq9T/rB6U/wav4PUpUgtjpSlKkH/2Q==';
 const LOGO_W=Math.round(56*1.184004),LOGO_H=56;
 const REGIONS={SFL:{lightreach:2.15,enfin:2.15,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:2.05,enfin:2.05,tesla:2.10,teslapw3:2.00,affordable:1.80}};
-const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Compra'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Compra'},{k:'affordable',n:'Affordable Solar',t:'Compra'},{k:'cash',n:'Cash',t:'Cash'}];
+const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Almika'];
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
-const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY; campo Precio total baterias se compara contra CAP×Cantidad
-const SOLAR_PRICE_CAP=3.50; // Adder Sheet 05272026 — $3.50/W precio solar máximo (sin adders, batería ni DF)
+const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
+const SOLAR_PRICE_CAP=3.50; // Adder Sheet 05272026 — $3.50/W max solar price (excluding adders, battery and DF)
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
@@ -181,31 +181,31 @@ function detailFields(id){
   const sel=(name,opts,val)=>`<select id="${name}-${id}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
   return `
   <div class="vlt-grid">
-    <div class="vlt-fld"><label class="vlt-lbl">Tamaño (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="ej. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Montaje</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
-    <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
+    <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
   </div>
   <div id="gmWrap-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Ground Mount — $0.55/W + trenching</div>
     <div class="vlt-grid">
-      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies) x$25</label><input class="vlt-num" type="number" id="dirt-${id}" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies) x$40</label><input class="vlt-num" type="number" id="hard-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (ft) x$25</label><input class="vlt-num" type="number" id="dirt-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (ft) x$40</label><input class="vlt-num" type="number" id="hard-${id}" value="0" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="septic-${id}" value="0" min="0"></div>
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Bateria</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Battery</div>
     <div class="vlt-grid">
-      <div class="vlt-fld"><label class="vlt-lbl">Tipo</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
-      <div class="vlt-fld"><label class="vlt-lbl">Cantidad</label><input class="vlt-num" type="number" id="battQty-${id}" value="0" min="0" step="1"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Precio total baterias ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Type</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
+      <div class="vlt-fld"><label class="vlt-lbl">Quantity</label><input class="vlt-num" type="number" id="battQty-${id}" value="0" min="0" step="1"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Total battery price ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
-    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Adders no solares</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Non-solar adders</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
       <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="ns_hvac-${id}" value="0" step="50" min="0"></div>
       <div class="vlt-row"><span style="font-size:12px">Fence</span><input class="vlt-num" type="number" id="ns_fence-${id}" value="0" step="50" min="0"></div>
@@ -220,39 +220,39 @@ function detailFields(id){
 function buildCard(inst){
   const {id,k}=inst;
   const o=OPTIONS.find(x=>x.k===k);
-  const purchase=(o.t==='Compra'||o.t==='Cash'); // Compra y Cash comparten el modelo de compra (no lease)
-  const financedOpt=(o.t==='Compra'); // solo Compra usa financiera/DF/Term/Tasa
+  const purchase=(o.t==='Purchase'||o.t==='Cash'); // Purchase and Cash share the purchase model (not lease)
+  const financedOpt=(o.t==='Purchase'); // only Purchase uses finance co./DF/Term/Rate
   const card=document.createElement('div');
   card.className='vlt-card';card.id='card-'+id;
   card.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
       <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
       <span style="display:flex;align-items:center;gap:8px">
-        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Comision total</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
-        <button onclick="removeInst('${id}')" title="Eliminar" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
+        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Total commission</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
+        <button onclick="removeInst('${id}')" title="Remove" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
       </span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
       <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="0.00"></div>
-      <div><label class="vlt-lbl">Contrato $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
-      ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Financiera</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (meses)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Tasa %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
+      <div><label class="vlt-lbl">Contract $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
+      ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Finance Co.</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Rate %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
             :(o.t==='Lease'?`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`:'')}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
-      <div><span class="vlt-lbl">TOTAL / ${purchase?'Cash':'Precio Cash'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
+      <div><span class="vlt-lbl">TOTAL / ${purchase?'Cash':'Cash Price'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
       ${financedOpt?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
       <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
-      ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Pago mes 37+ (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
-            :(o.t==='Lease'?`<div><label class="vlt-lbl">Pago mensual (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`:'')}
+      ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
+            :(o.t==='Lease'?`<div><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`:'')}
     </div>
-    <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Detalles del proyecto</button>
+    <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Project details</button>
     <div id="det-${id}" style="display:none">${detailFields(id)}</div>
     <div id="bw-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px">
-      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Bateria <span id="bname-${id}"></span> — redline editable</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Battery <span id="bname-${id}"></span> — editable redline</div>
       <div class="vlt-rep">
-        <div><label class="vlt-lbl">Redline 1ra ($)</label><input type="number" step="100" id="br1-${id}" class="vlt-num"></div>
-        <div><label class="vlt-lbl">Redline adic. ($)</label><input type="number" step="100" id="brA-${id}" class="vlt-num"></div>
-        <div><span class="vlt-lbl">Com. bateria (J28)</span><span id="bt-${id}" style="font-size:14px;font-weight:500">$0</span></div>
+        <div><label class="vlt-lbl">First redline ($)</label><input type="number" step="100" id="br1-${id}" class="vlt-num"></div>
+        <div><label class="vlt-lbl">Add'l redline ($)</label><input type="number" step="100" id="brA-${id}" class="vlt-num"></div>
+        <div><span class="vlt-lbl">Battery comm. (J28)</span><span id="bt-${id}" style="font-size:14px;font-weight:500">$0</span></div>
       </div>
     </div>
     <div id="note-${id}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>`;
@@ -287,11 +287,11 @@ function buildChips(){
   // Separator label
   const lbl=document.createElement('span');
   lbl.style.cssText='font-size:11px;color:var(--color-text-tertiary);align-self:center;margin-right:4px';
-  lbl.textContent='Agregar opcion:';c.appendChild(lbl);
+  lbl.textContent='Add option:';c.appendChild(lbl);
   OPTIONS.forEach(o=>{
     const b=document.createElement('button');b.className='vlt-chip';
     b.innerHTML=`<i class="ti ti-plus" aria-hidden="true"></i>${o.n}`;
-    b.title=`Agregar ${o.n}`;
+    b.title=`Add ${o.n}`;
     b.addEventListener('click',()=>addInst(o.k));
     c.appendChild(b);
   });}
@@ -321,25 +321,25 @@ function readOptCfg(id){
   cfg.noSolar=noSolar;cfg.nsItems=nsItems;return cfg;
 }
 
-function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (incluido)'):(r.sizeLabel+' - '+money(r.sizeAmt));}
+function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (included)'):(r.sizeLabel+' - '+money(r.sizeAmt));}
 
 function calc(){
   let best=-1e15,bestId=null;const res={};
   instances.forEach(inst=>{
     const {id,k}=inst;
     const o=OPTIONS.find(x=>x.k===k);
-    const purchase=(o.t==='Compra'||o.t==='Cash');
-    const financedOpt=(o.t==='Compra');
+    const purchase=(o.t==='Purchase'||o.t==='Cash');
+    const financedOpt=(o.t==='Purchase');
     const cfg=readOptCfg(id);const W=cfg.W;
     const redline=parseFloat($('rl-'+id)?.value)||0;
     const contract=parseFloat($('ct-'+id)?.value)||0;
-    const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A para esta opcion');
+    const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A for this option');
     const rr=roofRate(k,cfg.mount==='rooftop'?cfg.surface:'shingle');
     const sz=sizeAdder(k,W);const szI=sizeAdderInfo(k,W);
     let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
     const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
-    const adderCarve=adder23; // adder completo se resta de comision (sin carve parcial); Contrato x W ya es precio todo incluido
+    const adderCarve=adder23; // the full adder is subtracted from commission (no partial carve); Contract x W is already the all-in price
     const adderResidual=0;
     let battPriceThis=0,battComm=0,battTxt='$0';
     if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
@@ -351,13 +351,13 @@ function calc(){
     const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
     const comm=solarComm+battComm;
-    const cash=contract*W; // Contrato/Lender x W = precio TOTAL todo incluido; adders/bateria solo afectan comision, no el precio
+    const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
     let financed=cash,df=0,term=0,tasa=0;
     if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;}
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
-    // Sales Rebate cap: MIN(25% contrato, 12 × pago mensual) — Adder Sheet
+    // Sales Rebate cap: MIN(25% of contract, 12 x monthly payment) — Adder Sheet
     const contractAmt=contract*W;
     const cap25=contractAmt*0.25;
     const pago=parseFloat($('pay1-'+id)?.value)||0;
@@ -386,51 +386,51 @@ function calc(){
 function renderCmp(res,bestId){
   const cmp=$('cmp');
   const sel=instances.filter(inst=>res[inst.id]);
-  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Agrega al menos una opcion.</div>';return;}
+  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Add at least one option.</div>';return;}
   const fin=id=>$('co-'+id)?$('co-'+id).value:'';
   const esc=id=>$('esc-'+id)?($('esc-'+id).value+'%'):'';
   const pay=id=>{const p=$('pay1-'+id);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
   const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
-    {title:'Proyecto',rows:[
-      ['Tipo',(inst,r)=>r.o.t,{a:1}],
-      ['Tamano (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
+    {title:'Project',rows:[
+      ['Type',(inst,r)=>r.o.t,{a:1}],
+      ['System size (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
       ['Offset',(inst,r)=>r.offTxt],
       ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
-      ['Montaje',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
-      ['Superficie',(inst,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
+      ['Mount',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
+      ['Surface',(inst,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
     ]},
-    {title:'Adders solares',rows:[
+    {title:'Solar adders',rows:[
       ['Adder de tamano (auto)',(inst,r)=>sizeCell(r)],
-      ['Adder de panel',(inst,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' - '+money(r.panelAmt)):'—'],
-      ['Adder de superficie',(inst,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof - '+money(r.roofAmt)):'—'],
+      ['Panel adder',(inst,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' - '+money(r.panelAmt)):'—'],
+      ['Surface adder',(inst,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof - '+money(r.roofAmt)):'—'],
       ['Ground mount',(inst,r)=>r.gmAmt>0?('$0.55/W - '+money(r.gmAmt)):'—'],
       ['Trenching / septic',(inst,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
       ['Sales rebate (SR)',(inst,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
     ]},
-    {title:'Adders no solares',rows:[['Adders no solares',(inst,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']]},
-    {title:'Bateria',rows:[
-      ['Bateria',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
-      ['Precio bateria',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
-      ['Com. bateria (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
+    {title:'Non-solar adders',rows:[['Non-solar adders',(inst,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']]},
+    {title:'Battery',rows:[
+      ['Battery',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
+      ['Battery price',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
+      ['Battery comm. (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
     ]},
-    {title:'Resultados',rows:[
+    {title:'Results',rows:[
       ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
-      ['Contrato $/W',(inst,r)=>'$'+r.contract.toFixed(2),{a:1}],
-      ['Comision solar (J27)',(inst,r)=>money(r.solarComm),{a:1}],
-      ['Comision total',(inst,r)=>money(r.comm),{a:1,bold:1}],
+      ['Contract $/W',(inst,r)=>'$'+r.contract.toFixed(2),{a:1}],
+      ['Solar commission (J27)',(inst,r)=>money(r.solarComm),{a:1}],
+      ['Total commission',(inst,r)=>money(r.comm),{a:1,bold:1}],
       ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
       ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
-      ['Term (meses)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
-      ['Tasa %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
-      ['Financiera / Escalator',(inst,r)=>r.loan?fin(inst.id):(r.o.t==='Lease'?esc(inst.id):'—')],
-      ['Pago Mensual Año 1',(inst,r)=>pay(inst.id)],
-      ['Pago Mensual Mes 37+',(inst,r)=>pay2(inst.id)]
+      ['Term (months)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
+      ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
+      ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id):(r.o.t==='Lease'?esc(inst.id):'—')],
+      ['Year 1 monthly payment',(inst,r)=>pay(inst.id)],
+      ['Month 37+ monthly payment',(inst,r)=>pay2(inst.id)]
     ]}
   ];
   const ncol=1+sel.length;
   let html='<table class="vlt-tbl"><thead><tr><th></th>';
-  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id):(r.o.t==='Lease'?('Escalator '+esc(inst.id)):'Pago único'))+'</span></th>';});
+  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id):(r.o.t==='Lease'?('Escalator '+esc(inst.id)):'One-time payment'))+'</span></th>';});
   html+='</tr></thead><tbody>';
   blocks.forEach(bk=>{
     const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(inst=>!emptyV(row[1](inst,res[inst.id]))));
@@ -439,14 +439,14 @@ function renderCmp(res,bestId){
     vis.forEach(row=>{const label=row[0],fn=row[1],opt=row[2];html+='<tr><td>'+label+'</td>';
       sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
         if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
-        // Battery price cap: fondo rojo si precio/bat > $18,000 (Adder Sheet)
-        if(label==='Precio bateria'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
-        // Sales Rebate cap: MIN(25% contrato, 12x pago mensual)
+        // Battery price cap: red background if price per battery > $18,000 (Adder Sheet)
+        if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
+        // Sales Rebate cap: MIN(25% of contract, 12x monthly payment)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
-        // Offset cap: > 115% resaltado en rojo
+        // Offset cap: > 115% highlighted in red
         if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
-        if(label==='Contrato $/W'&&r.solarCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
+        if(label==='Contract $/W'&&r.solarCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
         html+='<td style="'+st+'">'+v+'</td>';});
       html+='</tr>';});
   });
@@ -458,7 +458,7 @@ function onChange(e){const id=e.target.id||'';
   if(parts[0]==='mount'){syncOptMount(suffix);}
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
-  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';}
+  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';}
   calc();
 }
 
@@ -470,14 +470,14 @@ function applyBaseline(){
 function emitPDF(text){
   if(typeof sendPrompt==='function'){sendPrompt(text);return;}
   try{navigator.clipboard.writeText(text);}catch(e){}
-  alert('JSON copiado al portapapeles.');
+  alert('JSON copied to clipboard.');
 }
 
-// ===================== CARGAR PDF =====================
+// ===================== LOAD PDF =====================
 document.getElementById('pdfUpload').addEventListener('change', async function(){
   const file=this.files[0]; if(!file) return;
   const status=$('loadStatus');
-  status.textContent='Leyendo PDF...';
+  status.textContent='Reading PDF...';
   try{
     const ab=await file.arrayBuffer();
     const pdfjsLib=window['pdfjs-dist/build/pdf'];
@@ -501,7 +501,7 @@ document.getElementById('pdfUpload').addEventListener('change', async function()
     parsePDFText(fullText, file.name);
     status.textContent='';
     this.value='';
-  }catch(e){status.textContent='⚠ Error al leer el PDF: '+e.message;console.error(e);}
+  }catch(e){status.textContent='⚠ Error reading the PDF: '+e.message;console.error(e);}
 });
 
 function parsePDFText(text, filename){
@@ -512,7 +512,7 @@ function parsePDFText(text, filename){
   if(lines.length>0) addr=lines[0].replace(/\*/g,'').trim();
   for(let i=1;i<Math.min(7,lines.length);i++){
     const l=lines[i];
-    if(l.includes('Sucursal:')){ branch=(l.match(/Sucursal:\s*([^-]+)/)||[])[1]?.trim()||''; reg=(l.match(/Region:\s*([^-]+)/)||[])[1]?.trim()||''; dateStr=(l.match(/Generado:\s*([0-9-]+)/)||[])[1]?.trim()||'';}
+    if(l.includes('Branch:')||l.includes('Sucursal:')){ branch=(l.match(/(?:Branch|Sucursal):\s*([^-]+)/)||[])[1]?.trim()||''; reg=(l.match(/Region:\s*([^-]+)/)||[])[1]?.trim()||''; dateStr=(l.match(/(?:Generated|Generado):\s*([0-9-]+)/)||[])[1]?.trim()||'';}
     if(l.includes('AHJ:')){ ahj=(l.match(/AHJ:\s*([^-]+)/)||[])[1]?.trim()||''; const em=l.match(/Permit ETA:\s*(\d+)/); if(em)eta=em[1];}
     if(l.includes('Name on Title:')){ nameOnTitle=(l.match(/Name on Title:\s*([^-]+)/)||[])[1]?.trim()||''; const rm=l.match(/Roof Age:\s*([^-]+)/); if(rm)roofAge=rm[1].trim(); const pm=l.match(/Previous Permits:\s*(.+)/); if(pm)prevPermits=pm[1].trim();}
   }
@@ -523,11 +523,11 @@ function parsePDFText(text, filename){
   // --- Find the table: header row has option names ---
   // Lines that are tab-separated with 2+ cells = table rows
   const tableLines=lines.filter(l=>l.includes('\t'));
-  if(!tableLines.length){alert('No se encontró la tabla de datos en el PDF. ¿Es un PDF generado por este widget?');return;}
+  if(!tableLines.length){alert('Could not find the data table in the PDF. Is this a PDF generated by this widget?');return;}
 
   // Header row: first row with multiple tab-separated non-empty cells
   const headerIdx=tableLines.findIndex(l=>{const p=l.split('\t').filter(Boolean);return p.length>=2&&!p[0].match(/^\$|^[0-9]/)&&p.some(c=>['LightReach','Skylight','Enfin','Tesla','Affordable','Powerwall','Cash'].some(k=>c.includes(k)));});
-  if(headerIdx<0){alert('No se identificaron las opciones en el PDF.');return;}
+  if(headerIdx<0){alert('Could not identify the options in the PDF.');return;}
 
   const headerCells=tableLines[headerIdx].split('\t').filter(Boolean);
   // First cell is empty label column; rest are option names
@@ -539,12 +539,13 @@ function parsePDFText(text, filename){
   tableLines.slice(headerIdx+1).forEach(line=>{
     const cells=line.split('\t');
     const label=cells[0]?.trim();
-    if(!label||label==='Proyecto'||label==='Adders solares'||label==='Adders no solares'||label==='Resultados') return;
+    if(!label||['Project','Proyecto','Solar adders','Adders solares','Results','Resultados'].indexOf(label)>=0) return;
     if(!data[label]) data[label]=[];
     for(let c=1;c<=numOpts;c++) data[label].push((cells[c]||'').trim());
   });
 
-  const get=(label,col)=>(data[label]||[])[col]||'';
+  // accepts one label or a list; falls back to legacy Spanish labels from older PDFs
+  const get=(label,col)=>{const ls=Array.isArray(label)?label:[label];for(const l of ls){const v=(data[l]||[])[col];if(v)return v;}return '';};
   const parseMoney=s=>{if(!s||s==='—'||s==='-')return 0;return parseFloat(s.replace(/[$,]/g,'').replace(/^-/,''))*(/^-/.test(s)||s.startsWith('-')?-1:1);};
 
   // Prefill header fields
@@ -562,45 +563,45 @@ function parsePDFText(text, filename){
   optNames.forEach((rawName,col)=>{
     const name=rawName.replace(/\s*\*\s*$/,'').trim();
     const optDef=OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
-    if(!optDef){console.warn('Opcion no reconocida:',name);return;}
+    if(!optDef){console.warn('Unrecognized option:',name);return;}
     const k=optDef.k; const id=k+'-'+(++instCounter);
     instances.push({id,k}); buildCard({id,k});
 
-    // Redline / Contrato
+    // Redline / Contract
     const rl=parseMoney(get('Redline $/W',col)); if(rl&&$('rl-'+id)) $('rl-'+id).value=rl;
-    const ct=parseMoney(get('Contrato $/W (Lender)',col)||get('Contrato $/W',col)); if(ct&&$('ct-'+id)) $('ct-'+id).value=ct;
+    const ct=parseMoney(get(['Contract $/W (Lender)','Contrato $/W (Lender)','Contract $/W','Contrato $/W'],col)); if(ct&&$('ct-'+id)) $('ct-'+id).value=ct;
 
-    // Financiera / Escalator
-    const finEsc=get('Financiera / Escalator',col);
-    if(optDef.t==='Compra'&&finEsc&&$('co-'+id)){
+    // Finance Co. / Escalator
+    const finEsc=get(['Finance Co. / Escalator','Financiera / Escalator'],col);
+    if((optDef.t==='Purchase'||optDef.t==='Compra')&&finEsc&&$('co-'+id)){
       const match=FINCO.find(f=>f===finEsc||finEsc.includes(f.split(' ')[0]));
       if(match) $('co-'+id).value=match;
     }
     if(optDef.t==='Lease'&&finEsc&&$('esc-'+id)) $('esc-'+id).value=parseFloat(finEsc)||2.99;
 
-    // Pago mensual
-    const pago=get('Pago Mensual Año 1 (ref.)',col)||get('Pago mensual (ref.)',col)||get('Pago mensual',col);
+    // Monthly payment
+    const pago=get(['Year 1 monthly payment (ref.)','Pago Mensual Año 1 (ref.)','Monthly payment (ref.)','Pago mensual (ref.)','Pago mensual'],col);
     if(pago&&$('pay1-'+id)) $('pay1-'+id).value=parseFloat(pago.replace(/[$,]/g,''))||0;
     const bsFin=$('co-'+id)?.value==='Sungage Brightstart';
     if($('p2w-'+id))$('p2w-'+id).style.display=bsFin?'block':'none';
-    if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bsFin?'Pago meses 1-36 (ref.)':'Pago mensual (ref.)';
-    const pago37=get('Pago Mensual Mes 37+ (ref.)',col);
+    if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bsFin?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';
+    const pago37=get(['Month 37+ monthly payment (ref.)','Pago Mensual Mes 37+ (ref.)'],col);
     if(bsFin&&pago37&&pago37!=='—'&&$('pay2-'+id)) $('pay2-'+id).value=parseFloat(pago37.replace(/[$,]/g,''))||0;
 
     // Cash + DF → derive DF %
-    const cash=parseMoney(get('TOTAL / Cash',col)||get('TOTAL / Precio Cash',col));
+    const cash=parseMoney(get(['TOTAL / Cash','TOTAL / Cash Price','TOTAL / Precio Cash'],col));
     const cashDF=parseMoney(get('Cash + DF',col));
     if(cash&&cashDF&&cashDF>cash&&$('df-'+id)){
       const df=Math.round((1-cash/cashDF)*10000)/100;
       $('df-'+id).value=df;
     }
 
-    // Term y Tasa
-    const termTxt=get('Term (meses)',col); if(termTxt&&termTxt!=='—'&&$('term-'+id)) $('term-'+id).value=parseFloat(termTxt)||0;
-    const tasaTxt=get('Tasa %',col); if(tasaTxt&&tasaTxt!=='—'&&$('tasa-'+id)) $('tasa-'+id).value=parseFloat(tasaTxt)||0;
+    // Term and Rate
+    const termTxt=get(['Term (months)','Term (meses)'],col); if(termTxt&&termTxt!=='—'&&$('term-'+id)) $('term-'+id).value=parseFloat(termTxt)||0;
+    const tasaTxt=get(['Rate %','Tasa %'],col); if(tasaTxt&&tasaTxt!=='—'&&$('tasa-'+id)) $('tasa-'+id).value=parseFloat(tasaTxt)||0;
 
     // Size
-    const kw=parseFloat(get('Tamano (kW)',col)||get('Tamaño (kW)',col));
+    const kw=parseFloat(get(['System size (kW)','Tamano (kW)','Tamaño (kW)'],col));
     if(kw&&$('size-'+id)) $('size-'+id).value=kw;
 
     // Offset
@@ -612,15 +613,15 @@ function parsePDFText(text, filename){
     if($('panel-'+id)) $('panel-'+id).value=panelKey;
 
     // Surface
-    const surfTxt=get('Superficie',col);
+    const surfTxt=get(['Surface','Superficie'],col);
     const surfKey=Object.entries(SURF_NAME).find(([k,v])=>surfTxt===v)?.[0]||'shingle';
     if($('surface-'+id)) $('surface-'+id).value=surfKey;
 
     // Battery
-    const batTxt=get('Bateria',col)||get('Batería',col);
+    const batTxt=get(['Battery','Bateria','Batería'],col);
     if(batTxt&&batTxt!=='—'){
       const bq=batTxt.match(/x(\d+)/); if(bq&&$('battQty-'+id)) $('battQty-'+id).value=bq[1];
-      const priceTxt=get('Precio bateria',col)||get('Precio total baterias',col)||get('Precio total baterías',col);
+      const priceTxt=get(['Battery price','Precio bateria','Precio batería','Precio total baterias','Precio total baterías'],col);
       const bpNum=parseMoney(priceTxt); if(bpNum&&$('battPrice-'+id)) $('battPrice-'+id).value=bpNum;
       const bt=batTxt.includes('Enphase')?'enphase':'pw3'; if($('battType-'+id)) $('battType-'+id).value=bt;
       syncOptBatt(id); fillBattRedline(id);
@@ -630,9 +631,9 @@ function parsePDFText(text, filename){
 
   calc();
   window.scrollTo({top:0,behavior:'smooth'});
-  $('handoffBanner').textContent='Proyecto cargado desde PDF: '+addr;
+  $('handoffBanner').textContent='Project loaded from PDF: '+addr;
   $('handoffBanner').style.display='block';
-  $('loadStatus').textContent='✓ '+optNames.length+' opción(es) cargadas';
+  $('loadStatus').textContent='✓ '+optNames.length+' option(s) loaded';
   setTimeout(()=>$('loadStatus').textContent='',4000);
 }
 // ======================================================
@@ -690,7 +691,7 @@ function loadHandoff(){
   if(p.roofAge)$('projRoofAge').value=p.roofAge;
   if(p.prevPermits)$('projPrevPermits').value=p.prevPermits;
   setRegion(p.regionCode);
-  let msg='Proyecto cargado desde Branch Lookup'+(p.address?': '+p.address:'');
+  let msg='Project loaded from Branch Lookup'+(p.address?': '+p.address:'');
   if(p.regionCode==='NFL')msg+=' - North Florida usa el pricing de Central Florida (CFL).';
   var bannerText = document.getElementById('handoffBannerText');
   var backBtn = document.getElementById('backToLookupBtn');
@@ -705,23 +706,23 @@ function loadHandoff(){
 $('baseFields').innerHTML=(function(){
   const sel=(name,opts,val)=>`<select id="b_${name}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
   return `<div class="vlt-grid">
-    <div class="vlt-fld"><label class="vlt-lbl">Tamano (kW)</label><input class="vlt-num" type="number" id="b_size" value="11.61" step="0.01" min="0"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="b_offset" step="1" placeholder="ej. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base incluido'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Montaje</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
-    <div class="vlt-fld" id="b_surfWrap"><label class="vlt-lbl">Superficie</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="b_size" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="b_offset" step="1" placeholder="e.g. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
+    <div class="vlt-fld" id="b_surfWrap"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
   </div>
   <div id="b_gmWrap" style="display:none;padding-top:8px">
     <div class="vlt-grid">
-      <div class="vlt-fld"><label class="vlt-lbl">Dirt (pies)</label><input class="vlt-num" type="number" id="b_dirt" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (pies)</label><input class="vlt-num" type="number" id="b_hard" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (ft)</label><input class="vlt-num" type="number" id="b_dirt" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (ft)</label><input class="vlt-num" type="number" id="b_hard" value="0" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="b_septic" value="0" min="0"></div>
     </div>
   </div>
   <div class="vlt-grid" style="margin-top:8px">
-    <div class="vlt-fld"><label class="vlt-lbl">Tipo bateria</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Cantidad bat.</label><input class="vlt-num" type="number" id="b_battQty" value="0" min="0" step="1"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Precio total bat. ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Battery type</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Battery qty</label><input class="vlt-num" type="number" id="b_battQty" value="0" min="0" step="1"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Total battery price ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="b_rebate" value="0" step="50" min="0"></div>
   </div>`;
 })();
@@ -736,7 +737,7 @@ document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEve
 document.getElementById('applyAll').addEventListener('click',applyBaseline);
 document.getElementById('pdfBtn').addEventListener('click',genPDF);
 
-// ===================== SIMULADOR DE AHORRO (handoff) =====================
+// ===================== SAVINGS SIMULATOR (handoff) =====================
 function refreshCardOptSel(){
   const sel=$('cardOptSel'); if(!sel) return;
   const prev=sel.value;
@@ -778,9 +779,9 @@ function buildSavingsHandoff(instId){
 }
 function openSavingsCalculator(){
   const sel=$('cardOptSel');
-  if(!sel||!sel.value){alert('Agrega y selecciona al menos una opción (con pago mensual) para continuar.');return;}
+  if(!sel||!sel.value){alert('Add and select at least one option (with a monthly payment) to continue.');return;}
   const payload=buildSavingsHandoff(sel.value);
-  if(!payload){alert('No se pudo preparar los datos para la opción seleccionada.');return;}
+  if(!payload){alert('Could not prepare data for the selected option.');return;}
   try{ sessionStorage.setItem('voltSavingsHandoff', JSON.stringify(payload)); }catch(e){}
   window.open('savings-calculator.html','_blank');
 }
@@ -795,7 +796,7 @@ function renderClientPDF(p){
   const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
   const doc=new jsPDF({orientation:n>=3?'landscape':'portrait',unit:'pt',format:'letter'});
   const regionName={SFL:'South Florida',CFL:'Central Florida',NFL:'North Florida'}[p.region]||p.region||'';
-  const title=(p.direccion&&p.direccion.trim())?p.direccion.trim():'Comparativo de Comisiones';
+  const title=(p.direccion&&p.direccion.trim())?p.direccion.trim():'Commission Comparison';
   const today=p.generado;
   let bi=0;for(let i=1;i<n;i++)if(ops[i].comision_total>ops[bi].comision_total)bi=i;
   const showStar=n>1;
@@ -803,11 +804,11 @@ function renderClientPDF(p){
   const empt=v=>v===null||v===undefined||v===''||v==='—'||v==='N/A';
   const clean=s=>String(s).replace(/—/g,'-').replace(/×/g,'x');
   const blocks=[
-    ['Proyecto',[['Tipo',o=>o.tipo,1],['Tamaño (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Montaje',o=>o.montaje,1],['Superficie',o=>o.superficie]]],
-    ['Adders solares',[['Adder de tamaño (auto)',o=>o.adder_tamano],['Adder de panel',o=>o.adder_panel],['Adder de superficie',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
-    ['Adders no solares',[['Adders no solares',o=>o.adders_no_solares]]],
-    ['Batería',[['Batería',o=>o.bateria],['Precio bateria',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Com. batería (J28)',o=>M(o.com_bateria)]]],
-    ['Resultados',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contrato $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Comisión solar (J27)',o=>M(o.comision_solar),1],['Comisión total',o=>M(o.comision_total),1,1],['TOTAL / Precio Cash',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (meses)',o=>o.term?o.term+'m':null],['Tasa %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Financiera / Escalator',o=>o.financiera||o.escalator],['Pago Mensual Año 1 (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Pago Mensual Mes 37+ (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Project',[['Type',o=>o.tipo,1],['System size (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Mount',o=>o.montaje,1],['Surface',o=>o.superficie]]],
+    ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
+    ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
+    ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (months)',o=>o.term?o.term+'m':null],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
@@ -816,11 +817,11 @@ function renderClientPDF(p){
     rows.forEach(row=>{const cells=[{content:row[0],styles:{fontStyle:'bold',textColor:[60,70,90],fillColor:[247,248,250]}}];
       ops.forEach((o,i)=>{let v=row[1](o);if(empt(v))v='—';const c={content:clean(v),styles:{}};
         if(row[3]){c.styles.fontStyle='bold';if(o.comision_total<0)c.styles.textColor=[192,57,43];else if(showStar&&i===bi)c.styles.textColor=[31,122,77];}
-        else if(row[0]==='Comisión solar (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
-        // Cap warnings: texto detallado + rojo en PDF
+        else if(row[0]==='Solar commission (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
+        // Cap warnings: detailed text + red in PDF
         if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ! cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Precio bateria'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Contrato $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Battery price'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Contract $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         cells.push(c);});
       body.push(cells);});
   });
@@ -828,10 +829,10 @@ function renderClientPDF(p){
   doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(31,42,68);try{doc.addImage(VOLT_LOGO,'JPEG',36,22,LOGO_W,LOGO_H);}catch(e){}
   doc.text(clean(title),36,32+LOGO_H+14);
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(107,114,128);
-  const sp=[];if(p.branch&&p.branch.trim())sp.push('Sucursal: '+p.branch.trim());if(regionName)sp.push('Region: '+regionName);sp.push('Generado: '+today);if(showStar)sp.push('* mayor comision');
+  const sp=[];if(p.branch&&p.branch.trim())sp.push('Branch: '+p.branch.trim());if(regionName)sp.push('Region: '+regionName);sp.push('Generated: '+today);if(showStar)sp.push('* highest commission');
   doc.text(sp.join('   -   '),36,32+LOGO_H+30);
   let _sy=32+LOGO_H+44;
-  const meta2=[];if(p.ahj&&String(p.ahj).trim())meta2.push('AHJ: '+p.ahj);if(p.permit_eta!==null&&p.permit_eta!==undefined&&String(p.permit_eta).trim()!=='')meta2.push('Permit ETA: '+p.permit_eta+' dias habiles');
+  const meta2=[];if(p.ahj&&String(p.ahj).trim())meta2.push('AHJ: '+p.ahj);if(p.permit_eta!==null&&p.permit_eta!==undefined&&String(p.permit_eta).trim()!=='')meta2.push('Permit ETA: '+p.permit_eta+' business days');
   if(meta2.length){doc.text(clean(meta2.join('   -   ')),36,32+LOGO_H+44);_sy=32+LOGO_H+58;}
   const meta3=[];if(p.name_on_title&&String(p.name_on_title).trim())meta3.push('Name on Title: '+p.name_on_title);if(p.roof_age&&String(p.roof_age).trim())meta3.push('Roof Age: '+p.roof_age);if(p.prev_permits&&String(p.prev_permits).trim())meta3.push('Previous Permits: '+p.prev_permits);
   if(meta3.length){doc.text(clean(meta3.join('   -   ')),36,_sy);_sy+=14;}
@@ -850,15 +851,15 @@ function renderClientPDF(p){
         var warn=false;
         if(lbl==='Offset'){var rawOff=typeof d.cell.raw==='object'&&d.cell.raw?d.cell.raw.content:d.cell.raw;var pct=parseFloat(rawOff||d.cell.text[0]);if(!isNaN(pct)&&pct>115)warn=true;}
         if(lbl==='Sales rebate (SR)'&&o.rebateCapExceeded)warn=true;
-        if(lbl==='Precio bateria'&&o.battCapExceeded)warn=true;
-        if(lbl==='Contrato $/W'&&o.solarCapExceeded)warn=true;
+        if(lbl==='Battery price'&&o.battCapExceeded)warn=true;
+        if(lbl==='Contract $/W'&&o.solarCapExceeded)warn=true;
         if(warn){d.cell.styles.fillColor=[253,236,234];d.cell.styles.textColor=[192,57,43];d.cell.styles.fontStyle='bold';}
       }
     }});
   let fy=doc.lastAutoTable.finalY+14;doc.setFontSize(7.5);doc.setTextColor(107,114,128);
-  const foot='Comision solar (J27) = (Lender - Redline) x W - adders solares - Tier 2 - adders no solares - precio de bateria. Com. bateria (J28) = precio - redline. Comision total = J27 + J28. TOTAL/Cash = Lender x W + residual. Valores en rojo = comision negativa. Offset, escalator y pago son referenciales.';
+  const foot='Solar commission (J27) = (Lender - Redline) x W - solar adders - Tier 2 - non-solar adders - battery price. Battery commission (J28) = price - redline. Total commission = J27 + J28. TOTAL/Cash = Lender x W + residual. Values in red = negative commission. Offset, escalator and payment are for reference only.';
   doc.text(doc.splitTextToSize(foot,doc.internal.pageSize.getWidth()-72),36,fy);
-  const safe=((p.direccion&&p.direccion.trim())?p.direccion.trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,''):'Comparativo_Comisiones_'+(p.region||''))+'_'+today+'.pdf';
+  const safe=((p.direccion&&p.direccion.trim())?p.direccion.trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,''):'Commission_Comparison_'+(p.region||''))+'_'+today+'.pdf';
   doc.save(safe);
 }
 </script>
