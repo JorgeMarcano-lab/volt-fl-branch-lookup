@@ -59,10 +59,7 @@
     gap:12px;
   }
   header .brand .logo{
-    width:40px;height:40px;border-radius:10px;
-    background:var(--volt-blue);
-    display:flex;align-items:center;justify-content:center;
-    font-weight:800;color:var(--ink);font-size:18px;
+    height:34px;width:auto;display:block;flex-shrink:0;
   }
   header h1{margin:0;font-size:19px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;}
   header p{margin:3px 0 0;font-size:11px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;}
@@ -200,7 +197,8 @@
   @media print{
     header .btnrow, .footerbar, .no-print{display:none !important;}
     body{background:#fff !important;color:#111 !important;}
-    header{background:#fff !important;color:#111 !important;border-bottom:2px solid #c79e1f !important;}
+    header{background:#141414 !important;border-bottom:2px solid #c79e1f !important;}
+    header .brand h1{color:#fff !important;}
     header h1{color:#111 !important;}
     header p{color:#666 !important;}
     .card,.stat{background:#fff !important;border-color:#ddd !important;}
@@ -222,7 +220,7 @@
 
 <header>
   <div class="brand">
-    <div class="logo">V</div>
+    <img class="logo" src="data:image/png;base64,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" alt="Volt Home">
     <div>
       <h1>VOLT Solar Savings Calculator</h1>
       <p>Sales team tool — Utility vs. purchase option comparison</p>
@@ -423,6 +421,22 @@
 const fmt$ = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const fmt$2 = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtPct = n => (n*100).toLocaleString('en-US',{maximumFractionDigits:1})+'%';
+const VOLT_LOGO_DARK = document.querySelector('header .logo').src;   // transparent lockup, for dark surfaces
+let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, for the PDF
+(function(){
+  var img = new Image();
+  img.onload = function(){
+    var c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    var x = c.getContext('2d');
+    x.fillStyle = '#141414'; x.fillRect(0,0,c.width,c.height);
+    x.drawImage(img,0,0);
+    try { VOLT_LOGO_PRINT = c.toDataURL('image/jpeg',0.85); } catch(e){}
+  };
+  img.src = VOLT_LOGO_DARK;
+})();
+const LOGO_RATIO = 440/108;
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
 
 /* ─────────── Client-facing document language (PDF + savings card) ───────────
    The app UI is always English; only the deliverables the customer sees are
@@ -714,13 +728,9 @@ window.addEventListener('beforeprint', ()=>{
 // This never navigates away or reloads the page, so the calculator stays
 // fully editable — you can tweak the numbers and download a new PDF anytime.
 function drawVoltLogo(doc, x, y){
-  doc.setFillColor(26,26,26); // Volt ink
-  doc.roundedRect(x, y, 10, 10, 2, 2, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(13);
-  doc.setTextColor(255,255,255);
-  doc.text('V', x+5, y+7.2, {align:'center'});
-  doc.setTextColor(26,26,26); doc.setFontSize(15);
-  doc.text('VOLT', x+14, y+7.5);
+  const h = 10, w = Math.round(h * LOGO_RATIO * 10) / 10;
+  try { if(VOLT_LOGO_PRINT) doc.addImage(VOLT_LOGO_PRINT, 'JPEG', x, y, w, h); else throw 0; }
+  catch(e){ doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(26,26,26); doc.text('VOLT', x, y+7.5); }
 }
 
 function getOptionAssumptions(opt){
@@ -916,7 +926,7 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight){
   return yy;
 }
 
-function buildSavingsCard(){
+async function buildSavingsCard(){
   const utilStart = parseFloat(els.utilStart.value)||0;
   const utilRate = (parseFloat(els.utilRate.value)||0)/100;
   const term = parseInt(els.term.value);
@@ -936,19 +946,13 @@ function buildSavingsCard(){
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
   // Logo mark
-  ctx.fillStyle = '#f4c537';
-  roundRectPath(ctx, 60, 54, 56, 56, 12); ctx.fill();
-  ctx.fillStyle = '#141414';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `800 30px ${FONT}`;
-  ctx.fillText('V', 60+28, 54+30);
+  const logoH = 48, logoW = Math.round(logoH * LOGO_RATIO);
+  try { ctx.drawImage(await loadImg(VOLT_LOGO_DARK), 60, 50, logoW, logoH); }
+  catch(e){ ctx.fillStyle = '#fff'; ctx.font = `800 30px ${FONT}`; ctx.fillText('VOLT', 60, 88); }
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#fff';
-  ctx.font = `800 26px ${FONT}`;
-  ctx.fillText('VOLT', 130, 54+32);
   ctx.font = `400 14px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,.75)';
-  ctx.fillText(D().cardTagline, 130, 54+53);
+  ctx.fillText(D().cardTagline, 60, 50 + logoH + 22);
 
   // Customer line
   ctx.font = `400 20px ${FONT}`;
@@ -995,12 +999,12 @@ function buildSavingsCard(){
   return { canvas, name };
 }
 
-function downloadSavingsCard(){
+async function downloadSavingsCard(){
   const btn = document.getElementById('savingsCardBtn');
   const originalLabel = btn.textContent;
   btn.textContent = 'Generating...'; btn.disabled = true;
   try{
-    const { canvas, name } = buildSavingsCard();
+    const { canvas, name } = await buildSavingsCard();
     canvas.toBlob(blob=>{
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
