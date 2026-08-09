@@ -103,9 +103,6 @@ a{color:var(--accent)}
     <div class="vlt-fld"><label class="vlt-lbl">Current average monthly bill</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="e.g. 1787.85"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Annual utility rate increase (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
   </div>
-  <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:6px 0 10px"><i class="ti ti-adjustments" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Baseline (default values)</div>
-  <div id="baseFields"></div>
-  <button id="applyAll" class="vlt-chip" style="margin-top:8px"><i class="ti ti-copy" aria-hidden="true"></i> Apply baseline to all options</button>
 </div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -114,6 +111,11 @@ a{color:var(--accent)}
 </div>
 <div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
 <div id="opts"></div>
+<div id="emptyState" style="display:none;border:1px dashed var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:22px 16px;text-align:center;font-size:13px;color:var(--color-text-tertiary);margin-bottom:14px">
+  <i class="ti ti-square-rounded-plus" style="font-size:22px;display:block;margin-bottom:8px;opacity:.6" aria-hidden="true"></i>
+  Pick a financing option above to add its card.<br>
+  <span style="font-size:11px">Once it's filled in, use <b>Duplicate to…</b> at the bottom of the card to copy the project details into another lender.</span>
+</div>
 
 <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -268,31 +270,68 @@ function buildCard(inst){
         <div><span class="vlt-lbl">Battery comm. (J28)</span><span id="bt-${id}" style="font-size:14px;font-weight:500">$0</span></div>
       </div>
     </div>
-    <div id="note-${id}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>`;
+    <div id="note-${id}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>
+    <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--color-text-secondary)"><i class="ti ti-copy" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Duplicate project details to:</span>
+      <select id="dup-${id}" style="font-size:12px">${OPTIONS.map(x=>`<option value="${x.k}"${x.k===(OPTIONS.find(y=>y.k!==k)||OPTIONS[0]).k?' selected':''}>${x.n}</option>`).join('')}</select>
+      <button id="dupbtn-${id}" class="vlt-chip" title="Creates a new card for that lender with the same project details (size, panel, mount, battery, adders). Pricing fields stay blank."><i class="ti ti-plus" aria-hidden="true"></i> Duplicate</button>
+    </div>`;
   $('opts').appendChild(card);
+  card.querySelector('#dupbtn-'+id).addEventListener('click',function(e){e.stopPropagation();duplicateInst(id,$('dup-'+id).value);});
   card.querySelector('#dtbtn-'+id).addEventListener('click',function(){const d=$('det-'+id);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
   syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
   card.addEventListener('input',onChange);card.addEventListener('change',onChange);
 }
 
+function updateEmptyState(){const e=$('emptyState');if(e)e.style.display=instances.length?'none':'block';}
+
 function addInst(k){
   const id=k+'-'+(++instCounter);
   instances.push({id,k});
   buildCard({id,k});
+  updateEmptyState();
   calc();
+  return id;
+}
+
+// Copies ONLY the project details (FIELD_NAMES) into a new card for another lender.
+// Pricing fields (redline, contract $/W, DF/term/rate, escalator, payments) stay at their
+// defaults because they change per lender. Battery redline is re-derived for the new lender.
+function duplicateInst(srcId,targetK){
+  if(!targetK)return;
+  const srcIdx=instances.findIndex(x=>x.id===srcId);
+  if(srcIdx<0)return;
+  const id=targetK+'-'+(++instCounter);
+  instances.splice(srcIdx+1,0,{id,k:targetK});
+  buildCard({id,k:targetK});
+  FIELD_NAMES.forEach(n=>{const src=$(n+'-'+srcId),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
+  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
+  // place the copy right after the card it came from
+  const nc=$('card-'+id),sc=$('card-'+srcId);
+  if(nc&&sc&&sc.nextSibling!==nc)sc.parentNode.insertBefore(nc,sc.nextSibling);
+  // open the details panel so it's obvious what got copied
+  const d=$('det-'+id),b=$('dtbtn-'+id);
+  if(d&&b){d.style.display='block';b.querySelector('i').className='ti ti-chevron-down';}
+  updateEmptyState();
+  calc();
+  if(nc){nc.scrollIntoView({behavior:'smooth',block:'nearest'});
+    nc.style.transition='box-shadow .4s';nc.style.boxShadow='0 0 0 3px var(--color-border-info)';
+    setTimeout(()=>{nc.style.boxShadow='none';},900);}
+  return id;
 }
 
 function removeInst(id){
-  if(instances.length<=1)return;
   instances=instances.filter(x=>x.id!==id);
   const c=$('card-'+id); if(c)c.remove();
   delete lastRes[id];
+  updateEmptyState();
   calc();
 }
 
 function buildRows(){
   $('opts').innerHTML='';
   instances.forEach(inst=>buildCard(inst));
+  updateEmptyState();
 }
 
 function buildChips(){
@@ -468,17 +507,13 @@ function renderCmp(res,bestId){
 
 function onChange(e){const id=e.target.id||'';
   const parts=id.split('-');const suffix=parts.slice(1).join('-');
+  if(parts[0]==='dup')return; // duplicate-target picker: no recalculation needed
   if(parts[0]==='mount'){syncOptMount(suffix);}
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
   else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';}
   calc();
 }
-
-function applyBaseline(){
-  instances.forEach(inst=>{const {id}=inst;
-    FIELD_NAMES.forEach(n=>{const src=$('b_'+n),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
-    syncOptMount(id);syncOptBatt(id);fillBattRedline(id);});calc();}
 
 function emitPDF(text){
   if(typeof sendPrompt==='function'){sendPrompt(text);return;}
@@ -642,6 +677,7 @@ function parsePDFText(text, filename){
     syncOptMount(id);
   });
 
+  updateEmptyState();
   calc();
   window.scrollTo({top:0,behavior:'smooth'});
   $('handoffBanner').textContent='Project loaded from PDF: '+addr;
@@ -715,39 +751,12 @@ function loadHandoff(){
   calc();
 }
 
-// Build baseline fields
-$('baseFields').innerHTML=(function(){
-  const sel=(name,opts,val)=>`<select id="b_${name}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
-  return `<div class="vlt-grid">
-    <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="b_size" value="11.61" step="0.01" min="0"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="b_offset" step="1" placeholder="e.g. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
-    <div class="vlt-fld" id="b_surfWrap"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
-  </div>
-  <div id="b_gmWrap" style="display:none;padding-top:8px">
-    <div class="vlt-grid">
-      <div class="vlt-fld"><label class="vlt-lbl">Dirt (ft)</label><input class="vlt-num" type="number" id="b_dirt" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (ft)</label><input class="vlt-num" type="number" id="b_hard" value="0" min="0"></div>
-      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="b_septic" value="0" min="0"></div>
-    </div>
-  </div>
-  <div class="vlt-grid" style="margin-top:8px">
-    <div class="vlt-fld"><label class="vlt-lbl">Battery type</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ 10C']],'pw3')}</div>
-    <div class="vlt-fld"><label class="vlt-lbl">Battery qty</label><input class="vlt-num" type="number" id="b_battQty" value="0" min="0" step="1"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Total battery price ($)</label><input class="vlt-num" type="number" id="b_battPrice" value="15000" step="100" min="0"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="b_rebate" value="0" step="50" min="0"></div>
-  </div>`;
-})();
-
-document.getElementById('b_mount').addEventListener('change',function(){const sh=this.value==='ground';$('b_gmWrap').style.display=sh?'block':'none';$('b_surfWrap').style.display=sh?'none':'block';});
-
-// Seed default instances: all 5 options once
-OPTIONS.forEach(o=>addInst(o.k));
+// Start empty: no cards until the user picks a lender chip.
 buildChips();
+updateEmptyState();
+calc();
 
 document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
-document.getElementById('applyAll').addEventListener('click',applyBaseline);
 document.getElementById('pdfBtn').addEventListener('click',genPDF);
 
 // ===================== SAVINGS SIMULATOR (handoff) =====================
