@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1786412800 -->
+<!-- v1786489395 -->
 <meta name="theme-color" content="#141414">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Volt Florida Branch Lookup</title>
@@ -1663,7 +1663,7 @@ const ZIP_JURIS={
   "33306":["Broward","municipal","City of Fort Lauderdale Building Department"],
   "33308":["Broward","municipal","City of Fort Lauderdale Building Department"],
   "33309":["Broward","mixed","City of Oakland Park Building Department"],
-  "33311":["Broward","mixed","City of Wilton Manors Building Department"],
+  "33311":["Broward","mixed","City of Fort Lauderdale Building Department"],
   "33312":["Broward","mixed","City of Fort Lauderdale Building Department"],
   "33313":["Broward","mixed","City of Plantation Building Department"],
   "33314":["Broward","municipal","City of Fort Lauderdale Building Department"],
@@ -2269,6 +2269,11 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function extractZip(t){var m=t.match(/(?:FL|Florida)[,\s]+(3[0-9]{4})\b/i);if(m)return m[1];var all=t.match(/\b(3[0-9]{4})\b/g);if(all&&all.length>0)return all[all.length-1];return null;}
 
 const STREET_OVERRIDES = {
+  // === ZIP 33311 (8 jurisdicciones: Fort Lauderdale 20,780 / uninc 3,670 / Lauderhill 3,499 / Wilton Manors 2,855 / Lauderdale Lakes 2,562 / Oakland Park 2,004 / Plantation 65 / Lazy Lake 1). Barrido completo PENDIENTE - por ahora solo NW 4th Pl ===
+  'northwest 4th pl': {ahj:'City of Lauderhill Building Department', ahj_type:'municipal', city:'Lauderhill', zips:['33311'], note:'NW 4th Pl (ZIP 33311) es City of Lauderhill - PointMatch 57/57, cero Fort Lauderdale (verificado con filtro negativo) 2026-08-08'},
+  'northwest 4 pl': {ahj:'City of Lauderhill Building Department', ahj_type:'municipal', city:'Lauderhill', zips:['33311'], note:'NW 4th Pl (ZIP 33311) es City of Lauderhill - PointMatch 57/57, cero Fort Lauderdale (verificado con filtro negativo) 2026-08-08'},
+  'nw 4th pl': {ahj:'City of Lauderhill Building Department', ahj_type:'municipal', city:'Lauderhill', zips:['33311'], note:'NW 4th Pl (ZIP 33311) es City of Lauderhill - PointMatch 57/57, cero Fort Lauderdale (verificado con filtro negativo) 2026-08-08'},
+  'nw 4 pl': {ahj:'City of Lauderhill Building Department', ahj_type:'municipal', city:'Lauderhill', zips:['33311'], note:'NW 4th Pl (ZIP 33311) es City of Lauderhill - PointMatch 57/57, cero Fort Lauderdale (verificado con filtro negativo) 2026-08-08'},
   // === ZIP 34772 Osceola census 2026-08-08: St. Cloud 13,843 (79%) / uninc Osceola 3,623 (21%). Default correcto; overrides del bolson uninc. Keys de mas larga a mas corta; sufijos trl/trail/tr ===
   'east irlo bronson memorial hwy': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', zips:['34772'], note:'E IRLO BRONSON MEMORIAL HWY (ZIP 34772) - FL DOR PointMatch full census 2026-08-08'},
   'e irlo bronson memorial hwy': {ahj:'Osceola County Building Department', ahj_type:'county-unincorporated', city:'Osceola County', zips:['34772'], note:'E IRLO BRONSON MEMORIAL HWY (ZIP 34772) - FL DOR PointMatch full census 2026-08-08'},
