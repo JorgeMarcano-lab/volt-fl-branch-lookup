@@ -136,7 +136,7 @@ a{color:var(--accent)}
 </div>
 
 <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
-Solar commission (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Battery comm. (J28) = precio − redline. Total commission = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 05272026 por región.
+Solar commission (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Battery comm. (J28) = precio − redline. Total commission = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 08262026 por región.
 </div>
 </div>
 
@@ -156,16 +156,17 @@ let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, 
   img.src = VOLT_LOGO_DARK;
 })();
 const LOGO_H=26,LOGO_W=Math.round(26*440/108);
-const REGIONS={SFL:{lightreach:2.15,enfin:2.15,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:2.05,enfin:2.05,tesla:2.10,teslapw3:2.00,affordable:1.80}};
-const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
+const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
+const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'enfin2',n:'Enfin (config 2)',t:'Lease'},{k:'pch',n:'Participate & Credit Human',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Almika'];
-const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
+const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],enfin2:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
-const BATT_PRICE_CAP=18000; // Adder Sheet 05272026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
-const SOLAR_PRICE_CAP=3.50; // Adder Sheet 05272026 — $3.50/W max solar price (excluding adders, battery and DF)
+const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
+const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
+const LEASE_KEYS=['lightreach','skylight','enfin','enfin2','pch']; // lease + pre-paid lease: Q.Peak base panel
 const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
@@ -176,13 +177,22 @@ let lastRes={},lastBest=null;
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
-function basePanelName(k){if(k==='lightreach'||k==='skylight'||k==='enfin')return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
+function basePanelName(k){if(LEASE_KEYS.includes(k))return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
 function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
-function panelRate(k,p){if(p==='base')return{r:0,ok:true};const lease=(k==='lightreach'||k==='skylight'||k==='enfin');
-  if(p==='qtron')return{r:0.05,ok:true};
-  if(p==='mission'){if(lease)return{r:0,ok:false};if(k==='tesla'||k==='teslapw3')return{r:0.10,ok:true};return{r:region==='SFL'?0.15:0.10,ok:true};}
-  if(p==='rec'){if(k==='tesla'||k==='teslapw3')return{r:0.45,ok:true};return{r:0,ok:false};}
+// Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
+// sheet; it is treated like LightReach. Cash is treated like Affordable Solar (purchase).
+function panelRate(k,p){if(p==='base')return{r:0,ok:true};
+  const lease=LEASE_KEYS.includes(k), teslaK=(k==='tesla'||k==='teslapw3'), sfl=(region==='SFL');
+  if(p==='qtron'){if(!lease)return{r:0,ok:false};                       // NA on every purchase option
+    if(sfl)return{r:0.05,ok:true};
+    return{r:(k==='enfin2'||k==='pch')?0.05:0.10,ok:true};}             // CFL: LightReach/Skylight/Enfin = 0.10
+  if(p==='mission'){if(k==='enfin2')return{r:0,ok:false};               // NA in both regions
+    if(sfl){if(lease)return{r:0,ok:false};return{r:teslaK?0.10:0.15,ok:true};}
+    return{r:0.20,ok:true};}                                            // CFL: 0.20 across the board
+  if(p==='rec'){if(k==='enfin2')return{r:0,ok:false};                   // NA in both regions
+    if(sfl)return{r:0.20,ok:true};                                      // SFL: 0.20 across the board
+    return teslaK?{r:0.45,ok:true}:{r:0,ok:false};}                     // CFL: only Tesla options
   return{r:0,ok:true};}
 function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
 function sizeAdder(k,W){const incl=(k==='tesla'||k==='teslapw3');if(W>11760)return{rate:0,fixed:incl?0:1250};if(W>=6000&&W<=8000)return{rate:incl?0:0.20,fixed:0};if(W<6000&&W>0)return{rate:0.90,fixed:0};return{rate:0,fixed:0};}
@@ -574,7 +584,7 @@ function parsePDFText(text, filename){
   if(!tableLines.length){alert('Could not find the data table in the PDF. Is this a PDF generated by this widget?');return;}
 
   // Header row: first row with multiple tab-separated non-empty cells
-  const headerIdx=tableLines.findIndex(l=>{const p=l.split('\t').filter(Boolean);return p.length>=2&&!p[0].match(/^\$|^[0-9]/)&&p.some(c=>['LightReach','Skylight','Enfin','Tesla','Affordable','Powerwall','Cash'].some(k=>c.includes(k)));});
+  const headerIdx=tableLines.findIndex(l=>{const p=l.split('\t').filter(Boolean);return p.length>=2&&!p[0].match(/^\$|^[0-9]/)&&p.some(c=>['LightReach','Skylight','Enfin','Participate','Credit Human','Tesla','Affordable','Powerwall','Cash'].some(k=>c.includes(k)));});
   if(headerIdx<0){alert('Could not identify the options in the PDF.');return;}
 
   const headerCells=tableLines[headerIdx].split('\t').filter(Boolean);
@@ -610,7 +620,7 @@ function parsePDFText(text, filename){
   $('opts').innerHTML=''; instances=[];
   optNames.forEach((rawName,col)=>{
     const name=rawName.replace(/\s*\*\s*$/,'').trim();
-    const optDef=OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
+    const optDef=OPTIONS.find(o=>o.n===name)||OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
     if(!optDef){console.warn('Unrecognized option:',name);return;}
     const k=optDef.k; const id=k+'-'+(++instCounter);
     instances.push({id,k}); buildCard({id,k});
