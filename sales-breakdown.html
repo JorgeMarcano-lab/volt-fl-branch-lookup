@@ -158,7 +158,7 @@ let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, 
 const LOGO_H=26,LOGO_W=Math.round(26*440/108);
 const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
 const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'enfin2',n:'Enfin (config 2)',t:'Lease'},{k:'pch',n:'Participate & Credit Human',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
-const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Almika'];
+const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Almika'];
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],enfin2:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
@@ -167,7 +167,7 @@ const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
 const LEASE_KEYS=['lightreach','skylight','enfin','enfin2','pch']; // lease + pre-paid lease: Q.Peak base panel
-const FIELD_NAMES=['size','offset','panel','mount','surface','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
 // instances: array of {id, k} — id is unique, k is the option key
@@ -195,6 +195,29 @@ function panelRate(k,p){if(p==='base')return{r:0,ok:true};
     return teslaK?{r:0.45,ok:true}:{r:0,ok:false};}                     // CFL: only Tesla options
   return{r:0,ok:true};}
 function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
+// Mixed roof: the system is split in kW across shingle/tile/flat. The surface adder is
+// the sum of each surface's rate x its kW, so the flat/tile adder only applies to its share.
+function readMix(id){const g=n=>parseFloat($(n+'-'+id)?.value)||0;
+  return{on:!!$('mixchk-'+id)?.checked,shingle:g('mkw_shingle'),tile:g('mkw_tile'),flat:g('mkw_flat')};}
+function mixTotal(m){return m.shingle+m.tile+m.flat;}
+function mixRoofAmt(k,m){return ['shingle','tile','flat'].reduce((a,sf)=>a+roofRate(k,sf)*m[sf]*1000,0);}
+function surfaceLabel(cfg){
+  if(cfg.mount==='ground')return '\u2014';
+  if(!cfg.mix.on)return SURF_NAME[cfg.surface];
+  const p=['shingle','tile','flat'].filter(sf=>cfg.mix[sf]>0).map(sf=>SURF_NAME[sf]+' '+cfg.mix[sf].toFixed(2)+' kW');
+  return p.length?('Mixed: '+p.join(' + ')):'Mixed (no kW entered)';}
+function roofAdderLabel(r){
+  const cfg=r.cfg;if(!(r.roofAmt>0))return '\u2014';
+  if(!cfg.mix.on)return SURF_NAME[cfg.surface]+' Roof - '+money(r.roofAmt);
+  const p=['tile','flat'].map(sf=>[sf,roofRate(r.inst.k,sf)*cfg.mix[sf]*1000]).filter(x=>x[1]>0)
+    .map(x=>SURF_NAME[x[0]]+' '+cfg.mix[x[0]].toFixed(2)+' kW '+money(x[1]));
+  return 'Mixed roof - '+money(r.roofAmt)+' ('+p.join(' + ')+')';}
+function updateMixNote(id){
+  const el=$('mixNote-'+id);if(!el)return;
+  if(!$('mixchk-'+id)?.checked){el.textContent='';return;}
+  const kw=parseFloat($('size-'+id)?.value)||0,t=mixTotal(readMix(id)),d=t-kw;
+  if(Math.abs(d)<=0.005){el.textContent='\u2713 '+t.toFixed(2)+' kW = system size';el.style.color='var(--color-text-secondary)';}
+  else{el.textContent='! '+t.toFixed(2)+' kW entered vs '+kw.toFixed(2)+' kW system size ('+(d>0?'+':'')+d.toFixed(2)+' kW)';el.style.color='var(--color-text-danger)';}}
 function sizeAdder(k,W){const incl=(k==='tesla'||k==='teslapw3');if(W>11760)return{rate:0,fixed:incl?0:1250};if(W>=6000&&W<=8000)return{rate:incl?0:0.20,fixed:0};if(W<6000&&W>0)return{rate:0.90,fixed:0};return{rate:0,fixed:0};}
 function sizeAdderInfo(k,W){const incl=(k==='tesla'||k==='teslapw3');
   if(W>11760)return{label:'Tier 2',amt:incl?0:1250,incl};
@@ -211,6 +234,16 @@ function detailFields(id){
     <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+    <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
+  </div>
+  <div id="mixWrap2-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Mixed roof \u2014 kW on each surface (Shingle $0/W \u00b7 Tile $0.10/W \u00b7 Flat $0.12/W). Should add up to the system size.</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Shingle (kW)</label><input class="vlt-num" type="number" id="mkw_shingle-${id}" value="0" step="0.01" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Tile (kW)</label><input class="vlt-num" type="number" id="mkw_tile-${id}" value="0" step="0.01" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Flat (kW)</label><input class="vlt-num" type="number" id="mkw_flat-${id}" value="0" step="0.01" min="0"></div>
+    </div>
+    <div id="mixNote-${id}" style="font-size:11px;margin-top:8px"></div>
   </div>
   <div id="gmWrap-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Ground Mount — $0.55/W + trenching</div>
@@ -315,6 +348,7 @@ function duplicateInst(srcId,targetK){
   instances.splice(srcIdx+1,0,{id,k:targetK});
   buildCard({id,k:targetK});
   FIELD_NAMES.forEach(n=>{const src=$(n+'-'+srcId),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
+  if($('mixchk-'+srcId)&&$('mixchk-'+id))$('mixchk-'+id).checked=$('mixchk-'+srcId).checked;
   syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
   // place the copy right after the card it came from
   const nc=$('card-'+id),sc=$('card-'+srcId);
@@ -366,13 +400,18 @@ function fillBattRedline(id){
   if(d===null){r1.value='';rA.value='';}
   else{r1.value=d[0]==null?'':d[0];rA.value=d[1]==null?'':d[1];}
 }
-function syncOptMount(id){const g=$('mount-'+id);if(!g)return;const sh=g.value==='ground';$('gmWrap-'+id).style.display=sh?'block':'none';$('surfWrap-'+id).style.display=sh?'none':'block';}
+function syncOptMount(id){const g=$('mount-'+id);if(!g)return;const sh=g.value==='ground';const mx=!!$('mixchk-'+id)?.checked;
+  $('gmWrap-'+id).style.display=sh?'block':'none';
+  $('surfWrap-'+id).style.display=(sh||mx)?'none':'block';
+  if($('mixWrap-'+id))$('mixWrap-'+id).style.display=sh?'none':'block';
+  if($('mixWrap2-'+id))$('mixWrap2-'+id).style.display=(!sh&&mx)?'block':'none';
+  updateMixNote(id);}
 function syncOptBatt(id){const g=$('battQty-'+id);if(!g)return;$('bw-'+id).style.display=(parseInt(g.value)||0)>0?'block':'none';}
 
 function readOptCfg(id){
   const g=n=>$(n+'-'+id);
   const kw=parseFloat(g('size')?.value)||0;
-  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',
+  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',mix:readMix(id),
     dirt:parseFloat(g('dirt')?.value)||0,hard:parseFloat(g('hard')?.value)||0,septic:parseFloat(g('septic')?.value)||0,
     battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
     rebate:parseFloat(g('rebate')?.value)||0};
@@ -380,6 +419,8 @@ function readOptCfg(id){
   let noSolar=0;const nsItems=[];
   ns.forEach(([fid,lbl])=>{const v=parseFloat(g(fid)?.value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
   const ov=parseFloat(g('ns_otherval')?.value)||0;if(ov>0){noSolar+=ov;nsItems.push((g('ns_otherlbl')?.value?.trim()||'Other')+' '+money(ov));}
+  cfg.mixTotal=mixTotal(cfg.mix);
+  cfg.mixMismatch=cfg.mix.on&&cfg.mount!=='ground'&&Math.abs(cfg.mixTotal-cfg.kw)>0.005;
   cfg.noSolar=noSolar;cfg.nsItems=nsItems;return cfg;
 }
 
@@ -396,10 +437,13 @@ function calc(){
     const redline=parseFloat($('rl-'+id)?.value)||0;
     const contract=parseFloat($('ct-'+id)?.value)||0;
     const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A for this option');
-    const rr=roofRate(k,cfg.mount==='rooftop'?cfg.surface:'shingle');
+    let roofAmt0=0;
+    if(cfg.mount==='rooftop')roofAmt0=cfg.mix.on?mixRoofAmt(k,cfg.mix):roofRate(k,cfg.surface)*W;
+    const rr=W>0?roofAmt0/W:0; // blended $/W so the flat/tile adder only covers its share of the array
+    if(cfg.mixMismatch)notes.push('Mixed roof kW ('+cfg.mixTotal.toFixed(2)+') != system size ('+cfg.kw.toFixed(2)+')');
     const sz=sizeAdder(k,W);const szI=sizeAdderInfo(k,W);
     let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
-    const panelAmt=pr.ok?pr.r*W:0;const roofAmt=rr*W;const gmAmt=gmRate*W;
+    const panelAmt=pr.ok?pr.r*W:0;const roofAmt=roofAmt0;const gmAmt=gmRate*W;
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
     const adderCarve=adder23; // the full adder is subtracted from commission (no partial carve); Contract x W is already the all-in price
     const adderResidual=0;
@@ -435,6 +479,7 @@ function calc(){
     if(comm>best){best=comm;bestId=id;}
   });
   instances.forEach(inst=>{const {id}=inst;const r=res[id];if(!r)return;
+    updateMixNote(id);
     const card=$('card-'+id);
     $('comm-'+id).textContent=money(r.comm);
     $('cbrk-'+id).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
@@ -460,12 +505,12 @@ function renderCmp(res,bestId){
       ['Offset',(inst,r)=>r.offTxt],
       ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
       ['Mount',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
-      ['Surface',(inst,r)=>r.cfg.mount==='ground'?'—':SURF_NAME[r.cfg.surface]]
+      ['Surface',(inst,r)=>surfaceLabel(r.cfg)]
     ]},
     {title:'Solar adders',rows:[
       ['Adder de tamano (auto)',(inst,r)=>sizeCell(r)],
       ['Panel adder',(inst,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' - '+money(r.panelAmt)):'—'],
-      ['Surface adder',(inst,r)=>r.roofAmt>0?(SURF_NAME[r.cfg.surface]+' Roof - '+money(r.roofAmt)):'—'],
+      ['Surface adder',(inst,r)=>roofAdderLabel(r)],
       ['Ground mount',(inst,r)=>r.gmAmt>0?('$0.55/W - '+money(r.gmAmt)):'—'],
       ['Trenching / septic',(inst,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
       ['Sales rebate (SR)',(inst,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
@@ -505,6 +550,8 @@ function renderCmp(res,bestId){
         if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% of contract, 12x monthly payment)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
+        // Mixed roof: kW split does not add up to the system size
+        if(label==='Surface'&&r.cfg.mixMismatch){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' \u26a0 '+r.cfg.mixTotal.toFixed(2)+' kW vs '+r.cfg.kw.toFixed(2)+' kW';}
         // Offset cap: > 115% highlighted in red
         if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';}
         // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
@@ -518,7 +565,14 @@ function renderCmp(res,bestId){
 function onChange(e){const id=e.target.id||'';
   const parts=id.split('-');const suffix=parts.slice(1).join('-');
   if(parts[0]==='dup')return; // duplicate-target picker: no recalculation needed
-  if(parts[0]==='mount'){syncOptMount(suffix);}
+  if(parts[0]==='mixchk'){
+    if(e.target.checked&&mixTotal(readMix(suffix))===0){
+      const sf=$('surface-'+suffix)?.value||'shingle';const el=$('mkw_'+sf+'-'+suffix);
+      if(el)el.value=(parseFloat($('size-'+suffix)?.value)||0).toFixed(2);
+    }
+    syncOptMount(suffix);
+  }
+  else if(parts[0]==='mount'){syncOptMount(suffix);}
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
   else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';}
@@ -672,8 +726,16 @@ function parsePDFText(text, filename){
 
     // Surface
     const surfTxt=get(['Surface','Superficie'],col);
-    const surfKey=Object.entries(SURF_NAME).find(([k,v])=>surfTxt===v)?.[0]||'shingle';
-    if($('surface-'+id)) $('surface-'+id).value=surfKey;
+    if(/^\s*Mixed/i.test(surfTxt)){
+      if($('mixchk-'+id))$('mixchk-'+id).checked=true;
+      ['shingle','tile','flat'].forEach(sf=>{
+        const m=surfTxt.match(new RegExp(SURF_NAME[sf]+'\\s+([\\d.]+)\\s*kW','i'));
+        if($('mkw_'+sf+'-'+id))$('mkw_'+sf+'-'+id).value=m?m[1]:0;});
+    } else {
+      if($('mixchk-'+id))$('mixchk-'+id).checked=false;
+      const surfKey=Object.entries(SURF_NAME).find(([k,v])=>surfTxt===v)?.[0]||'shingle';
+      if($('surface-'+id)) $('surface-'+id).value=surfKey;
+    }
 
     // Battery
     const batTxt=get(['Battery','Bateria','Batería'],col);
@@ -707,10 +769,10 @@ function genPDF(){
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
       return{opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
-        superficie:c.mount==='ground'?'N/A':SURF_NAME[c.surface],
+        superficie:c.mount==='ground'?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
-        adder_superficie:r.roofAmt>0?(SURF_NAME[c.surface]+' Roof '+money(r.roofAmt)):null,
+        adder_superficie:r.roofAmt>0?roofAdderLabel(r):null,
         ground_mount:r.gmAmt>0?money(r.gmAmt):null,trenching:r.gmFixed>0?money(r.gmFixed):null,
         sales_rebate:c.rebate>0?money(c.rebate):null,
         bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty):null,
@@ -798,6 +860,7 @@ function buildSavingsHandoff(instId){
     payload.optType='loan';
     const finRaw=$('co-'+inst.id)?.value||'Ygrene';
     const finco=finRaw.includes('Sungage Sunrise')?'Sungage Sunrise':finRaw;
+    // Sungage Level Pay: same monthly payment for the whole term (no escalator, no tier)
     payload.loanFinco=finco;
     if(finco==='Sungage Brightstart'){
       payload.loanPay1=pago;
