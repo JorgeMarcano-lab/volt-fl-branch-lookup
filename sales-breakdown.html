@@ -185,6 +185,14 @@ const RATE_SHEETS={
   'Sungage Level Pay':{terms:BSLP_TERMS,mode:'level',pts:'Sellers Points',src:'BSLP 25YR Rate Sheet',asOf:'9/8/2026',
     note:'LevelPay - one straight installment for the whole term, no DPP.'}
 };
+// Florida documentary stamp tax: $0.35 per $100 of the written obligation to pay money.
+// Sungage's calculator adds it to the financed amount BEFORE applying the payment factor
+// ("Applicable State Taxes" -> "Financed Amount (including applicable state taxes)"),
+// so the note amount is Cash + DF x 1.0035. Verified to the cent against the Sungage
+// calculator: 40,635 cash / 35.99% points -> 63,482.27 + 222.19 = 63,704.46 -> $248.32.
+const FL_DOC_STAMP=0.0035;
+const noteAmount=financed=>financed*(1+FL_DOC_STAMP);
+
 // rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
 // Cleared when the user edits a payment by hand or changes the finance company.
 let rateSel={};
@@ -331,6 +339,7 @@ function buildCard(inst){
                 <button id="rsClear-${id}" class="vlt-chip" title="Stop the rate sheet from driving these fields and edit them by hand">Manual</button>
               </div>
               <div id="rsNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
+              <div id="rsFin-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px"></div>
             </div>`
             :(o.t==='Lease'?`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`:'')}
     </div>
@@ -493,7 +502,7 @@ function applyRsRate(id){
   const f2=(sh.mode==='initmax')?r[3]:null;
   rateSel[id]={f1,f2,years:y,rate:r[0],pts:r[1]};
   $('rsNote-'+id).innerHTML=sh.src+' \u00b7 '+y+'-year \u00b7 '+r[0].toFixed(2)+'% \u00b7 '+sh.pts+' '+
-    (r[1]===0?'ZERO':r[1].toFixed(2)+'%')+'<br>'+sh.note+' Payment = Cash + DF \u00d7 factor, updates on its own.';
+    (r[1]===0?'ZERO':r[1].toFixed(2)+'%')+'<br>'+sh.note+' Payment = financed amount \u00d7 factor, updates on its own.';
   calc();
 }
 
@@ -506,6 +515,7 @@ function clearRsRate(id,notify){
     if($('rsRate-'+id))$('rsRate-'+id).value='';
     const sh=sheetFor(id);
     if(sh&&$('rsNote-'+id))$('rsNote-'+id).textContent='Manual \u2014 the rate sheet is no longer filling these fields.';
+    if($('rsFin-'+id))$('rsFin-'+id).textContent='';
     calc();
   }
 }
@@ -565,8 +575,10 @@ function calc(){
       // A rate-sheet selection keeps the payment fields live against the current Cash + DF.
       const rs=rateSel[id];
       if(rs){
-        if($('pay1-'+id))$('pay1-'+id).value=(financed*rs.f1).toFixed(2);
-        if(rs.f2&&$('pay2-'+id))$('pay2-'+id).value=(financed*rs.f2).toFixed(2);
+        const note=noteAmount(financed);
+        if($('pay1-'+id))$('pay1-'+id).value=(note*rs.f1).toFixed(2);
+        if($('pay2-'+id))$('pay2-'+id).value=rs.f2?(note*rs.f2).toFixed(2):'0';
+        if($('rsFin-'+id))$('rsFin-'+id).textContent='Financed '+money(note)+' = Cash + DF '+money(financed)+' + FL doc stamp 0.35% '+money(note-financed)+'.';
       }
     }
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
