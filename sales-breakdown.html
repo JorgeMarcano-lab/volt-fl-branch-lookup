@@ -159,6 +159,35 @@ const LOGO_H=26,LOGO_W=Math.round(26*440/108);
 const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
 const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'enfin2',n:'Enfin (config 2)',t:'Lease'},{k:'pch',n:'Participate & Credit Human',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Almika'];
+// ===================== SUNGAGE RATE SHEETS =====================
+// Transcribed verbatim from the official sheets; rates and fees as of 9/8/2026.
+// BSLP row = [borrowerRate%, sellersPoints%, INIT, MAX, LEVEL, ratesOver999Flag]
+//   INIT  = payment months 1-36 (during DPP) · MAX = month-37 payment if the 25% DPP is not repaid
+//   LEVEL = LevelPay, straight installment with no DPP
+//   Factors use a $50,000 reference loan, standard pricing, 0.25% ACH auto-pay discount.
+//   NOTE (source): 10-yr LEVEL is .0127570 for BOTH 8.99% and 8.49% in the published sheet.
+//   Kept verbatim — do not "fix" without Sungage confirming.
+const BSLP_TERMS={
+  5:[[10.49,0.0,0.0177154,0.0288912,0.0216768,1],[9.99,1.49,0.017446,0.028564,0.021419,0],[9.74,1.99,0.017312,0.0284014,0.0212908,0],[9.49,2.74,0.0171786,0.0282392,0.021163,0],[8.99,3.99,0.0169134,0.0279164,0.020909,0],[8.49,5.24,0.0166502,0.027596,0.0206568,0],[7.99,6.24,0.016389,0.0272778,0.0204066,0],[7.49,7.49,0.01613,0.0269618,0.0201582,0],[6.99,8.49,0.015873,0.026648,0.0199118,0],[5.99,10.74,0.0153654,0.0260272,0.0194246,0],[4.99,12.99,0.014866,0.0254158,0.0189452,0],[3.99,15.24,0.0143752,0.024813,0.0184732,0],[2.99,17.74,0.0138926,0.0242196,0.018009,0]],
+  10:[[9.74,0.0,0.010715,0.014798,0.0131776,0],[9.49,2.99,0.0105822,0.014633,0.0130366,0],[8.99,4.49,0.0103192,0.0143062,0.012757,0],[8.49,6.24,0.01006,0.0139838,0.012757,0],[7.99,8.24,0.0098048,0.0136658,0.0122082,0],[6.99,11.74,0.0093056,0.0130432,0.0116732,0],[5.99,15.24,0.0088218,0.0124382,0.0111524,0],[4.99,18.74,0.0083536,0.0118512,0.0106458,0],[4.49,20.74,0.0081254,0.0115644,0.0103978,0],[3.99,22.24,0.007901,0.0112822,0.0101534,0],[2.99,25.74,0.007464,0.0107312,0.0096756,0]],
+  15:[[8.99,4.74,0.008261,0.0110938,0.0102126,0],[8.49,6.99,0.0079888,0.0107514,0.0099112,0],[7.99,9.49,0.0077216,0.0104152,0.0096144,0],[6.99,13.99,0.0072024,0.0097608,0.009035,0],[5.99,18.49,0.0067042,0.009131,0.0084752,0],[4.99,22.49,0.006227,0.0085264,0.0079356,0],[4.49,24.99,0.0059964,0.0082334,0.0076734,0],[3.99,26.99,0.0057712,0.007947,0.0074164,0],[2.99,30.99,0.0053368,0.0073934,0.0069182,0]],
+  20:[[9.74,0.0,0.0077698,0.010277,0.0095556,0],[9.49,1.99,0.0076208,0.010089,0.0093884,0],[8.99,4.99,0.0073272,0.0097178,0.0090582,0],[8.49,7.74,0.0070394,0.0093534,0.0087332,0],[7.99,10.49,0.0067574,0.0089964,0.0084138,0],[6.99,15.74,0.0062116,0.008304,0.0077922,0],[5.99,20.99,0.0056908,0.0076418,0.0071942,0],[4.99,26.49,0.0051958,0.0070104,0.0066214,0],[4.49,28.99,0.0049582,0.0067066,0.0063448,0],[3.99,32.49,0.004727,0.006411,0.0060746,0]],
+  25:[[9.74,0.0,0.0072992,0.0095982,0.0089766,0],[9.49,2.49,0.0071424,0.0093994,0.008799,0],[8.99,5.24,0.0068336,0.0090072,0.008448,0],[8.49,7.99,0.0065308,0.0086226,0.0081024,0],[7.99,11.49,0.0062346,0.0082456,0.0077628,0],[6.99,16.99,0.005662,0.007516,0.0071026,0],[5.99,22.74,0.0051172,0.0068202,0.006469,0],[4.99,28.49,0.0046018,0.0061602,0.0058644,0],[4.49,31.49,0.0043554,0.0058442,0.0055734,0],[3.99,34.74,0.0041168,0.0055376,0.0052904,0]]};
+// Sunrise row = [borrowerRate%, sunriseFee%, paymentFactor, flag] — escalator loan, +2.9%/yr
+const SUNRISE_TERMS={
+  20:[[5.99,21.99,0.0057218,0],[4.99,27.49,0.0052183,0],[3.99,32.99,0.004743,0]],
+  25:[[5.99,23.74,0.0049038,0],[4.99,29.99,0.0043834,0],[3.99,35.99,0.003898,0]]};
+const RATE_SHEETS={
+  'Sungage Sunrise (2.9% annual escalator)':{terms:SUNRISE_TERMS,mode:'single',pts:'Sunrise Fee',src:'Sunrise Rate Sheet',asOf:'9/8/2026',
+    note:'Escalator loan - the factor gives the year-1 payment, then +2.9% each year.'},
+  'Sungage Brightstart':{terms:BSLP_TERMS,mode:'initmax',pts:'Sellers Points',src:'BSLP 25YR Rate Sheet',asOf:'9/8/2026',
+    note:'INIT fills months 1-36; MAX fills the month-37 payment if the 25% DPP is not repaid.'},
+  'Sungage Level Pay':{terms:BSLP_TERMS,mode:'level',pts:'Sellers Points',src:'BSLP 25YR Rate Sheet',asOf:'9/8/2026',
+    note:'LevelPay - one straight installment for the whole term, no DPP.'}
+};
+// rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
+// Cleared when the user edits a payment by hand or changes the finance company.
+let rateSel={};
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],enfin2:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
@@ -294,6 +323,15 @@ function buildCard(inst){
       <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="0.00"></div>
       <div><label class="vlt-lbl">Contract $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
       ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Finance Co.</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Rate %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
+            +`<div id="rsWrap-${id}" style="grid-column:1/-1;display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:10px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-size:11px;color:var(--color-text-secondary)"><i class="ti ti-table-options" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Rate sheet</span>
+                <select id="rsTerm-${id}" style="font-size:12px"></select>
+                <select id="rsRate-${id}" style="font-size:12px"></select>
+                <button id="rsClear-${id}" class="vlt-chip" title="Stop the rate sheet from driving these fields and edit them by hand">Manual</button>
+              </div>
+              <div id="rsNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
+            </div>`
             :(o.t==='Lease'?`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`:'')}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
@@ -321,8 +359,13 @@ function buildCard(inst){
     </div>`;
   $('opts').appendChild(card);
   card.querySelector('#dupbtn-'+id).addEventListener('click',function(e){e.stopPropagation();duplicateInst(id,$('dup-'+id).value);});
+  if(card.querySelector('#rsTerm-'+id)){
+    card.querySelector('#rsTerm-'+id).addEventListener('change',function(e){e.stopPropagation();fillRsRates(id);});
+    card.querySelector('#rsRate-'+id).addEventListener('change',function(e){e.stopPropagation();applyRsRate(id);});
+    card.querySelector('#rsClear-'+id).addEventListener('click',function(e){e.stopPropagation();clearRsRate(id,true);});
+  }
   card.querySelector('#dtbtn-'+id).addEventListener('click',function(){const d=$('det-'+id);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
-  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
+  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);syncRateSheet(id);
   card.addEventListener('input',onChange);card.addEventListener('change',onChange);
 }
 
@@ -367,7 +410,7 @@ function duplicateInst(srcId,targetK){
 function removeInst(id){
   instances=instances.filter(x=>x.id!==id);
   const c=$('card-'+id); if(c)c.remove();
-  delete lastRes[id];
+  delete lastRes[id];delete rateSel[id];
   updateEmptyState();
   calc();
 }
@@ -407,6 +450,65 @@ function syncOptMount(id){const g=$('mount-'+id);if(!g)return;const sh=g.value==
   if($('mixWrap2-'+id))$('mixWrap2-'+id).style.display=(!sh&&mx)?'block':'none';
   updateMixNote(id);}
 function syncOptBatt(id){const g=$('battQty-'+id);if(!g)return;$('bw-'+id).style.display=(parseInt(g.value)||0)>0?'block':'none';}
+
+// ===================== RATE SHEET PICKER =====================
+function sheetFor(id){const co=$('co-'+id);return co?RATE_SHEETS[co.value]:null;}
+
+// Show/hide the picker and rebuild the term list. Called on card build and whenever Finance Co. changes.
+function syncRateSheet(id){
+  const w=$('rsWrap-'+id); if(!w)return;
+  const sh=sheetFor(id);
+  w.style.display=sh?'block':'none';
+  if(!sh){clearRsRate(id,false);return;}
+  const ts=$('rsTerm-'+id);
+  ts.innerHTML=Object.keys(sh.terms).map(y=>Number(y)).sort((a,b)=>a-b)
+    .map(y=>`<option value="${y}">${y}-year</option>`).join('');
+  fillRsRates(id);
+}
+
+// Rebuild the borrower-rate list for the selected term. Nothing is applied until a real rate is picked.
+function fillRsRates(id){
+  const sh=sheetFor(id); if(!sh)return;
+  const y=parseInt($('rsTerm-'+id).value)||0;
+  const rows=sh.terms[y]||[];
+  $('rsRate-'+id).innerHTML='<option value="">Borrower rate...</option>'+rows.map((r,i)=>
+    `<option value="${i}">${r[0].toFixed(2)}%${r[5]?'*':''} &middot; ${sh.pts} ${r[1]===0?'ZERO':r[1].toFixed(2)+'%'}</option>`).join('');
+  clearRsRate(id,false);
+  $('rsNote-'+id).textContent=sh.src+' \u00b7 rates as of '+sh.asOf+' \u00b7 pick a rate to fill Rate %, Term and DF %.';
+}
+
+// Borrower Rate -> Rate % · years x12 -> Term (months) · Sellers Points / Sunrise Fee -> DF %
+// Payment factors drive the monthly payment fields, recomputed live in calc() from Cash + DF.
+function applyRsRate(id){
+  const sh=sheetFor(id); if(!sh)return;
+  const sel=$('rsRate-'+id).value;
+  if(sel===''){clearRsRate(id,true);return;}
+  const y=parseInt($('rsTerm-'+id).value)||0;
+  const r=(sh.terms[y]||[])[parseInt(sel)];
+  if(!r)return;
+  if($('tasa-'+id))$('tasa-'+id).value=r[0].toFixed(2);
+  if($('term-'+id))$('term-'+id).value=y*12;
+  if($('df-'+id))$('df-'+id).value=r[1].toFixed(2);
+  const f1=(sh.mode==='single')?r[2]:(sh.mode==='level'?r[4]:r[2]);
+  const f2=(sh.mode==='initmax')?r[3]:null;
+  rateSel[id]={f1,f2,years:y,rate:r[0],pts:r[1]};
+  $('rsNote-'+id).innerHTML=sh.src+' \u00b7 '+y+'-year \u00b7 '+r[0].toFixed(2)+'% \u00b7 '+sh.pts+' '+
+    (r[1]===0?'ZERO':r[1].toFixed(2)+'%')+'<br>'+sh.note+' Payment = Cash + DF \u00d7 factor, updates on its own.';
+  calc();
+}
+
+// Hand the payment fields back to the user. notify=false is the silent reset used when rebuilding the list.
+function clearRsRate(id,notify){
+  if(!rateSel[id])
+    {if(notify&&$('rsRate-'+id))$('rsRate-'+id).value='';return;}
+  delete rateSel[id];
+  if(notify){
+    if($('rsRate-'+id))$('rsRate-'+id).value='';
+    const sh=sheetFor(id);
+    if(sh&&$('rsNote-'+id))$('rsNote-'+id).textContent='Manual \u2014 the rate sheet is no longer filling these fields.';
+    calc();
+  }
+}
 
 function readOptCfg(id){
   const g=n=>$(n+'-'+id);
@@ -459,7 +561,14 @@ function calc(){
     const comm=solarComm+battComm;
     const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
     let financed=cash,df=0,term=0,tasa=0;
-    if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;}
+    if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;
+      // A rate-sheet selection keeps the payment fields live against the current Cash + DF.
+      const rs=rateSel[id];
+      if(rs){
+        if($('pay1-'+id))$('pay1-'+id).value=(financed*rs.f1).toFixed(2);
+        if(rs.f2&&$('pay2-'+id))$('pay2-'+id).value=(financed*rs.f2).toFixed(2);
+      }
+    }
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
@@ -575,7 +684,10 @@ function onChange(e){const id=e.target.id||'';
   else if(parts[0]==='mount'){syncOptMount(suffix);}
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
-  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';}
+  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';delete rateSel[k];syncRateSheet(k);}
+  // Typing a payment by hand takes it back from the rate sheet.
+  else if(parts[0]==='pay1'||parts[0]==='pay2'){clearRsRate(suffix,true);}
+  else if(parts[0]==='rsTerm'||parts[0]==='rsRate')return;
   calc();
 }
 
