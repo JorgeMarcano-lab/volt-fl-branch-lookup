@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volt Sales Breakdown Widget</title>
+<meta name="theme-color" content="#141414">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.5.0/iconfont/tabler-icons.min.css">
+<style>
+:root{
+  /* ── Volt Home corporate dark (Commercial Sales Dashboard) ── */
+  --color-text-primary:#f2f2f2;--color-text-secondary:#a8a8a8;--color-text-tertiary:#909090;
+  --color-text-info:#f4c537;--color-text-danger:#f87171;
+  --color-background-primary:#1e1e1e;--color-background-secondary:#232323;--color-background-info:rgba(244,197,55,0.12);
+  --color-border-tertiary:#2a2a2a;--color-border-secondary:#383838;--color-border-info:#f4c537;
+  --border-radius-md:8px;--border-radius-lg:12px;
+  --bg:#141414;--surface:#1e1e1e;--accent:#f4c537;--ink:#141414;
+  --cfl:#a78bfa;--cfl-bg:rgba(167,139,250,0.14);--cfl-bd:rgba(167,139,250,0.45);
+  --nfl:#34d399;--nfl-bg:rgba(52,211,153,0.14);--nfl-bd:rgba(52,211,153,0.45);
+  --sfl:#fb923c;--sfl-bg:rgba(251,146,60,0.14);--sfl-bd:rgba(251,146,60,0.45);
+}
+*{box-sizing:border-box}
+body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--color-text-primary);background:var(--bg);margin:0;padding:24px;-webkit-font-smoothing:antialiased}
+#vlt-root{max-width:1080px;margin:0 auto;background:transparent}
+input,select,textarea{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--color-border-secondary);border-radius:6px;background:#191919;color:var(--color-text-primary);width:100%}
+input::placeholder,textarea::placeholder{color:#6a6a6a}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+select{cursor:pointer}
+option{background:#1e1e1e;color:#f2f2f2}
+::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.5)}
+a{color:var(--accent)}
+/* ── Volt corporate header ── */
+.vlt-hdr{max-width:1080px;margin:0 auto 20px;text-align:center;padding-bottom:14px;border-bottom:2px solid var(--accent)}
+.vlt-hdr .wm{display:block;height:30px;width:auto;margin:0 auto 10px}
+.vlt-hdr h1{margin:6px 0 4px;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.01em}
+.vlt-hdr .sub{font-size:11px;letter-spacing:0.16em;color:var(--color-text-tertiary);text-transform:uppercase}
+/* ── section header bar (report style) ── */
+.vlt-sec{background:var(--color-background-primary);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:9px 14px;margin:0 0 12px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent)}
+.vlt-stitle{display:inline-flex;align-items:center;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);border-left:3px solid var(--accent);padding-left:10px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<div class="vlt-hdr">
+  <img class="wm" src="data:image/png;base64,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" alt="Volt Home">
+  <h1>Sales Breakdown</h1>
+  <div class="sub">Commission comparator &middot; Solar FL</div>
+</div>
+
+<div id="vlt-root" style="padding:1rem 0;">
+<h2 class="sr-only">Comparador de comisiones solar Volt — Sales Breakdown.</h2>
+<div id="handoffBanner" style="display:none;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between;gap:12px">
+  <span id="handoffBannerText"></span>
+  <a href="index.html" id="backToLookupBtn" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--accent);color:var(--ink);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">← Change address</a>
+</div>
+<style>
+.vlt-lbl{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+.vlt-fld{margin-bottom:12px}
+.vlt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.vlt-card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:10px}
+.vlt-num{width:100%;}
+.vlt-seg{display:inline-flex;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.vlt-seg button{border:none;border-radius:0;padding:6px 14px;background:transparent;color:var(--color-text-secondary);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.04em}
+.vlt-seg button.on{background:var(--color-background-info);color:var(--color-text-info)}
+/* branch identity on the region switch */
+.vlt-seg button[data-r="SFL"].on{background:var(--sfl-bg);color:var(--sfl);box-shadow:inset 0 -2px 0 var(--sfl)}
+.vlt-seg button[data-r="CFL"].on{background:var(--cfl-bg);color:var(--cfl);box-shadow:inset 0 -2px 0 var(--cfl)}
+.vlt-seg button[data-r="NFL"].on{background:var(--nfl-bg);color:var(--nfl);box-shadow:inset 0 -2px 0 var(--nfl)}
+.vlt-chip{border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s}
+.vlt-chip:hover{border-color:var(--accent)}
+.vlt-chip.on{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.vlt-row{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-bottom:8px}
+.vlt-rep{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end}
+.vlt-btn{border:1px solid var(--color-border-info);background:var(--accent);color:var(--ink);border-radius:var(--border-radius-md);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:background .15s,box-shadow .15s}
+.vlt-btn:hover{background:#ffd759;box-shadow:0 4px 18px rgba(244,197,55,0.20)}
+.vlt-tbl{border-collapse:collapse;font-size:12px;min-width:100%}
+.vlt-tbl th,.vlt-tbl td{border:1px solid var(--color-border-tertiary);padding:8px 11px;text-align:left;white-space:nowrap}
+.vlt-tbl th{background:#1a1a1a;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);border-bottom:2px solid var(--accent)}
+.vlt-tbl td:first-child,.vlt-tbl th:first-child{position:sticky;left:0;background:#1a1a1a;font-weight:600;color:var(--color-text-secondary)}
+.vlt-tbl tbody tr:hover td{background:#262626}
+.vlt-bhdr td{position:static;background:#1a1a1a;font-weight:800;color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:0.16em;border-top:2px solid var(--accent)}
+</style>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <span class="vlt-stitle"><i class="ti ti-map-pin" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Project</span>
+    <span class="vlt-seg" id="regSeg"><button data-r="SFL" class="on">South FL</button><button data-r="CFL">Central FL</button></span>
+  </div>
+  <div class="vlt-grid" style="margin-bottom:6px">
+    <div class="vlt-fld"><label class="vlt-lbl">Project address</label><input class="vlt-num" type="text" id="projAddr" placeholder="123 Main St, Miami, FL 33101"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Branch</label><input class="vlt-num" type="text" id="projBranch" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">AHJ</label><input class="vlt-num" type="text" id="projAHJ" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Permit ETA (business days)</label><input class="vlt-num" type="text" id="projEta" placeholder="e.g. 21"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Name on Title</label><input class="vlt-num" type="text" id="projNameOnTitle" placeholder="(auto from Branch Lookup)"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Roof Age</label><input class="vlt-num" type="text" id="projRoofAge" placeholder="e.g. 5 years, 2019, Unknown..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Previous Permits</label><input class="vlt-num" type="text" id="projPrevPermits" placeholder="e.g. Solar 2021, Roof 2019, None..."></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Current average monthly bill</label><input class="vlt-num" type="number" id="projUtilBill" step="1" min="0" placeholder="e.g. 1787.85"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Annual utility rate increase (%)</label><input class="vlt-num" type="number" id="projUtilRate" step="0.01" min="0" max="30" value="4.00"></div>
+  </div>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+  <span class="vlt-stitle">Options to compare</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary)">Each option has its own details</span>
+</div>
+<div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+<div id="opts"></div>
+<div id="emptyState" style="display:none;border:1px dashed var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:22px 16px;text-align:center;font-size:13px;color:var(--color-text-tertiary);margin-bottom:14px">
+  <i class="ti ti-square-rounded-plus" style="font-size:22px;display:block;margin-bottom:8px;opacity:.6" aria-hidden="true"></i>
+  Pick a financing option above to add its card.<br>
+  <span style="font-size:11px">Once it's filled in, use <b>Duplicate to…</b> at the bottom of the card to copy the project details into another lender.</span>
+</div>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:1.25rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <span class="vlt-stitle"><i class="ti ti-table" style="font-size:18px;vertical-align:-3px;margin-right:6px" aria-hidden="true"></i>Comparison summary</span>
+    <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button id="pdfBtn" class="vlt-btn"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> Generate PDF</button>
+      <label class="vlt-btn" style="cursor:pointer;background:#2a2a2a;color:#d4d4d4;border-color:#3a3a3a" title="Load a PDF previously generated by this widget">
+        <i class="ti ti-upload" aria-hidden="true"></i> Load PDF
+        <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
+      </label>
+      <select id="cardOptSel" class="vlt-btn" style="background:var(--color-background-primary);color:var(--color-text-secondary);border-color:var(--color-border-secondary);padding:6px 10px;font-size:12px;cursor:pointer" title="Choose the option for the savings card"></select>
+      <button id="savingsCardBtn" class="vlt-btn" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)"><i class="ti ti-calculator" aria-hidden="true"></i> Savings simulator</button>
+      <span id="loadStatus" style="font-size:11px;color:var(--color-text-tertiary)"></span>
+    </span>
+  </div>
+  <div style="overflow-x:auto"><div id="cmp"></div></div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px"><b>Generate PDF</b> downloads the document. <b>Load PDF</b> reopens a previously generated PDF and refills every field automatically. <b>Savings simulator</b> opens the VOLT Solar Savings Calculator in a new tab, preloaded with the option chosen in the selector and ready to edit.</div>
+</div>
+
+<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;line-height:1.6">
+Solar commission (J27) = (Lender − Redline)×W − adders solares − Tier 2 − no solares − precio batería. Battery comm. (J28) = precio − redline. Total commission = J27 + J28. TOTAL = Lender×W. Paneles base según el Adder Sheet 08262026 por región.
+</div>
+</div>
+
+<script>
+const VOLT_LOGO_DARK=document.querySelector('.vlt-hdr .wm').src;   // transparent lockup, dark surfaces
+let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, for the PDF
+(function(){
+  var img = new Image();
+  img.onload = function(){
+    var c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    var x = c.getContext('2d');
+    x.fillStyle = '#141414'; x.fillRect(0,0,c.width,c.height);
+    x.drawImage(img,0,0);
+    try { VOLT_LOGO_PRINT = c.toDataURL('image/jpeg',0.85); } catch(e){}
+  };
+  img.src = VOLT_LOGO_DARK;
+})();
+const LOGO_H=26,LOGO_W=Math.round(26*440/108);
+const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
+const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'enfin2',n:'Enfin (config 2)',t:'Lease'},{k:'pch',n:'Participate & Credit Human',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
+const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Almika'];
+// ===================== SUNGAGE RATE SHEETS =====================
+// Transcribed verbatim from the official sheets; rates and fees as of 9/8/2026.
+// BSLP row = [borrowerRate%, sellersPoints%, INIT, MAX, LEVEL, ratesOver999Flag]
+//   INIT  = payment months 1-36 (during DPP) · MAX = month-37 payment if the 25% DPP is not repaid
+//   LEVEL = LevelPay, straight installment with no DPP
+//   Factors use a $50,000 reference loan, standard pricing, 0.25% ACH auto-pay discount.
+//   NOTE (source): 10-yr LEVEL is .0127570 for BOTH 8.99% and 8.49% in the published sheet.
+//   Kept verbatim — do not "fix" without Sungage confirming.
+const BSLP_TERMS={
+  5:[[10.49,0.0,0.0177154,0.0288912,0.0216768,1],[9.99,1.49,0.017446,0.028564,0.021419,0],[9.74,1.99,0.017312,0.0284014,0.0212908,0],[9.49,2.74,0.0171786,0.0282392,0.021163,0],[8.99,3.99,0.0169134,0.0279164,0.020909,0],[8.49,5.24,0.0166502,0.027596,0.0206568,0],[7.99,6.24,0.016389,0.0272778,0.0204066,0],[7.49,7.49,0.01613,0.0269618,0.0201582,0],[6.99,8.49,0.015873,0.026648,0.0199118,0],[5.99,10.74,0.0153654,0.0260272,0.0194246,0],[4.99,12.99,0.014866,0.0254158,0.0189452,0],[3.99,15.24,0.0143752,0.024813,0.0184732,0],[2.99,17.74,0.0138926,0.0242196,0.018009,0]],
+  10:[[9.74,0.0,0.010715,0.014798,0.0131776,0],[9.49,2.99,0.0105822,0.014633,0.0130366,0],[8.99,4.49,0.0103192,0.0143062,0.012757,0],[8.49,6.24,0.01006,0.0139838,0.012757,0],[7.99,8.24,0.0098048,0.0136658,0.0122082,0],[6.99,11.74,0.0093056,0.0130432,0.0116732,0],[5.99,15.24,0.0088218,0.0124382,0.0111524,0],[4.99,18.74,0.0083536,0.0118512,0.0106458,0],[4.49,20.74,0.0081254,0.0115644,0.0103978,0],[3.99,22.24,0.007901,0.0112822,0.0101534,0],[2.99,25.74,0.007464,0.0107312,0.0096756,0]],
+  15:[[8.99,4.74,0.008261,0.0110938,0.0102126,0],[8.49,6.99,0.0079888,0.0107514,0.0099112,0],[7.99,9.49,0.0077216,0.0104152,0.0096144,0],[6.99,13.99,0.0072024,0.0097608,0.009035,0],[5.99,18.49,0.0067042,0.009131,0.0084752,0],[4.99,22.49,0.006227,0.0085264,0.0079356,0],[4.49,24.99,0.0059964,0.0082334,0.0076734,0],[3.99,26.99,0.0057712,0.007947,0.0074164,0],[2.99,30.99,0.0053368,0.0073934,0.0069182,0]],
+  20:[[9.74,0.0,0.0077698,0.010277,0.0095556,0],[9.49,1.99,0.0076208,0.010089,0.0093884,0],[8.99,4.99,0.0073272,0.0097178,0.0090582,0],[8.49,7.74,0.0070394,0.0093534,0.0087332,0],[7.99,10.49,0.0067574,0.0089964,0.0084138,0],[6.99,15.74,0.0062116,0.008304,0.0077922,0],[5.99,20.99,0.0056908,0.0076418,0.0071942,0],[4.99,26.49,0.0051958,0.0070104,0.0066214,0],[4.49,28.99,0.0049582,0.0067066,0.0063448,0],[3.99,32.49,0.004727,0.006411,0.0060746,0]],
+  25:[[9.74,0.0,0.0072992,0.0095982,0.0089766,0],[9.49,2.49,0.0071424,0.0093994,0.008799,0],[8.99,5.24,0.0068336,0.0090072,0.008448,0],[8.49,7.99,0.0065308,0.0086226,0.0081024,0],[7.99,11.49,0.0062346,0.0082456,0.0077628,0],[6.99,16.99,0.005662,0.007516,0.0071026,0],[5.99,22.74,0.0051172,0.0068202,0.006469,0],[4.99,28.49,0.0046018,0.0061602,0.0058644,0],[4.49,31.49,0.0043554,0.0058442,0.0055734,0],[3.99,34.74,0.0041168,0.0055376,0.0052904,0]]};
+// Sunrise row = [borrowerRate%, sunriseFee%, paymentFactor, flag] — escalator loan, +2.9%/yr
+const SUNRISE_TERMS={
+  20:[[5.99,21.99,0.0057218,0],[4.99,27.49,0.0052183,0],[3.99,32.99,0.004743,0]],
+  25:[[5.99,23.74,0.0049038,0],[4.99,29.99,0.0043834,0],[3.99,35.99,0.003898,0]]};
+const RATE_SHEETS={
+  'Sungage Sunrise (2.9% annual escalator)':{terms:SUNRISE_TERMS,mode:'single',pts:'Sunrise Fee',src:'Sunrise Rate Sheet',asOf:'9/8/2026',
+    note:'Escalator loan - the factor gives the year-1 payment, then +2.9% each year.'},
+  'Sungage Brightstart':{terms:BSLP_TERMS,mode:'initmax',pts:'Sellers Points',src:'BSLP 25YR Rate Sheet',asOf:'9/8/2026',
+    note:'INIT fills months 1-36; MAX fills the month-37 payment if the 25% DPP is not repaid.'},
+  'Sungage Level Pay':{terms:BSLP_TERMS,mode:'level',pts:'Sellers Points',src:'BSLP 25YR Rate Sheet',asOf:'9/8/2026',
+    note:'LevelPay - one straight installment for the whole term, no DPP.'}
+};
+// rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
+// Cleared when the user edits a payment by hand or changes the finance company.
+let rateSel={};
+const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],enfin2:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
+const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
+const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
+const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
+const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
+const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
+const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
+const LEASE_KEYS=['lightreach','skylight','enfin','enfin2','pch']; // lease + pre-paid lease: Q.Peak base panel
+const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+
+let region='SFL';
+// instances: array of {id, k} — id is unique, k is the option key
+let instances=[];
+let instCounter=0;
+let lastRes={},lastBest=null;
+const $=id=>document.getElementById(id);
+const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
+function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
+function basePanelName(k){if(LEASE_KEYS.includes(k))return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
+function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
+function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
+// Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
+// sheet; it is treated like LightReach. Cash is treated like Affordable Solar (purchase).
+function panelRate(k,p){if(p==='base')return{r:0,ok:true};
+  const lease=LEASE_KEYS.includes(k), teslaK=(k==='tesla'||k==='teslapw3'), sfl=(region==='SFL');
+  if(p==='qtron'){if(!lease)return{r:0,ok:false};                       // NA on every purchase option
+    if(sfl)return{r:0.05,ok:true};
+    return{r:(k==='enfin2'||k==='pch')?0.05:0.10,ok:true};}             // CFL: LightReach/Skylight/Enfin = 0.10
+  if(p==='mission'){if(k==='enfin2')return{r:0,ok:false};               // NA in both regions
+    if(sfl){if(lease)return{r:0,ok:false};return{r:teslaK?0.10:0.15,ok:true};}
+    return{r:0.20,ok:true};}                                            // CFL: 0.20 across the board
+  if(p==='rec'){if(k==='enfin2')return{r:0,ok:false};                   // NA in both regions
+    if(sfl)return{r:0.20,ok:true};                                      // SFL: 0.20 across the board
+    return teslaK?{r:0.45,ok:true}:{r:0,ok:false};}                     // CFL: only Tesla options
+  return{r:0,ok:true};}
+function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
+// Mixed roof: the system is split in kW across shingle/tile/flat. The surface adder is
+// the sum of each surface's rate x its kW, so the flat/tile adder only applies to its share.
+function readMix(id){const g=n=>parseFloat($(n+'-'+id)?.value)||0;
+  return{on:!!$('mixchk-'+id)?.checked,shingle:g('mkw_shingle'),tile:g('mkw_tile'),flat:g('mkw_flat')};}
+function mixTotal(m){return m.shingle+m.tile+m.flat;}
+function mixRoofAmt(k,m){return ['shingle','tile','flat'].reduce((a,sf)=>a+roofRate(k,sf)*m[sf]*1000,0);}
+function surfaceLabel(cfg){
+  if(cfg.mount==='ground')return '\u2014';
+  if(!cfg.mix.on)return SURF_NAME[cfg.surface];
+  const p=['shingle','tile','flat'].filter(sf=>cfg.mix[sf]>0).map(sf=>SURF_NAME[sf]+' '+cfg.mix[sf].toFixed(2)+' kW');
+  return p.length?('Mixed: '+p.join(' + ')):'Mixed (no kW entered)';}
+function roofAdderLabel(r){
+  const cfg=r.cfg;if(!(r.roofAmt>0))return '\u2014';
+  if(!cfg.mix.on)return SURF_NAME[cfg.surface]+' Roof - '+money(r.roofAmt);
+  const p=['tile','flat'].map(sf=>[sf,roofRate(r.inst.k,sf)*cfg.mix[sf]*1000]).filter(x=>x[1]>0)
+    .map(x=>SURF_NAME[x[0]]+' '+cfg.mix[x[0]].toFixed(2)+' kW '+money(x[1]));
+  return 'Mixed roof - '+money(r.roofAmt)+' ('+p.join(' + ')+')';}
+function updateMixNote(id){
+  const el=$('mixNote-'+id);if(!el)return;
+  if(!$('mixchk-'+id)?.checked){el.textContent='';return;}
+  const kw=parseFloat($('size-'+id)?.value)||0,t=mixTotal(readMix(id)),d=t-kw;
+  if(Math.abs(d)<=0.005){el.textContent='\u2713 '+t.toFixed(2)+' kW = system size';el.style.color='var(--color-text-secondary)';}
+  else{el.textContent='! '+t.toFixed(2)+' kW entered vs '+kw.toFixed(2)+' kW system size ('+(d>0?'+':'')+d.toFixed(2)+' kW)';el.style.color='var(--color-text-danger)';}}
+function sizeAdder(k,W){const incl=(k==='tesla'||k==='teslapw3');if(W>11760)return{rate:0,fixed:incl?0:1250};if(W>=6000&&W<=8000)return{rate:incl?0:0.20,fixed:0};if(W<6000&&W>0)return{rate:0.90,fixed:0};return{rate:0,fixed:0};}
+function sizeAdderInfo(k,W){const incl=(k==='tesla'||k==='teslapw3');
+  if(W>11760)return{label:'Tier 2',amt:incl?0:1250,incl};
+  if(W>=6000&&W<=8000)return{label:'Small (6-8 kW)',amt:incl?0:0.20*W,incl};
+  if(W<6000&&W>0)return{label:'Tiny (<6 kW)',amt:0.90*W,incl:false};
+  return{label:'—',amt:0,incl:false};}
+
+function detailFields(id){
+  const sel=(name,opts,val)=>`<select id="${name}-${id}">${opts.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('')}</select>`;
+  return `
+  <div class="vlt-grid">
+    <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
+    <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
+    <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
+  </div>
+  <div id="mixWrap2-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Mixed roof \u2014 kW on each surface (Shingle $0/W \u00b7 Tile $0.10/W \u00b7 Flat $0.12/W). Should add up to the system size.</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Shingle (kW)</label><input class="vlt-num" type="number" id="mkw_shingle-${id}" value="0" step="0.01" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Tile (kW)</label><input class="vlt-num" type="number" id="mkw_tile-${id}" value="0" step="0.01" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Flat (kW)</label><input class="vlt-num" type="number" id="mkw_flat-${id}" value="0" step="0.01" min="0"></div>
+    </div>
+    <div id="mixNote-${id}" style="font-size:11px;margin-top:8px"></div>
+  </div>
+  <div id="gmWrap-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Ground Mount — $0.55/W + trenching</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Dirt (ft) x$25</label><input class="vlt-num" type="number" id="dirt-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Hardscape (ft) x$40</label><input class="vlt-num" type="number" id="hard-${id}" value="0" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Septic ($)</label><input class="vlt-num" type="number" id="septic-${id}" value="0" min="0"></div>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Battery</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Type</label>${sel('battType',[['pw3','Powerwall 3'],['enphase','Enphase IQ Battery 10C']],'pw3')}</div>
+      <div class="vlt-fld"><label class="vlt-lbl">Quantity</label><input class="vlt-num" type="number" id="battQty-${id}" value="0" min="0" step="1"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Total battery price ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Non-solar adders</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
+      <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="ns_hvac-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Fence</span><input class="vlt-num" type="number" id="ns_fence-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Gutters</span><input class="vlt-num" type="number" id="ns_gutters-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Water Filter</span><input class="vlt-num" type="number" id="ns_water-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Doors &amp; Windows</span><input class="vlt-num" type="number" id="ns_doors-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><span style="font-size:12px">Roof</span><input class="vlt-num" type="number" id="ns_roof-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-row"><input type="text" id="ns_otherlbl-${id}" placeholder="Other..." style="font-size:12px"><input class="vlt-num" type="number" id="ns_otherval-${id}" value="0" step="50" min="0"></div>
+    </div>
+  </div>`;}
+
+function buildCard(inst){
+  const {id,k}=inst;
+  const o=OPTIONS.find(x=>x.k===k);
+  const purchase=(o.t==='Purchase'||o.t==='Cash'); // Purchase and Cash share the purchase model (not lease)
+  const financedOpt=(o.t==='Purchase'); // only Purchase uses finance co./DF/Term/Rate
+  const card=document.createElement('div');
+  card.className='vlt-card';card.id='card-'+id;
+  card.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Total commission</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
+        <button onclick="removeInst('${id}')" title="Remove" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
+      </span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
+      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="0.00"></div>
+      <div><label class="vlt-lbl">Contract $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
+      ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Finance Co.</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Rate %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
+            +`<div id="rsWrap-${id}" style="grid-column:1/-1;display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:10px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-size:11px;color:var(--color-text-secondary)"><i class="ti ti-table-options" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Rate sheet</span>
+                <select id="rsTerm-${id}" style="font-size:12px"></select>
+                <select id="rsRate-${id}" style="font-size:12px"></select>
+                <button id="rsClear-${id}" class="vlt-chip" title="Stop the rate sheet from driving these fields and edit them by hand">Manual</button>
+              </div>
+              <div id="rsNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
+            </div>`
+            :(o.t==='Lease'?`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`:'')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
+      <div><span class="vlt-lbl">TOTAL / ${purchase?'Cash':'Cash Price'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
+      ${financedOpt?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
+      <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
+      ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
+            :(o.t==='Lease'?`<div><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`:'')}
+    </div>
+    <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Project details</button>
+    <div id="det-${id}" style="display:none">${detailFields(id)}</div>
+    <div id="bw-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px"><i class="ti ti-battery-charging" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Battery <span id="bname-${id}"></span> — editable redline</div>
+      <div class="vlt-rep">
+        <div><label class="vlt-lbl">First redline ($)</label><input type="number" step="100" id="br1-${id}" class="vlt-num"></div>
+        <div><label class="vlt-lbl">Add'l redline ($)</label><input type="number" step="100" id="brA-${id}" class="vlt-num"></div>
+        <div><span class="vlt-lbl">Battery comm. (J28)</span><span id="bt-${id}" style="font-size:14px;font-weight:500">$0</span></div>
+      </div>
+    </div>
+    <div id="note-${id}" style="font-size:11px;color:var(--color-text-secondary);margin-top:8px"></div>
+    <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;padding-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--color-text-secondary)"><i class="ti ti-copy" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Duplicate project details to:</span>
+      <select id="dup-${id}" style="font-size:12px">${OPTIONS.map(x=>`<option value="${x.k}"${x.k===(OPTIONS.find(y=>y.k!==k)||OPTIONS[0]).k?' selected':''}>${x.n}</option>`).join('')}</select>
+      <button id="dupbtn-${id}" class="vlt-chip" title="Creates a new card for that lender with the same project details (size, panel, mount, battery, adders). Pricing fields stay blank."><i class="ti ti-plus" aria-hidden="true"></i> Duplicate</button>
+    </div>`;
+  $('opts').appendChild(card);
+  card.querySelector('#dupbtn-'+id).addEventListener('click',function(e){e.stopPropagation();duplicateInst(id,$('dup-'+id).value);});
+  if(card.querySelector('#rsTerm-'+id)){
+    card.querySelector('#rsTerm-'+id).addEventListener('change',function(e){e.stopPropagation();fillRsRates(id);});
+    card.querySelector('#rsRate-'+id).addEventListener('change',function(e){e.stopPropagation();applyRsRate(id);});
+    card.querySelector('#rsClear-'+id).addEventListener('click',function(e){e.stopPropagation();clearRsRate(id,true);});
+  }
+  card.querySelector('#dtbtn-'+id).addEventListener('click',function(){const d=$('det-'+id);d.style.display=(d.style.display==='none')?'block':'none';this.querySelector('i').className='ti ti-chevron-'+(d.style.display==='none'?'right':'down');});
+  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);syncRateSheet(id);
+  card.addEventListener('input',onChange);card.addEventListener('change',onChange);
+}
+
+function updateEmptyState(){const e=$('emptyState');if(e)e.style.display=instances.length?'none':'block';}
+
+function addInst(k){
+  const id=k+'-'+(++instCounter);
+  instances.push({id,k});
+  buildCard({id,k});
+  updateEmptyState();
+  calc();
+  return id;
+}
+
+// Copies ONLY the project details (FIELD_NAMES) into a new card for another lender.
+// Pricing fields (redline, contract $/W, DF/term/rate, escalator, payments) stay at their
+// defaults because they change per lender. Battery redline is re-derived for the new lender.
+function duplicateInst(srcId,targetK){
+  if(!targetK)return;
+  const srcIdx=instances.findIndex(x=>x.id===srcId);
+  if(srcIdx<0)return;
+  const id=targetK+'-'+(++instCounter);
+  instances.splice(srcIdx+1,0,{id,k:targetK});
+  buildCard({id,k:targetK});
+  FIELD_NAMES.forEach(n=>{const src=$(n+'-'+srcId),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
+  if($('mixchk-'+srcId)&&$('mixchk-'+id))$('mixchk-'+id).checked=$('mixchk-'+srcId).checked;
+  syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
+  // place the copy right after the card it came from
+  const nc=$('card-'+id),sc=$('card-'+srcId);
+  if(nc&&sc&&sc.nextSibling!==nc)sc.parentNode.insertBefore(nc,sc.nextSibling);
+  // open the details panel so it's obvious what got copied
+  const d=$('det-'+id),b=$('dtbtn-'+id);
+  if(d&&b){d.style.display='block';b.querySelector('i').className='ti ti-chevron-down';}
+  updateEmptyState();
+  calc();
+  if(nc){nc.scrollIntoView({behavior:'smooth',block:'nearest'});
+    nc.style.transition='box-shadow .4s';nc.style.boxShadow='0 0 0 3px var(--color-border-info)';
+    setTimeout(()=>{nc.style.boxShadow='none';},900);}
+  return id;
+}
+
+function removeInst(id){
+  instances=instances.filter(x=>x.id!==id);
+  const c=$('card-'+id); if(c)c.remove();
+  delete lastRes[id];delete rateSel[id];
+  updateEmptyState();
+  calc();
+}
+
+function buildRows(){
+  $('opts').innerHTML='';
+  instances.forEach(inst=>buildCard(inst));
+  updateEmptyState();
+}
+
+function buildChips(){
+  const c=$('chips');c.innerHTML='';
+  // Separator label
+  const lbl=document.createElement('span');
+  lbl.style.cssText='font-size:11px;color:var(--color-text-tertiary);align-self:center;margin-right:4px';
+  lbl.textContent='Add option:';c.appendChild(lbl);
+  OPTIONS.forEach(o=>{
+    const b=document.createElement('button');b.className='vlt-chip';
+    b.innerHTML=`<i class="ti ti-plus" aria-hidden="true"></i>${o.n}`;
+    b.title=`Add ${o.n}`;
+    b.addEventListener('click',()=>addInst(o.k));
+    c.appendChild(b);
+  });}
+
+function fillBattRedline(id){
+  const k=instances.find(x=>x.id===id)?.k;if(!k)return;
+  const t=$('battType-'+id)?.value;const d=battDefault(k,t);
+  const r1=$('br1-'+id),rA=$('brA-'+id);if(!r1)return;
+  $('bname-'+id).textContent=BATT_NAME[t];
+  if(d===null){r1.value='';rA.value='';}
+  else{r1.value=d[0]==null?'':d[0];rA.value=d[1]==null?'':d[1];}
+}
+function syncOptMount(id){const g=$('mount-'+id);if(!g)return;const sh=g.value==='ground';const mx=!!$('mixchk-'+id)?.checked;
+  $('gmWrap-'+id).style.display=sh?'block':'none';
+  $('surfWrap-'+id).style.display=(sh||mx)?'none':'block';
+  if($('mixWrap-'+id))$('mixWrap-'+id).style.display=sh?'none':'block';
+  if($('mixWrap2-'+id))$('mixWrap2-'+id).style.display=(!sh&&mx)?'block':'none';
+  updateMixNote(id);}
+function syncOptBatt(id){const g=$('battQty-'+id);if(!g)return;$('bw-'+id).style.display=(parseInt(g.value)||0)>0?'block':'none';}
+
+// ===================== RATE SHEET PICKER =====================
+function sheetFor(id){const co=$('co-'+id);return co?RATE_SHEETS[co.value]:null;}
+
+// Show/hide the picker and rebuild the term list. Called on card build and whenever Finance Co. changes.
+function syncRateSheet(id){
+  const w=$('rsWrap-'+id); if(!w)return;
+  const sh=sheetFor(id);
+  w.style.display=sh?'block':'none';
+  if(!sh){clearRsRate(id,false);return;}
+  const ts=$('rsTerm-'+id);
+  ts.innerHTML=Object.keys(sh.terms).map(y=>Number(y)).sort((a,b)=>a-b)
+    .map(y=>`<option value="${y}">${y}-year</option>`).join('');
+  fillRsRates(id);
+}
+
+// Rebuild the borrower-rate list for the selected term. Nothing is applied until a real rate is picked.
+function fillRsRates(id){
+  const sh=sheetFor(id); if(!sh)return;
+  const y=parseInt($('rsTerm-'+id).value)||0;
+  const rows=sh.terms[y]||[];
+  $('rsRate-'+id).innerHTML='<option value="">Borrower rate...</option>'+rows.map((r,i)=>
+    `<option value="${i}">${r[0].toFixed(2)}%${r[5]?'*':''} &middot; ${sh.pts} ${r[1]===0?'ZERO':r[1].toFixed(2)+'%'}</option>`).join('');
+  clearRsRate(id,false);
+  $('rsNote-'+id).textContent=sh.src+' \u00b7 rates as of '+sh.asOf+' \u00b7 pick a rate to fill Rate %, Term and DF %.';
+}
+
+// Borrower Rate -> Rate % · years x12 -> Term (months) · Sellers Points / Sunrise Fee -> DF %
+// Payment factors drive the monthly payment fields, recomputed live in calc() from Cash + DF.
+function applyRsRate(id){
+  const sh=sheetFor(id); if(!sh)return;
+  const sel=$('rsRate-'+id).value;
+  if(sel===''){clearRsRate(id,true);return;}
+  const y=parseInt($('rsTerm-'+id).value)||0;
+  const r=(sh.terms[y]||[])[parseInt(sel)];
+  if(!r)return;
+  if($('tasa-'+id))$('tasa-'+id).value=r[0].toFixed(2);
+  if($('term-'+id))$('term-'+id).value=y*12;
+  if($('df-'+id))$('df-'+id).value=r[1].toFixed(2);
+  const f1=(sh.mode==='single')?r[2]:(sh.mode==='level'?r[4]:r[2]);
+  const f2=(sh.mode==='initmax')?r[3]:null;
+  rateSel[id]={f1,f2,years:y,rate:r[0],pts:r[1]};
+  $('rsNote-'+id).innerHTML=sh.src+' \u00b7 '+y+'-year \u00b7 '+r[0].toFixed(2)+'% \u00b7 '+sh.pts+' '+
+    (r[1]===0?'ZERO':r[1].toFixed(2)+'%')+'<br>'+sh.note+' Payment = Cash + DF \u00d7 factor, updates on its own.';
+  calc();
+}
+
+// Hand the payment fields back to the user. notify=false is the silent reset used when rebuilding the list.
+function clearRsRate(id,notify){
+  if(!rateSel[id])
+    {if(notify&&$('rsRate-'+id))$('rsRate-'+id).value='';return;}
+  delete rateSel[id];
+  if(notify){
+    if($('rsRate-'+id))$('rsRate-'+id).value='';
+    const sh=sheetFor(id);
+    if(sh&&$('rsNote-'+id))$('rsNote-'+id).textContent='Manual \u2014 the rate sheet is no longer filling these fields.';
+    calc();
+  }
+}
+
+function readOptCfg(id){
+  const g=n=>$(n+'-'+id);
+  const kw=parseFloat(g('size')?.value)||0;
+  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',mix:readMix(id),
+    dirt:parseFloat(g('dirt')?.value)||0,hard:parseFloat(g('hard')?.value)||0,septic:parseFloat(g('septic')?.value)||0,
+    battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
+    rebate:parseFloat(g('rebate')?.value)||0};
+  const ns=[['ns_hvac','HVAC'],['ns_fence','Fence'],['ns_gutters','Gutters'],['ns_water','Water Filter'],['ns_doors','Doors & Windows'],['ns_roof','Roof']];
+  let noSolar=0;const nsItems=[];
+  ns.forEach(([fid,lbl])=>{const v=parseFloat(g(fid)?.value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
+  const ov=parseFloat(g('ns_otherval')?.value)||0;if(ov>0){noSolar+=ov;nsItems.push((g('ns_otherlbl')?.value?.trim()||'Other')+' '+money(ov));}
+  cfg.mixTotal=mixTotal(cfg.mix);
+  cfg.mixMismatch=cfg.mix.on&&cfg.mount!=='ground'&&Math.abs(cfg.mixTotal-cfg.kw)>0.005;
+  cfg.noSolar=noSolar;cfg.nsItems=nsItems;return cfg;
+}
+
+function sizeCell(r){if(r.sizeLabel==='—')return '—';return r.sizeIncl?(r.sizeLabel+' (included)'):(r.sizeLabel+' - '+money(r.sizeAmt));}
+
+function calc(){
+  let best=-1e15,bestId=null;const res={};
+  instances.forEach(inst=>{
+    const {id,k}=inst;
+    const o=OPTIONS.find(x=>x.k===k);
+    const purchase=(o.t==='Purchase'||o.t==='Cash');
+    const financedOpt=(o.t==='Purchase');
+    const cfg=readOptCfg(id);const W=cfg.W;
+    const redline=parseFloat($('rl-'+id)?.value)||0;
+    const contract=parseFloat($('ct-'+id)?.value)||0;
+    const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A for this option');
+    let roofAmt0=0;
+    if(cfg.mount==='rooftop')roofAmt0=cfg.mix.on?mixRoofAmt(k,cfg.mix):roofRate(k,cfg.surface)*W;
+    const rr=W>0?roofAmt0/W:0; // blended $/W so the flat/tile adder only covers its share of the array
+    if(cfg.mixMismatch)notes.push('Mixed roof kW ('+cfg.mixTotal.toFixed(2)+') != system size ('+cfg.kw.toFixed(2)+')');
+    const sz=sizeAdder(k,W);const szI=sizeAdderInfo(k,W);
+    let gmRate=0,gmFixed=0;if(cfg.mount==='ground'){gmRate=0.55;gmFixed=cfg.dirt*25+cfg.hard*40+cfg.septic;}
+    const panelAmt=pr.ok?pr.r*W:0;const roofAmt=roofAmt0;const gmAmt=gmRate*W;
+    const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
+    const adderCarve=adder23; // the full adder is subtracted from commission (no partial carve); Contract x W is already the all-in price
+    const adderResidual=0;
+    let battPriceThis=0,battComm=0,battTxt='$0';
+    if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
+      if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Bateria PW3 N/A para esta opcion');}
+      else{battPriceThis=cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
+        if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
+        else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
+    if($('bt-'+id))$('bt-'+id).textContent=battTxt;
+    const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
+    const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
+    const comm=solarComm+battComm;
+    const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
+    let financed=cash,df=0,term=0,tasa=0;
+    if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;
+      // A rate-sheet selection keeps the payment fields live against the current Cash + DF.
+      const rs=rateSel[id];
+      if(rs){
+        if($('pay1-'+id))$('pay1-'+id).value=(financed*rs.f1).toFixed(2);
+        if(rs.f2&&$('pay2-'+id))$('pay2-'+id).value=(financed*rs.f2).toFixed(2);
+      }
+    }
+    if($('cash-'+id))$('cash-'+id).textContent=money(cash);
+    const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
+    if($('off-'+id))$('off-'+id).textContent=offTxt;
+    // Sales Rebate cap: MIN(25% of contract, 12 x monthly payment) — Adder Sheet
+    const contractAmt=contract*W;
+    const cap25=contractAmt*0.25;
+    const pago=parseFloat($('pay1-'+id)?.value)||0;
+    const cap12=pago>0?pago*12:Infinity;
+    const rebateCap=Math.min(cap25,cap12);
+    const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
+
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
+      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
+      rebateCapExceeded,rebateCap,
+      solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
+      solarEffectiveWatt:W>0?((cash-adder23-otrosFull-battPriceThis)/W):0};
+    if(comm>best){best=comm;bestId=id;}
+  });
+  instances.forEach(inst=>{const {id}=inst;const r=res[id];if(!r)return;
+    updateMixNote(id);
+    const card=$('card-'+id);
+    $('comm-'+id).textContent=money(r.comm);
+    $('cbrk-'+id).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
+    $('note-'+id).textContent=r.notes.join(' · ');
+    card.style.border=(id===bestId)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
+    $('comm-'+id).style.color=(id===bestId)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
+  });
+  lastRes=res;lastBest=bestId;renderCmp(res,bestId);refreshCardOptSel();
+}
+
+function renderCmp(res,bestId){
+  const cmp=$('cmp');
+  const sel=instances.filter(inst=>res[inst.id]);
+  if(!sel.length){cmp.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);padding:8px">Add at least one option.</div>';return;}
+  const fin=id=>$('co-'+id)?$('co-'+id).value:'';
+  const esc=id=>$('esc-'+id)?($('esc-'+id).value+'%'):'';
+  const pay=id=>{const p=$('pay1-'+id);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
+  const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
+  const blocks=[
+    {title:'Project',rows:[
+      ['Type',(inst,r)=>r.o.t,{a:1}],
+      ['System size (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
+      ['Offset',(inst,r)=>r.offTxt],
+      ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
+      ['Mount',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
+      ['Surface',(inst,r)=>surfaceLabel(r.cfg)]
+    ]},
+    {title:'Solar adders',rows:[
+      ['Adder de tamano (auto)',(inst,r)=>sizeCell(r)],
+      ['Panel adder',(inst,r)=>r.panelAmt>0?(PANEL_NAME[r.cfg.panel]+' - '+money(r.panelAmt)):'—'],
+      ['Surface adder',(inst,r)=>roofAdderLabel(r)],
+      ['Ground mount',(inst,r)=>r.gmAmt>0?('$0.55/W - '+money(r.gmAmt)):'—'],
+      ['Trenching / septic',(inst,r)=>r.gmFixed>0?money(r.gmFixed):'—'],
+      ['Sales rebate (SR)',(inst,r)=>r.cfg.rebate>0?money(r.cfg.rebate):'—']
+    ]},
+    {title:'Non-solar adders',rows:[['Non-solar adders',(inst,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']]},
+    {title:'Battery',rows:[
+      ['Battery',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
+      ['Battery price',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
+      ['Battery comm. (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
+    ]},
+    {title:'Results',rows:[
+      ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
+      ['Contract $/W',(inst,r)=>'$'+r.contract.toFixed(2),{a:1}],
+      ['Solar commission (J27)',(inst,r)=>money(r.solarComm),{a:1}],
+      ['Total commission',(inst,r)=>money(r.comm),{a:1,bold:1}],
+      ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
+      ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
+      ['Term (months)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
+      ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
+      ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id):(r.o.t==='Lease'?esc(inst.id):'—')],
+      ['Year 1 monthly payment',(inst,r)=>pay(inst.id)],
+      ['Month 37+ monthly payment',(inst,r)=>pay2(inst.id)]
+    ]}
+  ];
+  const ncol=1+sel.length;
+  let html='<table class="vlt-tbl"><thead><tr><th></th>';
+  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id):(r.o.t==='Lease'?('Escalator '+esc(inst.id)):'One-time payment'))+'</span></th>';});
+  html+='</tr></thead><tbody>';
+  blocks.forEach(bk=>{
+    const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(inst=>!emptyV(row[1](inst,res[inst.id]))));
+    if(!vis.length)return;
+    html+='<tr class="vlt-bhdr"><td colspan="'+ncol+'">'+bk.title+'</td></tr>';
+    vis.forEach(row=>{const label=row[0],fn=row[1],opt=row[2];html+='<tr><td>'+label+'</td>';
+      sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
+        if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
+        // Battery price cap: red background if price per battery > $18,000 (Adder Sheet)
+        if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
+        // Sales Rebate cap: MIN(25% of contract, 12x monthly payment)
+        if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
+        // Mixed roof: kW split does not add up to the system size
+        if(label==='Surface'&&r.cfg.mixMismatch){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' \u26a0 '+r.cfg.mixTotal.toFixed(2)+' kW vs '+r.cfg.kw.toFixed(2)+' kW';}
+        // Offset cap: > 115% highlighted in red
+        if(label==='Offset'){var offPct=parseFloat(v);if(!isNaN(offPct)&&offPct>115)st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';}
+        // Solar price cap: (Cash - Adders Sol. - Adders No Sol. - Bat.) / W <= $3.50/W
+        if(label==='Contract $/W'&&r.solarCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const solarExcess=(r.solarEffectiveWatt-SOLAR_PRICE_CAP)*r.cfg.W;v=v+' ⚠ cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+money(solarExcess)+')';}
+        html+='<td style="'+st+'">'+v+'</td>';});
+      html+='</tr>';});
+  });
+  html+='</tbody></table>';cmp.innerHTML=html;
+}
+
+function onChange(e){const id=e.target.id||'';
+  const parts=id.split('-');const suffix=parts.slice(1).join('-');
+  if(parts[0]==='dup')return; // duplicate-target picker: no recalculation needed
+  if(parts[0]==='mixchk'){
+    if(e.target.checked&&mixTotal(readMix(suffix))===0){
+      const sf=$('surface-'+suffix)?.value||'shingle';const el=$('mkw_'+sf+'-'+suffix);
+      if(el)el.value=(parseFloat($('size-'+suffix)?.value)||0).toFixed(2);
+    }
+    syncOptMount(suffix);
+  }
+  else if(parts[0]==='mount'){syncOptMount(suffix);}
+  else if(parts[0]==='battQty'){syncOptBatt(suffix);}
+  else if(parts[0]==='battType'){fillBattRedline(suffix);}
+  else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';delete rateSel[k];syncRateSheet(k);}
+  // Typing a payment by hand takes it back from the rate sheet.
+  else if(parts[0]==='pay1'||parts[0]==='pay2'){clearRsRate(suffix,true);}
+  else if(parts[0]==='rsTerm'||parts[0]==='rsRate')return;
+  calc();
+}
+
+function emitPDF(text){
+  if(typeof sendPrompt==='function'){sendPrompt(text);return;}
+  try{navigator.clipboard.writeText(text);}catch(e){}
+  alert('JSON copied to clipboard.');
+}
+
+// ===================== LOAD PDF =====================
+document.getElementById('pdfUpload').addEventListener('change', async function(){
+  const file=this.files[0]; if(!file) return;
+  const status=$('loadStatus');
+  status.textContent='Reading PDF...';
+  try{
+    const ab=await file.arrayBuffer();
+    const pdfjsLib=window['pdfjs-dist/build/pdf'];
+    if(pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const loadingTask=(pdfjsLib||window.pdfjsLib).getDocument({data:ab});
+    const pdf=await loadingTask.promise;
+    let fullText='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const tc=await page.getTextContent();
+      // Group items by Y position to reconstruct rows
+      const items=tc.items.map(it=>({str:it.str.trim(),x:Math.round(it.transform[4]),y:Math.round(it.transform[5])})).filter(it=>it.str);
+      // Sort by y desc, then x asc
+      items.sort((a,b)=>b.y-a.y||a.x-b.x);
+      // Group by y (tolerance 4px)
+      const rows=[];let cur=[];let lastY=null;
+      items.forEach(it=>{if(lastY!==null&&Math.abs(it.y-lastY)>4){rows.push(cur);cur=[];}cur.push(it);lastY=it.y;});
+      if(cur.length)rows.push(cur);
+      fullText+=rows.map(r=>r.map(i=>i.str).join('\t')).join('\n')+'\n';
+    }
+    parsePDFText(fullText, file.name);
+    status.textContent='';
+    this.value='';
+  }catch(e){status.textContent='⚠ Error reading the PDF: '+e.message;console.error(e);}
+});
+
+function parsePDFText(text, filename){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  // --- Header: title (line 0), subtitle (line 1), optional AHJ line ---
+  let addr='', branch='', reg='', ahj='', eta='', dateStr='', nameOnTitle='', roofAge='', prevPermits='';
+  if(lines.length>0) addr=lines[0].replace(/\*/g,'').trim();
+  for(let i=1;i<Math.min(7,lines.length);i++){
+    const l=lines[i];
+    if(l.includes('Branch:')||l.includes('Sucursal:')){ branch=(l.match(/(?:Branch|Sucursal):\s*([^-]+)/)||[])[1]?.trim()||''; reg=(l.match(/Region:\s*([^-]+)/)||[])[1]?.trim()||''; dateStr=(l.match(/(?:Generated|Generado):\s*([0-9-]+)/)||[])[1]?.trim()||'';}
+    if(l.includes('AHJ:')){ ahj=(l.match(/AHJ:\s*([^-]+)/)||[])[1]?.trim()||''; const em=l.match(/Permit ETA:\s*(\d+)/); if(em)eta=em[1];}
+    if(l.includes('Name on Title:')){ nameOnTitle=(l.match(/Name on Title:\s*([^-]+)/)||[])[1]?.trim()||''; const rm=l.match(/Roof Age:\s*([^-]+)/); if(rm)roofAge=rm[1].trim(); const pm=l.match(/Previous Permits:\s*(.+)/); if(pm)prevPermits=pm[1].trim();}
+  }
+
+  // Map region display name to code
+  const regCode={'South Florida':'SFL','Central Florida':'CFL','North Florida':'NFL'}[reg]||'SFL';
+
+  // --- Find the table: header row has option names ---
+  // Lines that are tab-separated with 2+ cells = table rows
+  const tableLines=lines.filter(l=>l.includes('\t'));
+  if(!tableLines.length){alert('Could not find the data table in the PDF. Is this a PDF generated by this widget?');return;}
+
+  // Header row: first row with multiple tab-separated non-empty cells
+  const headerIdx=tableLines.findIndex(l=>{const p=l.split('\t').filter(Boolean);return p.length>=2&&!p[0].match(/^\$|^[0-9]/)&&p.some(c=>['LightReach','Skylight','Enfin','Participate','Credit Human','Tesla','Affordable','Powerwall','Cash'].some(k=>c.includes(k)));});
+  if(headerIdx<0){alert('Could not identify the options in the PDF.');return;}
+
+  const headerCells=tableLines[headerIdx].split('\t').filter(Boolean);
+  // First cell is empty label column; rest are option names
+  const optNames=headerCells[0]===''?headerCells.slice(1):headerCells;
+
+  // Build key→value map per option column
+  const numOpts=optNames.length;
+  const data={}; // data[label][colIdx] = value
+  tableLines.slice(headerIdx+1).forEach(line=>{
+    const cells=line.split('\t');
+    const label=cells[0]?.trim();
+    if(!label||['Project','Proyecto','Solar adders','Adders solares','Results','Resultados'].indexOf(label)>=0) return;
+    if(!data[label]) data[label]=[];
+    for(let c=1;c<=numOpts;c++) data[label].push((cells[c]||'').trim());
+  });
+
+  // accepts one label or a list; falls back to legacy Spanish labels from older PDFs
+  const get=(label,col)=>{const ls=Array.isArray(label)?label:[label];for(const l of ls){const v=(data[l]||[])[col];if(v)return v;}return '';};
+  const parseMoney=s=>{if(!s||s==='—'||s==='-')return 0;return parseFloat(s.replace(/[$,]/g,'').replace(/^-/,''))*(/^-/.test(s)||s.startsWith('-')?-1:1);};
+
+  // Prefill header fields
+  if(addr) $('projAddr').value=addr;
+  if(branch) $('projBranch').value=branch;
+  if(ahj) $('projAHJ').value=ahj;
+  if(eta) $('projEta').value=eta;
+  if(nameOnTitle) $('projNameOnTitle').value=nameOnTitle;
+  if(roofAge) $('projRoofAge').value=roofAge;
+  if(prevPermits) $('projPrevPermits').value=prevPermits;
+  setRegion(regCode);
+
+  // Rebuild instances
+  $('opts').innerHTML=''; instances=[];
+  optNames.forEach((rawName,col)=>{
+    const name=rawName.replace(/\s*\*\s*$/,'').trim();
+    const optDef=OPTIONS.find(o=>o.n===name)||OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
+    if(!optDef){console.warn('Unrecognized option:',name);return;}
+    const k=optDef.k; const id=k+'-'+(++instCounter);
+    instances.push({id,k}); buildCard({id,k});
+
+    // Redline / Contract
+    const rl=parseMoney(get('Redline $/W',col)); if(rl&&$('rl-'+id)) $('rl-'+id).value=rl;
+    const ct=parseMoney(get(['Contract $/W (Lender)','Contrato $/W (Lender)','Contract $/W','Contrato $/W'],col)); if(ct&&$('ct-'+id)) $('ct-'+id).value=ct;
+
+    // Finance Co. / Escalator
+    const finEsc=get(['Finance Co. / Escalator','Financiera / Escalator'],col);
+    if((optDef.t==='Purchase'||optDef.t==='Compra')&&finEsc&&$('co-'+id)){
+      const match=FINCO.find(f=>f===finEsc||finEsc.includes(f.split(' ')[0]));
+      if(match) $('co-'+id).value=match;
+    }
+    if(optDef.t==='Lease'&&finEsc&&$('esc-'+id)) $('esc-'+id).value=parseFloat(finEsc)||2.99;
+
+    // Monthly payment
+    const pago=get(['Year 1 monthly payment (ref.)','Pago Mensual Año 1 (ref.)','Monthly payment (ref.)','Pago mensual (ref.)','Pago mensual'],col);
+    if(pago&&$('pay1-'+id)) $('pay1-'+id).value=parseFloat(pago.replace(/[$,]/g,''))||0;
+    const bsFin=$('co-'+id)?.value==='Sungage Brightstart';
+    if($('p2w-'+id))$('p2w-'+id).style.display=bsFin?'block':'none';
+    if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bsFin?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';
+    const pago37=get(['Month 37+ monthly payment (ref.)','Pago Mensual Mes 37+ (ref.)'],col);
+    if(bsFin&&pago37&&pago37!=='—'&&$('pay2-'+id)) $('pay2-'+id).value=parseFloat(pago37.replace(/[$,]/g,''))||0;
+
+    // Cash + DF → derive DF %
+    const cash=parseMoney(get(['TOTAL / Cash','TOTAL / Cash Price','TOTAL / Precio Cash'],col));
+    const cashDF=parseMoney(get('Cash + DF',col));
+    if(cash&&cashDF&&cashDF>cash&&$('df-'+id)){
+      const df=Math.round((1-cash/cashDF)*10000)/100;
+      $('df-'+id).value=df;
+    }
+
+    // Term and Rate
+    const termTxt=get(['Term (months)','Term (meses)'],col); if(termTxt&&termTxt!=='—'&&$('term-'+id)) $('term-'+id).value=parseFloat(termTxt)||0;
+    const tasaTxt=get(['Rate %','Tasa %'],col); if(tasaTxt&&tasaTxt!=='—'&&$('tasa-'+id)) $('tasa-'+id).value=parseFloat(tasaTxt)||0;
+
+    // Size
+    const kw=parseFloat(get(['System size (kW)','Tamano (kW)','Tamaño (kW)'],col));
+    if(kw&&$('size-'+id)) $('size-'+id).value=kw;
+
+    // Offset
+    const off=get('Offset',col); if(off&&$('offset-'+id)) $('offset-'+id).value=parseFloat(off)||'';
+
+    // Panel
+    const panelTxt=get('Panel',col);
+    const panelKey=Object.entries(PANEL_NAME).find(([k,v])=>panelTxt.includes(v)&&k!=='base')?.[0]||'base';
+    if($('panel-'+id)) $('panel-'+id).value=panelKey;
+
+    // Surface
+    const surfTxt=get(['Surface','Superficie'],col);
+    if(/^\s*Mixed/i.test(surfTxt)){
+      if($('mixchk-'+id))$('mixchk-'+id).checked=true;
+      ['shingle','tile','flat'].forEach(sf=>{
+        const m=surfTxt.match(new RegExp(SURF_NAME[sf]+'\\s+([\\d.]+)\\s*kW','i'));
+        if($('mkw_'+sf+'-'+id))$('mkw_'+sf+'-'+id).value=m?m[1]:0;});
+    } else {
+      if($('mixchk-'+id))$('mixchk-'+id).checked=false;
+      const surfKey=Object.entries(SURF_NAME).find(([k,v])=>surfTxt===v)?.[0]||'shingle';
+      if($('surface-'+id)) $('surface-'+id).value=surfKey;
+    }
+
+    // Battery
+    const batTxt=get(['Battery','Bateria','Batería'],col);
+    if(batTxt&&batTxt!=='—'){
+      const bq=batTxt.match(/x(\d+)/); if(bq&&$('battQty-'+id)) $('battQty-'+id).value=bq[1];
+      const priceTxt=get(['Battery price','Precio bateria','Precio batería','Precio total baterias','Precio total baterías'],col);
+      const bpNum=parseMoney(priceTxt); if(bpNum&&$('battPrice-'+id)) $('battPrice-'+id).value=bpNum;
+      const bt=batTxt.includes('Enphase')?'enphase':'pw3'; if($('battType-'+id)) $('battType-'+id).value=bt;
+      syncOptBatt(id); fillBattRedline(id);
+    }
+    syncOptMount(id);
+  });
+
+  updateEmptyState();
+  calc();
+  window.scrollTo({top:0,behavior:'smooth'});
+  $('handoffBanner').textContent='Project loaded from PDF: '+addr;
+  $('handoffBanner').style.display='block';
+  $('loadStatus').textContent='✓ '+optNames.length+' option(s) loaded';
+  setTimeout(()=>$('loadStatus').textContent='',4000);
+}
+// ======================================================
+
+function genPDF(){
+  if(!instances.length)return;
+  const payload={region,direccion:($('projAddr').value||'').trim(),branch:($('projBranch').value||'').trim(),
+    ahj:($('projAHJ').value||'').trim()||null,permit_eta:($('projEta').value||'').trim()||null,
+    name_on_title:($('projNameOnTitle').value||'').trim()||null,
+    roof_age:($('projRoofAge').value||'').trim()||null,
+    prev_permits:($('projPrevPermits').value||'').trim()||null,
+    generado:new Date().toISOString().slice(0,10),
+    opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
+      return{opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
+        superficie:c.mount==='ground'?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
+        adder_tamano:sizeCell(r),
+        adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
+        adder_superficie:r.roofAmt>0?roofAdderLabel(r):null,
+        ground_mount:r.gmAmt>0?money(r.gmAmt):null,trenching:r.gmFixed>0?money(r.gmFixed):null,
+        sales_rebate:c.rebate>0?money(c.rebate):null,
+        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty):null,
+        com_bateria:c.battQty>0?Math.round(r.battComm):null,
+        adders_no_solares:c.nsItems.join('; ')||null,
+        redline:r.redline,contrato:r.contract,
+        comision_solar:Math.round(r.solarComm),comision_total:Math.round(r.comm),
+        total_cash:Math.round(r.cash),
+        cash_df:(r.loan&&r.df>0)?Math.round(r.financed):null,
+        term:(r.loan&&r.term>0)?r.term:null,
+        tasa:(r.loan&&r.tasa>0)?r.tasa:null,
+        financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
+        escalator:(!r.loan&&r.o.t==='Lease')?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
+        pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
+        pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
+        rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
+        battCapExceeded:r.battCapExceeded||false,
+        solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
+        cfg:{rebate:c.rebate,battQty:c.battQty,battPrice:c.battPrice,W:c.kw*1000}};}).filter(Boolean)};
+  const txt='[GENERAR_PDF_COMPARATIVO] Genera el PDF descargable del comparativo. Datos exactos:\n```json\n'+JSON.stringify(payload)+'\n```';
+  try{if(window.jspdf&&window.jspdf.jsPDF){renderClientPDF(payload);return;}}catch(e){console.error(e);}
+  emitPDF(txt);
+}
+
+// --- INIT ---
+function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));return true;}
+
+function loadHandoff(){
+  let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
+  if(!raw)return;let p;try{p=JSON.parse(raw);}catch(e){return;}
+  if(p.address)$('projAddr').value=p.address;
+  const br=(p.branch||p.regionCode||'');
+  if(br)$('projBranch').value=br+(p.county?(' - '+p.county+' County'):'');
+  if(p.ahj)$('projAHJ').value=p.ahj;
+  if(p.permitEta!==undefined&&p.permitEta!==null&&String(p.permitEta).trim()!=='')$('projEta').value=p.permitEta;
+  if(p.nameOnTitle)$('projNameOnTitle').value=p.nameOnTitle;
+  if(p.roofAge)$('projRoofAge').value=p.roofAge;
+  if(p.prevPermits)$('projPrevPermits').value=p.prevPermits;
+  setRegion(p.regionCode);
+  let msg='Project loaded from Branch Lookup'+(p.address?': '+p.address:'');
+  if(p.regionCode==='NFL')msg+=' - North Florida usa el pricing de Central Florida (CFL).';
+  var bannerText = document.getElementById('handoffBannerText');
+  var backBtn = document.getElementById('backToLookupBtn');
+  if(bannerText) bannerText.textContent=msg;
+  else $('handoffBanner').textContent=msg;
+  $('handoffBanner').style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px';
+  if(backBtn) backBtn.style.display='inline-block';
+  calc();
+}
+
+// Start empty: no cards until the user picks a lender chip.
+buildChips();
+updateEmptyState();
+calc();
+
+document.getElementById('regSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{setRegion(b.dataset.r);calc();}));
+document.getElementById('pdfBtn').addEventListener('click',genPDF);
+
+// ===================== SAVINGS SIMULATOR (handoff) =====================
+function refreshCardOptSel(){
+  const sel=$('cardOptSel'); if(!sel) return;
+  const prev=sel.value;
+  const eligible=instances.filter(inst=>$('pay1-'+inst.id));
+  sel.innerHTML=eligible.map(inst=>{const o=OPTIONS.find(x=>x.k===inst.k);return `<option value="${inst.id}">${o.n}</option>`;}).join('');
+  if(eligible.some(inst=>inst.id===prev)) sel.value=prev;
+}
+function buildSavingsHandoff(instId){
+  const inst=instances.find(x=>x.id===instId); if(!inst) return null;
+  const r=lastRes[inst.id]; if(!r) return null;
+  const o=r.o;
+  const utilStart=$('projUtilBill')?.value||'0';
+  const utilRate=$('projUtilRate')?.value||'4.00';
+  const termMonths=parseFloat($('term-'+inst.id)?.value)||0;
+  let term=termMonths>0?Math.round(termMonths/12):25;
+  term=Math.min(30,Math.max(5,term));
+  const custName=($('projAddr')?.value||'').trim()||($('projNameOnTitle')?.value||'').trim();
+  const pago=$('pay1-'+inst.id)?.value||'0';
+  const payload={utilStart,utilRate,term:String(term),custName};
+  if(o.t==='Lease'){
+    payload.optType='lease';
+    payload.leaseProvider=o.n;
+    payload.leasePay=pago;
+    payload.leaseEsc=$('esc-'+inst.id)?.value||'2.99';
+  } else {
+    payload.optType='loan';
+    const finRaw=$('co-'+inst.id)?.value||'Ygrene';
+    const finco=finRaw.includes('Sungage Sunrise')?'Sungage Sunrise':finRaw;
+    // Sungage Level Pay: same monthly payment for the whole term (no escalator, no tier)
+    payload.loanFinco=finco;
+    if(finco==='Sungage Brightstart'){
+      payload.loanPay1=pago;
+      payload.loanPay2=$('pay2-'+inst.id)?.value||pago;
+    } else {
+      payload.loanPay=pago;
+      if(finco==='Sungage Sunrise') payload.loanEsc='2.90';
+    }
+  }
+  return payload;
+}
+function openSavingsCalculator(){
+  const sel=$('cardOptSel');
+  if(!sel||!sel.value){alert('Add and select at least one option (with a monthly payment) to continue.');return;}
+  const payload=buildSavingsHandoff(sel.value);
+  if(!payload){alert('Could not prepare data for the selected option.');return;}
+  try{ sessionStorage.setItem('voltSavingsHandoff', JSON.stringify(payload)); }catch(e){}
+  window.open('savings-calculator.html','_blank');
+}
+document.getElementById('savingsCardBtn').addEventListener('click',openSavingsCalculator);
+// Call loadHandoff with multiple fallbacks to ensure it runs
+try { loadHandoff(); } catch(e){}
+setTimeout(function(){ try { loadHandoff(); } catch(e){} }, 100);
+setTimeout(function(){ try { loadHandoff(); } catch(e){} }, 500);
+window.addEventListener('load', function(){ try { loadHandoff(); } catch(e){}});
+
+function renderClientPDF(p){
+  const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
+  const doc=new jsPDF({orientation:n>=3?'landscape':'portrait',unit:'pt',format:'letter'});
+  const regionName={SFL:'South Florida',CFL:'Central Florida',NFL:'North Florida'}[p.region]||p.region||'';
+  const title=(p.direccion&&p.direccion.trim())?p.direccion.trim():'Commission Comparison';
+  const today=p.generado;
+  let bi=0;for(let i=1;i<n;i++)if(ops[i].comision_total>ops[bi].comision_total)bi=i;
+  const showStar=n>1;
+  const M=v=>{if(v===null||v===undefined)return null;const x=Math.round(v);return (x<0?'-$':'$')+Math.abs(x).toLocaleString('en-US');};
+  const empt=v=>v===null||v===undefined||v===''||v==='—'||v==='N/A';
+  const clean=s=>String(s).replace(/—/g,'-').replace(/×/g,'x');
+  const blocks=[
+    ['Project',[['Type',o=>o.tipo,1],['System size (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Mount',o=>o.montaje,1],['Surface',o=>o.superficie]]],
+    ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
+    ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
+    ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (months)',o=>o.term?o.term+'m':null],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+  ];
+  const ncol=n+1;const body=[];
+  blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
+    if(!rows.length)return;
+    body.push([{content:bk[0],colSpan:ncol,styles:{fillColor:[250,243,214],textColor:[120,90,10],fontStyle:'bold',fontSize:7.5}}]);
+    rows.forEach(row=>{const cells=[{content:row[0],styles:{fontStyle:'bold',textColor:[60,70,90],fillColor:[247,248,250]}}];
+      ops.forEach((o,i)=>{let v=row[1](o);if(empt(v))v='—';const c={content:clean(v),styles:{}};
+        if(row[3]){c.styles.fontStyle='bold';if(o.comision_total<0)c.styles.textColor=[192,57,43];else if(showStar&&i===bi)c.styles.textColor=[31,122,77];}
+        else if(row[0]==='Solar commission (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
+        // Cap warnings: detailed text + red in PDF
+        if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ! cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Battery price'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Contract $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        cells.push(c);});
+      body.push(cells);});
+  });
+  const head=[['',...ops.map((o,i)=>o.opcion+((showStar&&i===bi)?'  *':''))]];
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(26,26,26);try{if(VOLT_LOGO_PRINT)doc.addImage(VOLT_LOGO_PRINT,'JPEG',36,22,LOGO_W,LOGO_H);}catch(e){}
+  doc.text(clean(title),36,32+LOGO_H+14);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(107,114,128);
+  const sp=[];if(p.branch&&p.branch.trim())sp.push('Branch: '+p.branch.trim());if(regionName)sp.push('Region: '+regionName);sp.push('Generated: '+today);if(showStar)sp.push('* highest commission');
+  doc.text(sp.join('   -   '),36,32+LOGO_H+30);
+  let _sy=32+LOGO_H+44;
+  const meta2=[];if(p.ahj&&String(p.ahj).trim())meta2.push('AHJ: '+p.ahj);if(p.permit_eta!==null&&p.permit_eta!==undefined&&String(p.permit_eta).trim()!=='')meta2.push('Permit ETA: '+p.permit_eta+' business days');
+  if(meta2.length){doc.text(clean(meta2.join('   -   ')),36,32+LOGO_H+44);_sy=32+LOGO_H+58;}
+  const meta3=[];if(p.name_on_title&&String(p.name_on_title).trim())meta3.push('Name on Title: '+p.name_on_title);if(p.roof_age&&String(p.roof_age).trim())meta3.push('Roof Age: '+p.roof_age);if(p.prev_permits&&String(p.prev_permits).trim())meta3.push('Previous Permits: '+p.prev_permits);
+  if(meta3.length){doc.text(clean(meta3.join('   -   ')),36,_sy);_sy+=14;}
+  doc.autoTable({head:head,body:body,startY:_sy,theme:'grid',
+    styles:{fontSize:8.5,cellPadding:3,lineColor:[201,206,216],lineWidth:0.4,valign:'middle'},
+    headStyles:{fillColor:[26,26,26],textColor:[244,197,55],fontStyle:'bold',halign:'left'},
+    columnStyles:{0:{cellWidth:150}},margin:{left:36,right:36},
+    didParseCell:function(d){
+      if(d.section==='head'&&showStar&&d.column.index===bi+1)d.cell.styles.fillColor=[31,122,77];
+      if(d.section==='body'&&d.column.index>0){
+        var _c0=d.row.cells[0]?d.row.cells[0].raw:'';
+        var lbl=typeof _c0==='object'&&_c0!==null?(_c0.content||''):String(_c0||'');
+        var colIdx=d.column.index-1;
+        var o=ops[colIdx];
+        if(!o)return;
+        var warn=false;
+        if(lbl==='Offset'){var rawOff=typeof d.cell.raw==='object'&&d.cell.raw?d.cell.raw.content:d.cell.raw;var pct=parseFloat(rawOff||d.cell.text[0]);if(!isNaN(pct)&&pct>115)warn=true;}
+        if(lbl==='Sales rebate (SR)'&&o.rebateCapExceeded)warn=true;
+        if(lbl==='Battery price'&&o.battCapExceeded)warn=true;
+        if(lbl==='Contract $/W'&&o.solarCapExceeded)warn=true;
+        if(warn){d.cell.styles.fillColor=[253,236,234];d.cell.styles.textColor=[192,57,43];d.cell.styles.fontStyle='bold';}
+      }
+    }});
+  let fy=doc.lastAutoTable.finalY+14;doc.setFontSize(7.5);doc.setTextColor(107,114,128);
+  const foot='Solar commission (J27) = (Lender - Redline) x W - solar adders - Tier 2 - non-solar adders - battery price. Battery commission (J28) = price - redline. Total commission = J27 + J28. TOTAL/Cash = Lender x W + residual. Values in red = negative commission. Offset, escalator and payment are for reference only.';
+  doc.text(doc.splitTextToSize(foot,doc.internal.pageSize.getWidth()-72),36,fy);
+  const safe=((p.direccion&&p.direccion.trim())?p.direccion.trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,''):'Commission_Comparison_'+(p.region||''))+'_'+today+'.pdf';
+  doc.save(safe);
+}
+</script>
+</body>
+</html>
