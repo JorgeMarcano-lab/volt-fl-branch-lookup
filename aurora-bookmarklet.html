@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOLT | Aurora → Sales Breakdown</title>
+<meta name="theme-color" content="#141414">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#141414;--surface:#1e1e1e;--surface2:#232323;--accent:#f4c537;--ink:#141414;
+  --text:#f2f2f2;--text2:#a8a8a8;--text3:#909090;--border:#2a2a2a;--border2:#383838;--green:#34d399;--red:#f87171}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--text);
+  font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.55}
+.wrap{max-width:820px;margin:0 auto}
+header{text-align:center;padding-bottom:16px;border-bottom:2px solid var(--accent);margin-bottom:26px}
+header h1{margin:8px 0 4px;font-size:23px;font-weight:800;color:#fff;letter-spacing:-0.01em}
+header .sub{font-size:11px;letter-spacing:0.16em;color:var(--text3);text-transform:uppercase}
+h2{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);
+  border-left:3px solid var(--accent);padding-left:10px;margin:30px 0 12px}
+p{font-size:14px;color:var(--text2);margin:0 0 12px}
+b{color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.drag{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--surface2);
+  border:1px dashed var(--accent);border-radius:12px;padding:22px;margin:16px 0}
+a.bm{background:var(--accent);color:var(--ink);text-decoration:none;font-weight:800;font-size:15px;
+  padding:12px 22px;border-radius:9px;white-space:nowrap;cursor:grab;display:inline-block;flex-shrink:0}
+a.bm:active{cursor:grabbing}
+.drag .hint{font-size:13px;color:var(--text2)}
+ol{font-size:14px;color:var(--text2);padding-left:20px;margin:0}
+ol li{margin-bottom:9px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--accent);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:800;
+  background:#1a1a1a;border-bottom:2px solid var(--accent)}
+td:first-child{color:var(--text2)}
+.warn{background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.45);color:#ffb4b4;
+  border-radius:10px;padding:13px 16px;font-size:13px;margin:14px 0}
+.info{background:rgba(244,197,55,.10);border:1px solid rgba(244,197,55,.45);color:#f7d97a;
+  border-radius:10px;padding:13px 16px;font-size:13px;margin:14px 0}
+.warn b,.info b{color:#fff}
+code{background:#191919;border:1px solid var(--border2);border-radius:5px;padding:1px 6px;font-size:12.5px;color:var(--accent)}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.1em}
+pre{background:#191919;border:1px solid var(--border2);border-radius:8px;padding:14px;overflow:auto;
+  font-size:11.5px;line-height:1.5;color:#d8d8d8;max-height:460px}
+.foot{font-size:11.5px;color:var(--text3);border-top:1px solid var(--border);padding-top:14px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Aurora → Sales Breakdown</h1>
+  <div class="sub">One-click capture &middot; Volt FL</div>
+</header>
+
+<p>This bookmarklet reads the Aurora project you are looking at and drops the figures straight into the
+Sales Breakdown widget: address, utility, consumption, production, offset, and the whole
+<b>Compare pre and post-solar</b> card. Nothing is typed twice, and nothing is guessed.</p>
+
+<div class="drag">
+  <a class="bm" id="bm" href="#">⚡ Aurora → Volt</a>
+  <div class="hint"><b>Drag that button to your bookmarks bar.</b><br>
+  If the bar is hidden, press <code>⌘⇧B</code> (Mac) or <code>Ctrl+Shift+B</code> (Windows) first.<br>
+  Clicking it here does nothing — it only works on an Aurora page.</div>
+</div>
+
+<h2>How to use it</h2>
+<div class="card">
+  <ol>
+    <li>Open the project in Aurora and land on the <b>Dashboard</b>. Click the bookmarklet — it grabs the
+      customer, address, utility, bill and annual consumption.</li>
+    <li>Click <b>Sales Mode</b> and scroll to <b>Compare pre and post-solar</b>. Click the bookmarklet
+      again — it adds production, offset, escalation, grid use, fixed costs and every financing option.</li>
+    <li>A small panel in the corner shows what has been captured and what is still missing.
+      Hit <b>Send to Sales Breakdown</b> and the widget opens with everything filled in.</li>
+  </ol>
+</div>
+
+<div class="info">
+  <b>Two clicks, not one, and that is on purpose.</b> Aurora keeps the project data and the money on
+  different screens, so the bookmarklet accumulates: run it wherever you are, as often as you like, and it
+  merges what it finds. The panel tells you when it has enough.
+</div>
+
+<h2>What it captures</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>Screen</th><th>Fields</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>Customer &middot; address &middot; utility &amp; tariff &middot; avg. monthly bill &middot; annual kWh &middot; system size &middot; offset &middot; design cost</td></tr>
+      <tr><td>Sales Mode</td><td>Grid use and fixed costs, pre and post &middot; avg. monthly payment &middot; monthly savings &middot; escalation &middot; average rate &middot; yearly production &middot; every financing option with its payment, escalator and $/kWh</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="warn">
+  <b>The AHJ is deliberately not captured.</b> Aurora's jurisdiction is wrong often enough that the
+  Branch Lookup value wins. The bookmarklet never touches that field.
+</div>
+
+<h2>What it will not do</h2>
+<div class="card">
+  <p style="margin:0">It reads only what is rendered on the screen you are on, in your own logged-in session.
+  It sends nothing to any server, stores nothing outside your browser, touches no credentials, and never
+  writes to Aurora. If a number is not on screen, it is not captured — scroll to it and click again.</p>
+</div>
+
+<div class="warn">
+  <b>It will break, eventually.</b> This reads Aurora's interface, so an Aurora redesign can knock a field
+  out. When that happens the panel shows the field as missing instead of sending a wrong number, and the
+  Sales Breakdown fields stay editable by hand. Expect a repair once or twice a year.
+</div>
+
+<h2>If the widget does not open</h2>
+<div class="card">
+  <p style="margin:0 0 8px">Some browsers block the pop-up. The panel then falls back to
+  <b>Copy JSON</b>: click it, open the Sales Breakdown yourself, and press
+  <b>Paste from Aurora</b> in the Aurora section. Same result.</p>
+  <p style="margin:0">The Sales Breakdown only accepts messages coming from <code>v2.aurorasolar.com</code>.</p>
+</div>
+
+<details>
+  <summary>View the source</summary>
+  <pre id="srcView"></pre>
+</details>
+
+<div class="foot">
+  The bookmarklet below is generated from the source above every time this page loads, so the two can never
+  drift apart. To change behaviour, edit the source in this file and reload — the button updates itself.
+</div>
+
+</div>
+
+<script id="bmsrc" type="text/plain">
+(function(){
+  'use strict';
+  var WIDGET = 'https://jorgemarcano-lab.github.io/volt-fl-branch-lookup/sales-breakdown.html';
+  var ORIGIN = 'https://jorgemarcano-lab.github.io';
+  var KEY    = 'voltAuroraCapture';
+
+  if(!/aurorasolar\.com$/.test(location.hostname)){
+    alert('Run this on an Aurora project page (v2.aurorasolar.com).');
+    return;
+  }
+
+  /* ---------- helpers ---------- */
+  var B = function(){ return document.body.innerText; };
+  function g(re,i){ var m=B().match(re); return m ? String(m[i||1]).trim() : null; }
+  function num(s){ if(s==null) return null; var n=parseFloat(String(s).replace(/[$,\s]/g,'')); return isNaN(n)?null:n; }
+  function leaf(t){
+    var all=document.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){ if(!all[i].children.length && all[i].textContent.trim()===t) return all[i]; }
+    return null;
+  }
+  /* Walk up from a label until an ancestor holds every needle. Anchored on visible
+     text, never on class names — Aurora's classes are build-generated hashes. */
+  function cardFor(label,needles){
+    var n=leaf(label);
+    for(var i=0;i<12 && n;i++, n=n.parentElement){
+      var t=n.innerText||'';
+      var ok=true;
+      for(var j=0;j<needles.length;j++){ if(t.indexOf(needles[j])<0){ ok=false; break; } }
+      if(ok) return n;
+    }
+    return null;
+  }
+  function lines(el){
+    if(!el) return [];
+    return el.innerText.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  }
+  /* label on one line, $value on the next */
+  function money(ls){
+    var o={};
+    for(var i=0;i<ls.length-1;i++){
+      var m=ls[i+1].match(/^-?\$([\d,]+(?:\.\d+)?)$/);
+      if(m) o[ls[i]]=parseFloat(m[1].replace(/,/g,''));
+    }
+    return o;
+  }
+
+  /* ---------- scrape whatever this screen shows ---------- */
+  function scrape(){
+    var d={}, t=B();
+
+    /* --- project dashboard --- */
+    var addr=g(/Property address\s*\n([\s\S]+?)\n(?:Authority|Energy usage)/);
+    if(addr) d.address=addr.replace(/\s*\n\s*/g,', ');
+    var cust=g(/Customer profile\s*\nName\s*\n(.+)/); if(cust) d.customer=cust;
+    var util=g(/Utility provider\s*\n(.+)/);          if(util) d.utilityName=util;
+    var tar =g(/Utility provider\s*\n.+\n(.+)/);      if(tar)  d.tariff=tar;
+    var ab  =num(g(/Avg\. monthly bill\s*\n\$?([\d,.]+)/));  if(ab!=null) d.preBill=ab;
+    var ak  =num(g(/Annual energy\s*\n([\d,]+)/));           if(ak!=null) d.annualConsumptionKwh=ak;
+    /* design row: cost, offset, size */
+    var dr=t.match(/\$([\d,]+\.\d\d)\s*\n\s*([\d.]+)%\s*\n\s*([\d.]+)\s*kW/);
+    if(dr){ d.designCost=num(dr[1]); d.offsetPct=parseFloat(dr[2]); d.systemKw=parseFloat(dr[3]); }
+
+    /* --- sales mode / proposal --- */
+    var prod=g(/([\d,]+)\s*kWh\s*\n\s*Yearly energy produced/);
+    if(prod!=null) d.annualProductionKwh=num(prod);
+    var esc=g(/Escalation\s*\n\s*([\d.]+)%/);   if(esc!=null) d.escalationPct=parseFloat(esc);
+    var ar =g(/Average rate\s*\n\s*\$([\d.]+)/); if(ar!=null)  d.avgRatePerKwh=parseFloat(ar);
+    var lt =g(/Utility bill lifetime total\s*\n?\s*\$([\d,]+\.\d\d)/); if(lt!=null) d.utilityLifetime=num(lt);
+
+    /* --- Compare pre and post-solar --- */
+    var need=['Grid use','Average monthly payment'];
+    var pre=money(lines(cardFor('Pre-solar',need)));
+    if(pre['Grid use']!=null){
+      d.preGridUse=pre['Grid use'];
+      d.preFixed=pre['Fixed costs'];
+      d.preBill=pre['Average monthly payment'];
+    }
+    var postEl=cardFor('Post-solar',need), postLs=lines(postEl), post=money(postLs);
+    if(post['Grid use']!=null){
+      d.postGridUse=post['Grid use'];
+      d.postFixed=post['Fixed costs'];
+      d.postTotal=post['Average monthly payment'];
+      /* the figure printed after the total is the monthly saving */
+      var ti=postLs.indexOf('Average monthly payment');
+      if(ti>-1 && postLs[ti+2]){
+        var sv=postLs[ti+2].match(/^-?\$([\d,]+(?:\.\d+)?)$/);
+        if(sv) d.monthlySavings=parseFloat(sv[1].replace(/,/g,''));
+      }
+      /* financing: name / "2.99% ESC - $0.11 per kWh" / $payment */
+      var fin=[];
+      for(var i=0;i<postLs.length;i++){
+        var sub=postLs[i].match(/([\d.]+)%\s*ESC[^$]*\$([\d.]+)\s*per kWh/i);
+        if(sub && i>0 && postLs[i+1]){
+          var pay=postLs[i+1].match(/^\$([\d,]+(?:\.\d+)?)$/);
+          if(pay) fin.push({name:postLs[i-1],escalatorPct:parseFloat(sub[1]),
+                            ratePerKwh:parseFloat(sub[2]),payment:parseFloat(pay[1].replace(/,/g,''))});
+        }
+      }
+      if(fin.length) d.financing=fin;
+    }
+
+    /* identity */
+    var pid=location.pathname.match(/projects\/([0-9a-f-]{36})/);
+    if(pid){ d.projectId=pid[1]; d.url='https://v2.aurorasolar.com/projects/'+pid[1]+'/overview/dashboard'; }
+    var did=location.pathname.match(/designs\/([0-9a-f-]{36})/); if(did) d.designId=did[1];
+    return d;
+  }
+
+  /* ---------- merge + persist (same-origin storage, nothing leaves the browser) ---------- */
+  var store={};
+  try{ store=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ store={}; }
+  var fresh=scrape(), added=0;
+  for(var k in fresh){
+    if(fresh[k]===null||fresh[k]===undefined||fresh[k]==='') continue;
+    if(JSON.stringify(store[k])!==JSON.stringify(fresh[k])) added++;
+    store[k]=fresh[k];
+  }
+  store.v=1; store.source='aurora-bookmarklet'; store.capturedAt=new Date().toISOString();
+  try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
+
+  /* ---------- panel ---------- */
+  var old=document.getElementById('voltAuroraPanel'); if(old) old.remove();
+  var need=[
+    ['address','Address'],['utilityName','Utility'],['preBill','Bill / mo'],
+    ['annualConsumptionKwh','Annual kWh'],['annualProductionKwh','Production'],
+    ['offsetPct','Offset'],['escalationPct','Escalation'],
+    ['preFixed','Fixed pre'],['postFixed','Fixed post'],['postGridUse','Grid use post'],
+    ['postTotal','Post-solar total'],['financing','Financing']
+  ];
+  var have=0;
+  var rows=need.map(function(f){
+    var v=store[f[0]], ok=(v!==undefined&&v!==null&&v!=='');
+    if(ok) have++;
+    var shown = !ok ? '—'
+      : (f[0]==='financing' ? v.length+' option'+(v.length>1?'s':'')
+      : (typeof v==='number' ? v.toLocaleString('en-US') : String(v).slice(0,30)));
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0">'+
+      '<span style="color:'+(ok?'#9aa':'#6a6a6a')+'">'+f[1]+'</span>'+
+      '<span style="color:'+(ok?'#34d399':'#6a6a6a')+';font-weight:600;text-align:right">'+shown+'</span></div>';
+  }).join('');
+
+  var p=document.createElement('div');
+  p.id='voltAuroraPanel';
+  p.style.cssText='position:fixed;right:18px;bottom:18px;z-index:2147483647;width:310px;'+
+    'background:#1a1a1a;color:#f2f2f2;border:1px solid #f4c537;border-radius:12px;padding:14px 16px;'+
+    'font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;'+
+    'box-shadow:0 10px 40px rgba(0,0,0,.6)';
+  p.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">'+
+      '<b style="color:#f4c537;letter-spacing:.1em;font-size:11px">AURORA → VOLT</b>'+
+      '<span id="vaX" style="cursor:pointer;color:#909090;font-size:17px;line-height:1">&times;</span></div>'+
+    '<div style="font-size:11.5px;color:#a8a8a8;margin-bottom:8px">'+have+' of '+need.length+' captured'+
+      (added?' &middot; <span style="color:#34d399">+'+added+' on this screen</span>':' &middot; nothing new here')+'</div>'+
+    '<div style="max-height:210px;overflow:auto;font-size:11.5px;border-top:1px solid #2a2a2a;'+
+      'border-bottom:1px solid #2a2a2a;padding:7px 0;margin-bottom:10px">'+rows+'</div>'+
+    '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
+      '<button id="vaSend" style="flex:1;background:#f4c537;color:#141414;border:none;border-radius:7px;'+
+        'padding:9px 12px;font-weight:800;font-size:12.5px;cursor:pointer">Send to Sales Breakdown</button>'+
+      '<button id="vaCopy" style="background:#2a2a2a;color:#d4d4d4;border:1px solid #3a3a3a;border-radius:7px;'+
+        'padding:9px 11px;font-size:12.5px;cursor:pointer">Copy JSON</button>'+
+      '<button id="vaClr" style="background:#2a2a2a;color:#d4d4d4;border:1px solid #3a3a3a;border-radius:7px;'+
+        'padding:9px 11px;font-size:12.5px;cursor:pointer">Clear</button>'+
+    '</div>'+
+    '<div id="vaMsg" style="font-size:11px;color:#909090;margin-top:8px"></div>';
+  document.body.appendChild(p);
+
+  var msg=function(t,c){ var e=document.getElementById('vaMsg'); e.style.color=c||'#909090'; e.innerHTML=t; };
+  document.getElementById('vaX').onclick=function(){ p.remove(); };
+  document.getElementById('vaClr').onclick=function(){
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    p.remove(); alert('Capture cleared. Click the bookmarklet again to start over.');
+  };
+  document.getElementById('vaCopy').onclick=function(){
+    var txt=JSON.stringify(store);
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        msg('Copied. Open the Sales Breakdown and hit <b>Paste from Aurora</b>.','#34d399');
+      },function(){ msg('Could not reach the clipboard — use Send instead.','#f87171'); });
+    } else { msg('Clipboard unavailable in this browser — use Send.','#f87171'); }
+  };
+
+  /* postMessage handshake: keep offering the payload until the widget acknowledges.
+     Survives slow loads without needing to guess how long the widget takes. */
+  document.getElementById('vaSend').onclick=function(){
+    var w;
+    try{ w=window.open(WIDGET,'voltSalesBreakdown'); }catch(e){ w=null; }
+    if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
+    msg('Opening the widget…');
+    var tries=0;
+    var timer=setInterval(function(){
+      tries++;
+      try{ w.postMessage({type:'VOLT_AURORA',payload:store},ORIGIN); }catch(e){}
+      if(tries>40){ clearInterval(timer);
+        msg('No answer from the widget. Use <b>Copy JSON</b> and paste it there.','#f87171'); }
+    },400);
+    function onAck(ev){
+      if(ev.origin!==ORIGIN || !ev.data || ev.data.type!=='VOLT_AURORA_ACK') return;
+      clearInterval(timer);
+      window.removeEventListener('message',onAck);
+      msg('Delivered — '+(ev.data.applied||0)+' fields filled in the widget.','#34d399');
+    }
+    window.addEventListener('message',onAck);
+  };
+})();
+</script>
+
+<script>
+(function(){
+  var src = document.getElementById('bmsrc').textContent;
+  document.getElementById('srcView').textContent = src.trim();
+  // Collapse to a single-line javascript: URL. Generated on every load so the button
+  // and the readable source above can never disagree.
+  document.getElementById('bm').href = 'javascript:' + encodeURIComponent(src.trim());
+  document.getElementById('bm').addEventListener('click', function(e){
+    e.preventDefault();
+    alert('Drag this button to your bookmarks bar — clicking it here does nothing.\n\nThen open an Aurora project and click the bookmark from there.');
+  });
+})();
+</script>
+
+</body>
+</html>
