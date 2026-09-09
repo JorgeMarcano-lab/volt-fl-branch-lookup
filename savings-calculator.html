@@ -314,8 +314,11 @@
       </select>
     </div>
     <div class="field" id="auroraField">
-      <label>Post-solar monthly bill <span class="hint">USD — Aurora</span></label>
-      <input type="number" id="postBillAurora" value="120" step="1" min="0">
+      <label>Post-solar monthly cost <span class="hint">USD — Aurora, total</span></label>
+      <input type="number" id="postBillAurora" value="2100" step="1" min="0">
+      <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:6px;">
+        This is Aurora's <b>total</b> new monthly cost &mdash; the solar payment <i>and</i> whatever the utility still bills, in one figure. It is not a second bill on top of the payment. The calculator subtracts the solar payment to isolate the residual, so enter Aurora's number as-is.
+      </div>
     </div>
     <div class="field" id="offsetField">
       <label>Offset <span class="hint" id="offsetHint">production &divide; consumption</span></label>
@@ -783,17 +786,27 @@ function residualForYear(s, utilStart, utilRate, y){
   return Math.max(bill, s.minBill*infl);
 }
 
+// The monthly solar payment in year 1. Needed to strip the payment out of
+// Aurora's post-solar figure, which bundles payment and utility remainder
+// together. Cash has no monthly payment, so its post-solar figure IS the
+// residual utility bill.
+function firstYearPayMonthly(opt){
+  if(opt.type==='cash')   return 0;
+  if(opt.type==='tiered') return opt.pay1;
+  return opt.pay;
+}
+
 // Aurora mode: instead of trusting a separate offset field, we invert the model
-// against the post-solar bill Aurora produced. That bill is the anchor, and the
-// offset it implies falls out of it — which doubles as a cross-check: if Aurora
-// says 95% offset but its own post-solar bill implies 78%, something is wrong in
-// the proposal and the rep sees it before the customer does.
-function impliedOffset(s, utilStart){
+// against the RESIDUAL utility bill — Aurora's post-solar cost minus the solar
+// payment. That residual is the anchor, and the offset it implies falls out of
+// it, which doubles as a cross-check: if Aurora says 95% offset but its own
+// numbers imply 78%, something is wrong in the proposal and the rep sees it
+// before the customer does.
+function impliedOffset(s, utilStart, residual){
   const {fixed, energy} = splitBill(s, utilStart);
   if(energy <= 0) return 0;
-  const bill = s.auroraBill;
-  if(bill >= fixed) return Math.max(1 - (bill-fixed)/energy, 0);
-  return s.cogRatio > 0 ? 1 + (fixed-bill)/(energy*s.cogRatio) : 1;
+  if(residual >= fixed) return Math.max(1 - (residual-fixed)/energy, 0);
+  return s.cogRatio > 0 ? 1 + (fixed-residual)/(energy*s.cogRatio) : 1;
 }
 
 // Share of annual consumption value that the production actually captures.
@@ -813,14 +826,28 @@ function valueCaptured(s, prod){
 
 function calc(utilStart, utilRate, term, opt, s){
   // Resolve the offset actually used by the model.
-  s.offset = (s.mode === 'aurora') ? impliedOffset(s, utilStart) : s.offsetInput;
+  //
+  // Aurora's post-solar figure is the customer's TOTAL new monthly cost: the
+  // solar payment AND the utility remainder, in a single number. It is not a
+  // second bill sitting on top of the payment. So the residual has to be
+  // isolated by subtracting the year-1 solar payment before anything can be
+  // inferred from it — otherwise the payment is counted twice and the option
+  // looks dramatically worse than it is.
+  // Work on a copy: resolving the offset writes to the config, and callers reuse
+  // theirs (render, the PDF and the savings card all compute off the same read).
+  s = Object.assign({}, s);
 
-  // A post-solar bill sitting at (or below) the minimum bill is NOT invertible:
-  // once the floor is reached, every offset from there upward produces the exact
+  const pay1 = firstYearPayMonthly(opt);
+  const auroraShortfall = (s.mode === 'aurora') && (s.auroraBill < pay1 - 0.01);
+  const residual1 = (s.mode === 'aurora') ? Math.max(s.auroraBill - pay1, 0) : 0;
+  s.offset = (s.mode === 'aurora') ? impliedOffset(s, utilStart, residual1) : s.offsetInput;
+
+  // A residual sitting at (or below) the minimum bill is NOT invertible: once
+  // the floor is reached, every offset from there upward produces the exact
   // same bill, so the implied figure is a lower bound rather than a reading.
   // Worth surfacing — in FPL/Duke territory the $30 minimum swallows the top of
   // the offset range, which is precisely where over-sizing stops paying.
-  const offsetFloored = (s.mode === 'aurora') && (s.auroraBill <= s.minBill + 0.01);
+  const offsetFloored = (s.mode === 'aurora') && (residual1 <= s.minBill + 0.01);
 
   const rows = [];
   for(let y=1;y<=term;y++){
@@ -884,8 +911,8 @@ function calc(utilStart, utilRate, term, opt, s){
   });
 
   return {rows, totalUtil, totalOpt, totalPay, totalRes, totalProd, savings, savingsPct,
-          breakevenYear, offset:s.offset, offsetFloored, captured, efficiency,
-          solarKwh, utilKwh, consumption};
+          breakevenYear, offset:s.offset, offsetFloored, auroraShortfall, residual1, pay1,
+          captured, efficiency, solarKwh, utilKwh, consumption};
 }
 
 function drawChart(rows){
@@ -1012,9 +1039,19 @@ function renderOffsetAlert(r, s, utilStart){
   if(r.offset > 1.15){
     msgs.push('<div class="alertbox warn"><b>Over the 115% cap.</b> FPL’s interconnection guideline is that the system produce less than 115% of annual consumption. Verify before submitting.</div>');
   }
-  if(r.offsetFloored){
-    msgs.push('<div class="alertbox info"><b>The bill is already at the minimum.</b> Aurora’s post-solar bill of '+fmt$2(s.auroraBill)+
-      '/mo is at or below this utility’s '+fmt$2(s.minBill)+' floor, so the offset cannot be read back from it — '+fmtPct(r.offset)+
+  if(r.auroraShortfall){
+    // The single most likely data-entry mistake in this mode: typing the utility
+    // remainder into a field that expects Aurora's total post-solar cost.
+    msgs.push('<div class="alertbox warn"><b>Check this number.</b> Aurora’s post-solar cost of '+fmt$2(s.auroraBill)+
+      '/mo is <i>less</i> than the solar payment alone ('+fmt$2(r.pay1)+'/mo), which is not possible — that figure is supposed to include the payment. '+
+      'It looks like the utility remainder was entered instead of the total. The residual is being treated as $0 until this is fixed.</div>');
+  } else if(s.mode === 'aurora'){
+    msgs.push('<div class="alertbox info"><b>Aurora’s '+fmt$2(s.auroraBill)+'/mo breaks down as</b> '+fmt$2(r.pay1)+
+      '/mo solar payment + <b>'+fmt$2(r.residual1)+'/mo</b> still owed to the utility. Only that second piece is the residual bill; the payment is not billed twice.</div>');
+  }
+  if(r.offsetFloored && !r.auroraShortfall){
+    msgs.push('<div class="alertbox info"><b>The residual is already at the minimum.</b> The '+fmt$2(r.residual1)+
+      '/mo left after the solar payment is at or below this utility’s '+fmt$2(s.minBill)+' floor, so the offset cannot be read back from it — '+fmtPct(r.offset)+
       ' is a lower bound. Everything above that point produces the identical bill, which is exactly why adding more panels here stops paying. Switch to "Derive it from offset %" if you need the real figure.</div>');
   }
   if(s.mode === 'aurora' && !r.offsetFloored && s.offsetInput > 0 && Math.abs(r.offset - s.offsetInput) > 0.05){
@@ -1062,7 +1099,7 @@ function render(){
   offEl.textContent = (r.offsetFloored ? '≥ ' : '') + fmtPct(r.offset);
   offEl.className = 'value' + (r.offset>1.15 ? ' warn' : (r.offset>=0.85 && r.offset<=1.05 ? ' good' : ''));
   document.getElementById('statOffsetSub').textContent =
-    (s.mode==='aurora' ? (r.offsetFloored ? 'lower bound — bill is at the minimum' : 'implied by the Aurora bill') : 'entered') +
+    (s.mode==='aurora' ? (r.offsetFloored ? 'lower bound — residual is at the minimum' : 'implied, net of the solar payment') : 'entered') +
     (r.consumption>0 ? ' · '+Math.round(r.consumption).toLocaleString('en-US')+' kWh/yr use' : '');
 
   const capEl = document.getElementById('statCapture');
@@ -1120,7 +1157,7 @@ window.addEventListener('resize', render);
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   els.utilStart.value=1787.85; els.utilRate.value='4.00';
   selUtility.value='FPL'; applyUtilityPreset();
-  els.annualProd.value=20500; selMode.value='aurora'; els.postBillAurora.value=120; els.offset.value='95.00';
+  els.annualProd.value=20500; selMode.value='aurora'; els.postBillAurora.value=2100; els.offset.value='95.00';
   els.cogRatio.value=28; els.degr.value='0.50'; els.selfCons.value=35;
   els.optType.value='lease';
   els.leaseProvider.value='LightReach'; els.leasePay.value=2033.32; els.leaseEsc.value='2.99';
