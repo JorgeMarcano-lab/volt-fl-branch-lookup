@@ -267,7 +267,7 @@
     <h2 style="margin-top:22px;">Utility (current situation)</h2>
     <div class="field">
       <label>Current monthly payment <span class="hint">USD</span></label>
-      <input type="number" id="utilStart" value="1787.85" step="1" min="0">
+      <input type="number" id="utilStart" value="337.97" step="1" min="0">
     </div>
     <div class="field">
       <label>Annual rate increase <span class="hint">editable</span></label>
@@ -280,7 +280,7 @@
       <label>Utility company <span class="hint">sets the defaults below</span></label>
       <select id="utility">
         <option value="FPL">FPL</option>
-        <option value="DUKE">Duke Energy Florida</option>
+        <option value="DUKE" selected>Duke Energy Florida</option>
         <option value="TECO">Tampa Electric (TECO)</option>
         <option value="OUC">OUC (Orlando)</option>
         <option value="JEA">JEA (Jacksonville)</option>
@@ -291,39 +291,69 @@
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Fixed charges <span class="hint">$/mo</span></label>
-        <input type="number" id="fixedMonthly" value="10.52" step="0.01" min="0">
+        <label>Fixed costs <span class="hint">$/mo &mdash; pre</span></label>
+        <input type="number" id="fixedMonthly" value="13.22" step="0.01" min="0">
       </div>
       <div class="field">
-        <label>Minimum bill <span class="hint">$/mo</span></label>
+        <label>Fixed costs <span class="hint">$/mo &mdash; post</span></label>
+        <input type="number" id="postFixed" value="19.68" step="0.01" min="0">
+      </div>
+      <div class="field">
+        <label>Min. bill <span class="hint">$/mo</span></label>
         <input type="number" id="minBill" value="30" step="0.01" min="0">
       </div>
     </div>
+    <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;">
+      Fixed costs usually <b>rise</b> after solar &mdash; interconnection and minimum-bill mechanics. In the Duke example Aurora goes from $13.22 to $19.68, and that $6.46/mo is pure residual the customer never had before.
+    </div>
     <div class="hint" id="utilNote" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;"></div>
+
+    <h2 style="margin-top:22px;">Aurora project</h2>
+    <div class="field">
+      <label>Aurora project URL <span class="hint">paste it here</span></label>
+      <input type="text" id="auroraUrl" placeholder="https://v2.aurorasolar.com/projects/…">
+      <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:6px;">
+        Reference link only &mdash; it travels with the quote and lands in the PDF so anyone can trace the numbers back to the design. It does <b>not</b> pull data: the project sits behind your Aurora login, which this page cannot reach. Copy the figures from Sales Mode below.
+        <span id="auroraOpen"></span>
+      </div>
+    </div>
 
     <h2 style="margin-top:22px;">Solar production &amp; offset</h2>
     <div class="field">
       <label>Annual production <span class="hint">kWh/yr — Aurora</span></label>
-      <input type="number" id="annualProd" value="20500" step="100" min="0">
+      <input type="number" id="annualProd" value="25153" step="100" min="0">
     </div>
     <div class="field">
       <label>Post-solar bill source <span class="hint">how we get the residual</span></label>
       <select id="postBillMode">
-        <option value="aurora">Aurora post-solar bill</option>
+        <option value="aurora">Aurora “Compare pre and post-solar”</option>
         <option value="derive">Derive it from offset %</option>
       </select>
     </div>
-    <div class="field" id="auroraField">
-      <label>Post-solar monthly cost <span class="hint">USD — Aurora, total</span></label>
-      <input type="number" id="postBillAurora" value="2100" step="1" min="0">
-      <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:6px;">
-        This is Aurora's <b>total</b> new monthly cost &mdash; the solar payment <i>and</i> whatever the utility still bills, in one figure. It is not a second bill on top of the payment. The calculator subtracts the solar payment to isolate the residual, so enter Aurora's number as-is.
+
+    <!-- Captura literal del panel "Compare pre and post-solar" de Sales Mode.
+         Aurora ya desglosa el remanente en dos renglones, así que no hay que
+         inferir nada restando: se transcribe lo que el rep ve en pantalla. -->
+    <div id="auroraField">
+      <div class="field-row">
+        <div class="field">
+          <label>Grid use <span class="hint">$/mo — post-solar</span></label>
+          <input type="number" id="postGridUse" value="13.51" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Avg. monthly payment <span class="hint">optional — check</span></label>
+          <input type="number" id="auroraTotal" value="263.76" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;">
+        Both from the <b>Post-solar</b> card in Sales Mode. Grid use plus the post-solar fixed costs above is the residual bill; the solar payment goes in Purchase option below. Enter Aurora's average monthly payment too and the calculator verifies the three add up.
       </div>
     </div>
+
     <div class="field" id="offsetField">
       <label>Offset <span class="hint" id="offsetHint">production &divide; consumption</span></label>
       <div class="input-suffix">
-        <input type="number" id="offset" min="0" max="200" step="0.1" value="95.0">
+        <input type="number" id="offset" min="0" max="200" step="0.1" value="99.8">
         <span>%</span>
       </div>
     </div>
@@ -387,7 +417,7 @@
       </div>
       <div class="field">
         <label>Lease monthly payment <span class="hint">USD</span></label>
-        <input type="number" id="leasePay" value="2033.32" step="1" min="0">
+        <input type="number" id="leasePay" value="230.57" step="1" min="0">
       </div>
       <div class="field">
         <label>Annual payment increase <span class="hint">2 decimals, e.g. 2.99%</span></label>
@@ -491,7 +521,7 @@
         <div class="value" id="statCapture">—</div>
         <div class="sub" id="statCaptureSub">&nbsp;</div>
       </div>
-      <div class="stat" title="What the customer effectively pays per kWh of solar, levelized over the term, versus what the utility charges per kWh over the same period.">
+      <div class="stat" title="What the customer effectively pays per kWh of solar in year 1 — the same figure Aurora prints on the financing card, so the two screens can be checked against each other. The levelized cost over the whole term and the utility's rate are shown underneath.">
         <div class="label">Solar $/kWh vs. utility</div>
         <div class="value" id="statLcoe">—</div>
         <div class="sub" id="statLcoeSub">&nbsp;</div>
@@ -596,7 +626,7 @@ const DOC = {
     pay136:'Payment months 1–36', pay37:'Payment month 37 onward',
     initialPay:'Initial monthly payment', escalator:'Annual escalator',
     firstMonths:m=>'First '+m+' months', noPayment:'No payment ($0)',
-    offsetWord:'Offset', residualYr1:'Residual bill, yr 1', solarKwh:'Solar $/kWh (levelized)',
+    offsetWord:'Offset', residualYr1:'Residual bill, yr 1', solarKwh:'Solar $/kWh (yr 1)',
     valueCapture:'Value capture',
     offsetLine:(o,r)=>'Offset '+o+'   ·   Residual utility bill after solar: '+r+'/mo in year 1',
     cardTagline:'Estimated solar savings', cardSub:t=>'in estimated savings over '+t+' years vs. your current utility',
@@ -621,7 +651,7 @@ const DOC = {
     pay136:'Pago meses 1–36', pay37:'Pago mes 37 en adelante',
     initialPay:'Pago mensual inicial', escalator:'Escalador anual',
     firstMonths:m=>'Primeros '+m+' meses', noPayment:'Sin pago ($0)',
-    offsetWord:'Offset', residualYr1:'Factura residual, año 1', solarKwh:'$/kWh solar (nivelado)',
+    offsetWord:'Offset', residualYr1:'Factura residual, año 1', solarKwh:'$/kWh solar (año 1)',
     valueCapture:'Valor capturado',
     offsetLine:(o,r)=>'Offset '+o+'   ·   Factura utility remanente después del solar: '+r+'/mes en el año 1',
     cardTagline:'Ahorro estimado en energía solar', cardSub:t=>'de ahorro estimado en '+t+' años vs. tu utility actual',
@@ -643,24 +673,31 @@ const D = () => DOC[docLang];
    December true-up at the COG-1 avoided-cost rate. Municipals and co-ops set
    their own terms under s.366.91(6) F.S. and several are NOT 1:1.
    ──────────────────────────────────────────────────────────────────────── */
+// postFixed = fixed costs AFTER solar. Aurora reports these separately and they
+// are usually higher (interconnection, minimum-bill mechanics). Only Duke has an
+// observed value so far; everywhere else it defaults to the pre-solar figure,
+// which is optimistic — overwrite it with whatever Aurora shows for the project.
 const UTILS = {
-  FPL:      {fixed:10.52, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1, monthly rollover, December true-up at COG-1. Minimum base bill $30/mo — this is the floor the bill cannot go below. FPL guideline caps system size at 115% of annual consumption.'},
-  DUKE:     {fixed:14.35, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1. Minimum monthly bill $30. Winter energy rate is higher (Dec–Feb).'},
-  TECO:     {fixed:13.69, minBill:13.69, nem:1,    note:'Rule 25-6.065: full-retail 1:1 confirmed. Basic service charge $0.45/day. Energy Planner customers must move to the standard residential rate to net meter.'},
-  OUC:      {fixed:18.50, minBill:18.50, nem:1,    note:'CHECK THE INTERCONNECTION DATE. Full retail is grandfathered to 2045 only if interconnected on or before 30-Jun-2025. Newer systems lose the grace period on 31-Oct-2026, and from 1-Nov-2026 OUC ends credit banking and the annual true-up — excess is credited within the same billing period. A residential DemandLevel charge of $5–$15/mo also starts Nov-2026.'},
-  JEA:      {fixed:19.25, minBill:19.25, nem:0.37, note:'NOT 1:1. JEA credits exports at its fuel cost only ($0.04282 vs $0.11519 retail ≈ 0.37x). Self-consumption drives the economics here, so a battery changes the answer materially.'},
-  LAKELAND: {fixed:14.45, minBill:14.45, nem:0.75, note:'Nominally "full retail", but residential solar is forced onto the Solar/Demand Price Plan whose energy rate is far lower, plus a $5.77/kW solar demand charge not modeled here. Effective export value ≈ 0.68–0.82x the standard plan. Residential limit 10 kW.'},
-  KUA:      {fixed:10.17, minBill:10.17, nem:0.5,  note:'NOT PUBLISHED. Credit is set by the Tri-Party PPA with FMPA and is not in the public tariff; non-grandfathered customers get the avoided-cost rate. The 0.50x here is a placeholder — confirm with KUA before quoting.'},
-  OTHER:    {fixed:12.00, minBill:12.00, nem:1,    note:'Manual entry. Confirm the fixed charge, any minimum bill, and whether the utility credits exports at full retail before relying on the numbers.'}
+  FPL:      {fixed:10.52, postFixed:10.52, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1, monthly rollover, December true-up at COG-1. Minimum base bill $30/mo — this is the floor the bill cannot go below. FPL guideline caps system size at 115% of annual consumption. Post-solar fixed costs not yet observed — take them from Aurora.'},
+  DUKE:     {fixed:13.22, postFixed:19.68, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1. Minimum monthly bill $30. Winter energy rate is higher (Dec–Feb). Pre/post fixed costs ($13.22 → $19.68) come from a real Aurora proposal; note the published RS-1 customer charge is $14.35, so confirm which applies.'},
+  TECO:     {fixed:13.69, postFixed:13.69, minBill:13.69, nem:1,    note:'Rule 25-6.065: full-retail 1:1 confirmed. Basic service charge $0.45/day. Energy Planner customers must move to the standard residential rate to net meter.'},
+  OUC:      {fixed:18.50, postFixed:18.50, minBill:18.50, nem:1,    note:'CHECK THE INTERCONNECTION DATE. Full retail is grandfathered to 2045 only if interconnected on or before 30-Jun-2025. Newer systems lose the grace period on 31-Oct-2026, and from 1-Nov-2026 OUC ends credit banking and the annual true-up — excess is credited within the same billing period. A residential DemandLevel charge of $5–$15/mo also starts Nov-2026, which belongs in post-solar fixed costs.'},
+  JEA:      {fixed:19.25, postFixed:19.25, minBill:19.25, nem:0.37, note:'NOT 1:1. JEA credits exports at its fuel cost only ($0.04282 vs $0.11519 retail ≈ 0.37x). Self-consumption drives the economics here, so a battery changes the answer materially.'},
+  LAKELAND: {fixed:14.45, postFixed:14.45, minBill:14.45, nem:0.75, note:'Nominally "full retail", but residential solar is forced onto the Solar/Demand Price Plan whose energy rate is far lower, plus a $5.77/kW solar demand charge that belongs in post-solar fixed costs. Effective export value ≈ 0.68–0.82x the standard plan. Residential limit 10 kW.'},
+  KUA:      {fixed:10.17, postFixed:10.17, minBill:10.17, nem:0.5,  note:'NOT PUBLISHED. Credit is set by the Tri-Party PPA with FMPA and is not in the public tariff; non-grandfathered customers get the avoided-cost rate. The 0.50x here is a placeholder — confirm with KUA before quoting.'},
+  OTHER:    {fixed:12.00, postFixed:12.00, minBill:12.00, nem:1,    note:'Manual entry. Confirm the fixed charge, any minimum bill, and whether the utility credits exports at full retail before relying on the numbers.'}
 };
 
 const els = {
   utilStart: document.getElementById('utilStart'),
   utilRate: document.getElementById('utilRate'),
   fixedMonthly: document.getElementById('fixedMonthly'),
+  postFixed: document.getElementById('postFixed'),
   minBill: document.getElementById('minBill'),
+  auroraUrl: document.getElementById('auroraUrl'),
   annualProd: document.getElementById('annualProd'),
-  postBillAurora: document.getElementById('postBillAurora'),
+  postGridUse: document.getElementById('postGridUse'),
+  auroraTotal: document.getElementById('auroraTotal'),
   offset: document.getElementById('offset'),
   exportRatio: document.getElementById('exportRatio'),
   selfCons: document.getElementById('selfCons'),
@@ -741,9 +778,11 @@ function getSolarConfig(){
   return {
     mode:        selMode.value,
     offsetInput: (parseFloat(els.offset.value)||0)/100,
-    auroraBill:  parseFloat(els.postBillAurora.value)||0,
+    gridUse:     parseFloat(els.postGridUse.value)||0,
+    auroraTotal: parseFloat(els.auroraTotal.value)||0,
     annualProd:  parseFloat(els.annualProd.value)||0,
     fixedMonthly:parseFloat(els.fixedMonthly.value)||0,
+    postFixed:   parseFloat(els.postFixed.value)||0,
     minBill:     parseFloat(els.minBill.value)||0,
     exportRatio: nem1 ? 1 : (parseFloat(els.exportRatio.value)||0),
     selfCons:    (parseFloat(els.selfCons.value)||0)/100,
@@ -778,11 +817,14 @@ function energyBalance(s, prod){
 }
 
 function residualForYear(s, utilStart, utilRate, y){
-  const {fixed, energy} = splitBill(s, utilStart);
+  // The energy portion comes from the PRE-solar bill (that is what solar attacks),
+  // but the fixed component is the POST-solar one, which is normally higher —
+  // interconnection charges and minimum-bill mechanics show up only after solar.
+  const {energy} = splitBill(s, utilStart);
   const infl  = Math.pow(1+utilRate, y-1);
   const prod  = s.offset * Math.pow(1-s.degr, y-1);
   const bal   = energyBalance(s, prod);
-  const bill  = fixed*infl + energy*infl*bal.billed - energy*infl*bal.surplus*s.cogRatio;
+  const bill  = s.postFixed*infl + energy*infl*bal.billed - energy*infl*bal.surplus*s.cogRatio;
   return Math.max(bill, s.minBill*infl);
 }
 
@@ -796,17 +838,23 @@ function firstYearPayMonthly(opt){
   return opt.pay;
 }
 
-// Aurora mode: instead of trusting a separate offset field, we invert the model
-// against the RESIDUAL utility bill — Aurora's post-solar cost minus the solar
-// payment. That residual is the anchor, and the offset it implies falls out of
-// it, which doubles as a cross-check: if Aurora says 95% offset but its own
-// numbers imply 78%, something is wrong in the proposal and the rep sees it
-// before the customer does.
-function impliedOffset(s, utilStart, residual){
-  const {fixed, energy} = splitBill(s, utilStart);
+// Aurora mode: the offset is inverted out of the post-solar GRID USE line, which
+// is the pure energy component — no fixed-cost confound, no subtraction of the
+// solar payment. Solving energyBalance() for prod:
+//     billed = 1 − prod·[selfCons + (1−selfCons)·exportRatio]
+// which collapses to billed = 1 − prod under true 1:1 net metering.
+//
+// This is the honest offset, and it is routinely LOWER than the nameplate offset
+// on the design. A 99.84% design that still buys $13.51/mo of grid energy is
+// really covering ~96%: production and consumption do not line up month to month,
+// so the customer buys in some months and banks in others. That gap is the
+// number the old model could not see.
+function impliedOffset(s, utilStart, gridUse){
+  const {energy} = splitBill(s, utilStart);
   if(energy <= 0) return 0;
-  if(residual >= fixed) return Math.max(1 - (residual-fixed)/energy, 0);
-  return s.cogRatio > 0 ? 1 + (fixed-residual)/(energy*s.cogRatio) : 1;
+  const billed = Math.max(gridUse/energy, 0);
+  const k = s.selfCons + (1-s.selfCons)*s.exportRatio;   // = 1 when exportRatio = 1
+  return k > 0 ? Math.max((1-billed)/k, 0) : 0;
 }
 
 // Share of annual consumption value that the production actually captures.
@@ -838,16 +886,22 @@ function calc(utilStart, utilRate, term, opt, s){
   s = Object.assign({}, s);
 
   const pay1 = firstYearPayMonthly(opt);
-  const auroraShortfall = (s.mode === 'aurora') && (s.auroraBill < pay1 - 0.01);
-  const residual1 = (s.mode === 'aurora') ? Math.max(s.auroraBill - pay1, 0) : 0;
-  s.offset = (s.mode === 'aurora') ? impliedOffset(s, utilStart, residual1) : s.offsetInput;
 
-  // A residual sitting at (or below) the minimum bill is NOT invertible: once
-  // the floor is reached, every offset from there upward produces the exact
-  // same bill, so the implied figure is a lower bound rather than a reading.
-  // Worth surfacing — in FPL/Duke territory the $30 minimum swallows the top of
-  // the offset range, which is precisely where over-sizing stops paying.
-  const offsetFloored = (s.mode === 'aurora') && (residual1 <= s.minBill + 0.01);
+  // Aurora hands the residual over already split — Grid use + Fixed costs — so
+  // nothing is inferred by subtraction any more, and the solar payment is never
+  // touched. The offset is read off Grid use alone.
+  const residual1 = (s.mode === 'aurora') ? (s.gridUse + s.postFixed) : 0;
+  s.offset = (s.mode === 'aurora') ? impliedOffset(s, utilStart, s.gridUse) : s.offsetInput;
+
+  // Zero grid purchases means the offset is only a lower bound: from that point
+  // upward every extra panel produces the identical bill. That is exactly where
+  // over-sizing stops paying.
+  const offsetFloored = (s.mode === 'aurora') && (s.gridUse <= 0.01);
+
+  // Does the calculator reproduce Aurora's own headline number?
+  const modelTotal1    = pay1 + residual1;
+  const auroraMismatch = (s.mode === 'aurora' && s.auroraTotal > 0)
+                         ? (modelTotal1 - s.auroraTotal) : 0;
 
   const rows = [];
   for(let y=1;y<=term;y++){
@@ -898,6 +952,12 @@ function calc(utilStart, utilRate, term, opt, s){
   const consumption = s.offset>0 ? s.annualProd/s.offset : 0;   // kWh/yr
   const solarKwh = totalProd>0 ? totalPay/totalProd : 0;
   const utilKwh  = consumption>0 ? totalUtil/(consumption*term) : 0;
+  // Year-1 figure as well, because that is the one Aurora prints on the
+  // financing card ("$0.11 per kWh"). Showing the levelized number as the
+  // headline would look like a discrepancy to a rep holding both screens.
+  // Cash has no year-1 payment to speak of, so it falls back to levelized.
+  const solarKwh1 = (rows[0] && rows[0].prodKwh>0 && rows[0].payMonthly!==null)
+                    ? rows[0].payAnnual/rows[0].prodKwh : solarKwh;
 
   // Offset quality
   const captured  = valueCaptured(s, s.offset);
@@ -911,8 +971,8 @@ function calc(utilStart, utilRate, term, opt, s){
   });
 
   return {rows, totalUtil, totalOpt, totalPay, totalRes, totalProd, savings, savingsPct,
-          breakevenYear, offset:s.offset, offsetFloored, auroraShortfall, residual1, pay1,
-          captured, efficiency, solarKwh, utilKwh, consumption};
+          breakevenYear, offset:s.offset, offsetFloored, auroraMismatch, modelTotal1,
+          residual1, pay1, captured, efficiency, solarKwh, solarKwh1, utilKwh, consumption};
 }
 
 function drawChart(rows){
@@ -993,7 +1053,7 @@ function updateSolarVisibility(){
   // drive the math — it is the cross-check: type what Aurora claims the offset
   // is, and the calculator tells you whether Aurora's own post-solar bill agrees.
   document.getElementById('offsetHint').textContent =
-    aurora ? 'Aurora’s figure — cross-check only' : 'production ÷ consumption';
+    aurora ? 'Aurora design offset — nameplate' : 'production ÷ consumption';
   document.getElementById('nemFields').style.display   = selNem.value==='no' ? '' : 'none';
   const u = UTILS[selUtility.value];
   document.getElementById('utilNote').textContent = u ? u.note : '';
@@ -1003,6 +1063,7 @@ function applyUtilityPreset(){
   const u = UTILS[selUtility.value];
   if(!u) return;
   els.fixedMonthly.value = u.fixed.toFixed(2);
+  els.postFixed.value    = u.postFixed.toFixed(2);
   els.minBill.value      = u.minBill.toFixed(2);
   selNem.value           = u.nem >= 1 ? 'yes' : 'no';
   if(u.nem < 1) els.exportRatio.value = u.nem.toFixed(2);
@@ -1039,24 +1100,37 @@ function renderOffsetAlert(r, s, utilStart){
   if(r.offset > 1.15){
     msgs.push('<div class="alertbox warn"><b>Over the 115% cap.</b> FPL’s interconnection guideline is that the system produce less than 115% of annual consumption. Verify before submitting.</div>');
   }
-  if(r.auroraShortfall){
-    // The single most likely data-entry mistake in this mode: typing the utility
-    // remainder into a field that expects Aurora's total post-solar cost.
-    msgs.push('<div class="alertbox warn"><b>Check this number.</b> Aurora’s post-solar cost of '+fmt$2(s.auroraBill)+
-      '/mo is <i>less</i> than the solar payment alone ('+fmt$2(r.pay1)+'/mo), which is not possible — that figure is supposed to include the payment. '+
-      'It looks like the utility remainder was entered instead of the total. The residual is being treated as $0 until this is fixed.</div>');
-  } else if(s.mode === 'aurora'){
-    msgs.push('<div class="alertbox info"><b>Aurora’s '+fmt$2(s.auroraBill)+'/mo breaks down as</b> '+fmt$2(r.pay1)+
-      '/mo solar payment + <b>'+fmt$2(r.residual1)+'/mo</b> still owed to the utility. Only that second piece is the residual bill; the payment is not billed twice.</div>');
+  if(s.mode === 'aurora'){
+    // Reproduce Aurora's own arithmetic on screen, so the rep can eyeball it
+    // against the "Compare pre and post-solar" card line by line.
+    const mism = Math.abs(r.auroraMismatch) > 1;
+    msgs.push('<div class="alertbox '+(mism?'warn':'info')+'"><b>Post-solar breakdown:</b> '+
+      fmt$2(r.pay1)+' solar payment + '+fmt$2(s.gridUse)+' grid use + '+fmt$2(s.postFixed)+
+      ' fixed costs = <b>'+fmt$2(r.modelTotal1)+'/mo</b>. Residual utility bill: <b>'+fmt$2(r.residual1)+'/mo</b>.'+
+      (s.auroraTotal>0
+        ? (mism
+            ? ' Aurora says '+fmt$2(s.auroraTotal)+' — off by '+fmt$2(Math.abs(r.auroraMismatch))+'. Check the three figures against Sales Mode.'
+            : ' Matches Aurora’s '+fmt$2(s.auroraTotal)+'. ✓')
+        : '')+
+      '</div>');
   }
-  if(r.offsetFloored && !r.auroraShortfall){
-    msgs.push('<div class="alertbox info"><b>The residual is already at the minimum.</b> The '+fmt$2(r.residual1)+
-      '/mo left after the solar payment is at or below this utility’s '+fmt$2(s.minBill)+' floor, so the offset cannot be read back from it — '+fmtPct(r.offset)+
-      ' is a lower bound. Everything above that point produces the identical bill, which is exactly why adding more panels here stops paying. Switch to "Derive it from offset %" if you need the real figure.</div>');
+  if(r.offsetFloored){
+    msgs.push('<div class="alertbox info"><b>No grid purchases at all.</b> Grid use is $0, so the offset cannot be read back — '+fmtPct(r.offset)+
+      ' is a lower bound. From here upward every extra panel produces the identical bill. Switch to "Derive it from offset %" if you need the real figure.</div>');
   }
-  if(s.mode === 'aurora' && !r.offsetFloored && s.offsetInput > 0 && Math.abs(r.offset - s.offsetInput) > 0.05){
-    msgs.push('<div class="alertbox info"><b>Aurora cross-check.</b> The post-solar bill entered implies an offset of <b>'+fmtPct(r.offset)+
-      '</b>, but the offset field says '+fmtPct(s.offsetInput)+'. One of the two is wrong — reconcile them before sending the proposal.</div>');
+  // The seasonality gap: nameplate offset on the design vs. the offset the money
+  // actually reflects. This is the whole reason offset overstates savings.
+  if(s.mode === 'aurora' && !r.offsetFloored && s.offsetInput > 0){
+    const gap = s.offsetInput - r.offset;
+    if(gap > 0.015){
+      msgs.push('<div class="alertbox info"><b>Nameplate '+fmtPct(s.offsetInput)+', economic '+fmtPct(r.offset)+
+        '.</b> Aurora’s design offset is an annual production ratio; the '+fmt$2(s.gridUse)+
+        '/mo of grid use it still shows means the customer really covers '+fmtPct(r.offset)+
+        ' of their energy bill. The '+(gap*100).toFixed(1)+'-point gap is month-to-month mismatch — production peaks in spring, consumption peaks with the summer AC — so they buy in some months and bank in others. Quote the economic figure, not the nameplate.</div>');
+    } else if(gap < -0.015){
+      msgs.push('<div class="alertbox warn"><b>Numbers disagree.</b> Grid use implies an offset of '+fmtPct(r.offset)+
+        ', higher than the '+fmtPct(s.offsetInput)+' on the design. That should not happen — recheck Grid use and the pre-solar fixed costs.</div>');
+    }
   }
   if(!s.nem1){
     msgs.push('<div class="alertbox info"><b>No 1:1 net metering.</b> Exports are credited at '+s.exportRatio.toFixed(2)+
@@ -1099,8 +1173,25 @@ function render(){
   offEl.textContent = (r.offsetFloored ? '≥ ' : '') + fmtPct(r.offset);
   offEl.className = 'value' + (r.offset>1.15 ? ' warn' : (r.offset>=0.85 && r.offset<=1.05 ? ' good' : ''));
   document.getElementById('statOffsetSub').textContent =
-    (s.mode==='aurora' ? (r.offsetFloored ? 'lower bound — residual is at the minimum' : 'implied, net of the solar payment') : 'entered') +
+    (s.mode==='aurora'
+      ? (r.offsetFloored ? 'lower bound — no grid use'
+                         : 'economic · nameplate '+fmtPct(s.offsetInput))
+      : 'entered') +
     (r.consumption>0 ? ' · '+Math.round(r.consumption).toLocaleString('en-US')+' kWh/yr use' : '');
+
+  // Aurora project link — reference only, opens in a new tab.
+  const auOpen = document.getElementById('auroraOpen');
+  const auRaw  = els.auroraUrl.value.trim();
+  auOpen.textContent = '';
+  if(/^https:\/\/[\w.-]*aurorasolar\.com\//i.test(auRaw)){
+    const a = document.createElement('a');
+    a.href = auRaw; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.textContent = ' Open in Aurora ↗';
+    a.style.cssText = 'color:var(--volt-blue);font-weight:700;text-decoration:none;';
+    auOpen.appendChild(a);
+  } else if(auRaw){
+    auOpen.textContent = ' — that does not look like an aurorasolar.com link.';
+  }
 
   const capEl = document.getElementById('statCapture');
   capEl.textContent = fmtPct(r.efficiency);
@@ -1108,9 +1199,9 @@ function render(){
   document.getElementById('statCaptureSub').textContent =
     'covers '+fmtPct(r.captured)+' of the energy bill';
 
-  document.getElementById('statLcoe').textContent = r.solarKwh>0 ? fmtKwh(r.solarKwh) : '—';
+  document.getElementById('statLcoe').textContent = r.solarKwh1>0 ? fmtKwh(r.solarKwh1) : '—';
   document.getElementById('statLcoeSub').textContent =
-    r.utilKwh>0 ? ('utility '+fmtKwh(r.utilKwh)+' over '+term+' yrs') : ' ';
+    r.utilKwh>0 ? ('yr 1 · '+fmtKwh(r.solarKwh)+' levelized · utility '+fmtKwh(r.utilKwh)) : ' ';
 
   const res1 = r.rows[0] ? r.rows[0].resMonthly : 0;
   document.getElementById('statResidual').textContent = fmt$2(res1)+'/mo';
@@ -1155,13 +1246,17 @@ function render(){
 });
 window.addEventListener('resize', render);
 document.getElementById('resetBtn').addEventListener('click', ()=>{
-  els.utilStart.value=1787.85; els.utilRate.value='4.00';
-  selUtility.value='FPL'; applyUtilityPreset();
-  els.annualProd.value=20500; selMode.value='aurora'; els.postBillAurora.value=2100; els.offset.value='95.00';
+  // Defaults are a real, reconciled Aurora project (Duke / 13418 Zori Ln):
+  // 230.57 payment + 13.51 grid use + 19.68 fixed = 263.76, Aurora's own figure.
+  els.utilStart.value=337.97; els.utilRate.value='4.00';
+  selUtility.value='DUKE'; applyUtilityPreset();
+  els.auroraUrl.value='';
+  els.annualProd.value=25153; selMode.value='aurora';
+  els.postGridUse.value=13.51; els.auroraTotal.value=263.76; els.offset.value='99.80';
   els.cogRatio.value=28; els.degr.value='0.50'; els.selfCons.value=35;
   els.optType.value='lease';
-  els.leaseProvider.value='LightReach'; els.leasePay.value=2033.32; els.leaseEsc.value='2.99';
-  els.loanFinco.value='Sungage Sunrise'; els.loanPay.value=2033.32; els.loanEsc.value='2.90';
+  els.leaseProvider.value='LightReach'; els.leasePay.value=230.57; els.leaseEsc.value='2.99';
+  els.loanFinco.value='Sungage Sunrise'; els.loanPay.value=230.57; els.loanEsc.value='2.90';
   els.loanPay1.value=1900; els.loanPay2.value=2200;
   els.cashPrice.value=45000;
   els.term.value=25; els.custName.value='';
@@ -1271,7 +1366,16 @@ async function generatePDF(){
     // Offset line — the honest framing: solar shrinks the bill, it does not delete it.
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(90,98,110);
     doc.text(D().offsetLine(fmtPct(r.offset), fmt$2(res1)), marginX, y);
-    y += 8;
+    y += 5;
+
+    // Traceability: the Aurora project the figures came from.
+    const auUrl = els.auroraUrl.value.trim();
+    if(auUrl){
+      doc.setFontSize(7); doc.setTextColor(150,158,170);
+      doc.text('Aurora: '+auUrl, marginX, y, {maxWidth:pageW-marginX*2});
+      y += 5;
+    }
+    y += 3;
 
     // Key stats
     const breakevenTxt = r.breakevenYear ? D().year(r.breakevenYear) : D().afterYear(term);
@@ -1297,7 +1401,7 @@ async function generatePDF(){
     const stats2 = [
       [D().offsetWord, fmtPct(r.offset)],
       [D().valueCapture, fmtPct(r.efficiency)],
-      [D().solarKwh, r.solarKwh>0 ? fmtKwh(r.solarKwh) : '—'],
+      [D().solarKwh, r.solarKwh1>0 ? fmtKwh(r.solarKwh1) : '—'],
       [D().residualYr1, fmt$2(res1)+D().perMonth],
     ];
     stats2.forEach((st,i)=>{
