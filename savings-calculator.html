@@ -159,7 +159,7 @@
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:14px;
-    margin-bottom:20px;
+    margin-bottom:14px;
   }
   @media (max-width:900px){.stats{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:480px){.stats{grid-template-columns:1fr;}}
@@ -172,19 +172,34 @@
   }
   .stat .label{font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.14em;}
   .stat .value{font-size:24px;font-weight:800;margin-top:8px;color:var(--volt-blue);}
+  .stat .sub{font-size:10.5px;color:var(--text3);margin-top:5px;font-weight:600;}
   .stat.savings .value{color:var(--volt-blue);}
   .stat.pct .value{color:var(--volt-blue);}
   .stat.breakeven .value{color:var(--volt-blue);font-size:20px;}
   .stat.month .value{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6;font-weight:500;}
   .stat.month .value b{font-size:16px;color:var(--volt-blue);font-weight:800;}
+  /* Segunda fila: métricas de offset. Se distinguen del bloque de ahorro
+     con un tinte más apagado porque son diagnóstico interno, no cifras de cierre. */
+  .stats.secondary .stat{background:var(--surface2);}
+  .stats.secondary .stat .value{font-size:20px;}
+  .stats.secondary .stat .value.good{color:var(--volt-green);}
+  .stats.secondary .stat .value.warn{color:var(--volt-red);}
+  .alertbox{
+    border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.55;
+    margin:0 0 18px;border:1px solid;
+  }
+  .alertbox.warn{background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.5);color:#ffb4b4;}
+  .alertbox.info{background:var(--volt-blue-light);border-color:rgba(244,197,55,.5);color:#f7d97a;}
+  .alertbox b{color:#fff;}
   canvas{width:100%;height:340px;display:block;}
-  .legend{display:flex;gap:22px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;color:var(--text2);}
+  .legend{display:flex;gap:22px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;color:var(--text2);flex-wrap:wrap;}
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
-  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);}
+  .legend .dash{width:14px;height:0;border-top:2.5px dashed var(--volt-blue);display:inline-block;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  th,td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--border);}
   th:first-child,td:first-child{text-align:left;}
-  thead th{background:#1a1a1a;color:var(--volt-blue);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.12em;position:sticky;top:0;border-bottom:2px solid var(--volt-blue);}
+  thead th{background:#1a1a1a;color:var(--volt-blue);font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;position:sticky;top:0;border-bottom:2px solid var(--volt-blue);}
   tbody tr:hover{background:#262626;}
   .tablewrap{max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;}
   details summary{cursor:pointer;font-weight:800;color:var(--volt-blue);font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em;}
@@ -202,11 +217,14 @@
     header h1{color:#111 !important;}
     header p{color:#666 !important;}
     .card,.stat{background:#fff !important;border-color:#ddd !important;}
+    .stats.secondary .stat{background:#fafafa !important;}
     .card h2,.stat .value,.stat.month .value b,details summary,thead th{color:#8a6b00 !important;}
     .field label,.stat.month .value{color:#333 !important;}
     thead th{background:#faf3d6 !important;border-bottom-color:#c79e1f !important;}
     th,td{border-bottom-color:#e5e5e5 !important;}
-    .disclaimer,.field label span.hint,.stat .label{color:#777 !important;}
+    .disclaimer,.field label span.hint,.stat .label,.stat .sub{color:#777 !important;}
+    .alertbox{background:#fff !important;color:#333 !important;border-color:#ddd !important;}
+    .alertbox b{color:#111 !important;}
     .wrap{display:block !important;}
     .wrap > .card:first-child{display:none !important;}
     .tablewrap{max-height:none !important; overflow:visible !important;}
@@ -220,7 +238,7 @@
 
 <header>
   <div class="brand">
-    <img class="logo" src="data:image/png;base64,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" alt="Volt Home">
+    <img class="logo" src="data:image/png;base64,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" alt="Volt Home">
     <div>
       <h1>VOLT Solar Savings Calculator</h1>
       <p>Sales team tool — Utility vs. purchase option comparison</p>
@@ -257,6 +275,91 @@
         <input type="number" id="utilRate" min="0" max="30" step="0.01" value="4.00">
         <span>%</span>
       </div>
+    </div>
+    <div class="field">
+      <label>Utility company <span class="hint">sets the defaults below</span></label>
+      <select id="utility">
+        <option value="FPL">FPL</option>
+        <option value="DUKE">Duke Energy Florida</option>
+        <option value="TECO">Tampa Electric (TECO)</option>
+        <option value="OUC">OUC (Orlando)</option>
+        <option value="JEA">JEA (Jacksonville)</option>
+        <option value="LAKELAND">Lakeland Electric</option>
+        <option value="KUA">Kissimmee Utility Authority</option>
+        <option value="OTHER">Other / manual</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Fixed charges <span class="hint">$/mo</span></label>
+        <input type="number" id="fixedMonthly" value="10.52" step="0.01" min="0">
+      </div>
+      <div class="field">
+        <label>Minimum bill <span class="hint">$/mo</span></label>
+        <input type="number" id="minBill" value="30" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="hint" id="utilNote" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;"></div>
+
+    <h2 style="margin-top:22px;">Solar production &amp; offset</h2>
+    <div class="field">
+      <label>Annual production <span class="hint">kWh/yr — Aurora</span></label>
+      <input type="number" id="annualProd" value="20500" step="100" min="0">
+    </div>
+    <div class="field">
+      <label>Post-solar bill source <span class="hint">how we get the residual</span></label>
+      <select id="postBillMode">
+        <option value="aurora">Aurora post-solar bill</option>
+        <option value="derive">Derive it from offset %</option>
+      </select>
+    </div>
+    <div class="field" id="auroraField">
+      <label>Post-solar monthly bill <span class="hint">USD — Aurora</span></label>
+      <input type="number" id="postBillAurora" value="120" step="1" min="0">
+    </div>
+    <div class="field" id="offsetField">
+      <label>Offset <span class="hint" id="offsetHint">production &divide; consumption</span></label>
+      <div class="input-suffix">
+        <input type="number" id="offset" min="0" max="200" step="0.1" value="95.0">
+        <span>%</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Net metering 1:1? <span class="hint">exports credited at retail</span></label>
+      <select id="nem1to1">
+        <option value="yes">Yes — full retail credit</option>
+        <option value="no">No — reduced export credit</option>
+      </select>
+    </div>
+    <div id="nemFields" style="display:none;">
+      <div class="field-row">
+        <div class="field">
+          <label>Export credit <span class="hint">&times; retail</span></label>
+          <input type="number" id="exportRatio" value="0.37" step="0.01" min="0" max="1">
+        </div>
+        <div class="field">
+          <label>Self-consumption <span class="hint">%</span></label>
+          <input type="number" id="selfCons" value="35" step="1" min="0" max="100">
+        </div>
+      </div>
+      <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;">
+        Without 1:1, only the kWh consumed at the moment they are produced are worth full retail. Self-consumption is typically 30&ndash;40% without a battery and 60&ndash;80% with one.
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Year-end surplus <span class="hint">% of retail</span></label>
+        <input type="number" id="cogRatio" value="28" step="1" min="0" max="100">
+      </div>
+      <div class="field">
+        <label>Degradation <span class="hint">%/yr</span></label>
+        <input type="number" id="degr" value="0.50" step="0.05" min="0" max="3">
+      </div>
+    </div>
+    <div class="hint" style="font-size:11px;color:var(--text3);line-height:1.5;margin:-8px 0 16px;">
+      Anything produced beyond 100% of annual consumption is bought back at the utility's avoided-cost rate at the December true-up &mdash; not at retail. That is what "year-end surplus" prices.
     </div>
 
     <h2 style="margin-top:22px;">Purchase option</h2>
@@ -323,7 +426,7 @@
 
       <div id="loanTieredFields" style="display:none;">
         <div class="field">
-          <label>Payment months 1–36 <span class="hint">USD</span></label>
+          <label>Payment months 1&ndash;36 <span class="hint">USD</span></label>
           <input type="number" id="loanPay1" value="1900" step="1" min="0">
         </div>
         <div class="field">
@@ -349,7 +452,7 @@
     </div>
 
     <div class="disclaimer">
-      This calculator is an estimate based on the assumptions entered (initial payments, increase rates and term). It is not a financial guarantee. Actual utility rates, solar production and contract/financing terms may vary.
+      This calculator is an estimate based on the assumptions entered (initial payments, increase rates, offset and term). It is not a financial guarantee. Actual utility rates, solar production, net-metering rules and contract/financing terms may vary.
     </div>
   </div>
 
@@ -364,7 +467,7 @@
         <div class="label">% savings vs. utility</div>
         <div class="value" id="statPct">0%</div>
       </div>
-      <div class="stat breakeven" title="The year in which the chosen option's payment becomes lower than the utility payment for that same year">
+      <div class="stat breakeven" title="The year in which the chosen option's total cost (solar payment + residual bill) becomes lower than the utility payment for that same year">
         <div class="label">Saves from</div>
         <div class="value" id="statBreakeven">—</div>
       </div>
@@ -373,12 +476,38 @@
         <div class="value">Utility: <b id="statTotalUtil">$0</b><br><span id="statOptLbl">Option</span>: <b id="statTotalOpt">$0</b></div>
       </div>
     </div>
-    <div class="statsActions no-print" style="display:flex;justify-content:flex-end;margin:-6px 0 14px;">
+
+    <div class="stats secondary">
+      <div class="stat" title="Annual production divided by annual consumption. In Aurora mode this is implied by the post-solar bill, which is the number that actually drives the math.">
+        <div class="label">Offset</div>
+        <div class="value" id="statOffset">—</div>
+        <div class="sub" id="statOffsetSub">&nbsp;</div>
+      </div>
+      <div class="stat" title="Share of the production that is actually worth full retail. Everything above 100% offset is bought back at avoided cost, so it drags this down.">
+        <div class="label">Value capture</div>
+        <div class="value" id="statCapture">—</div>
+        <div class="sub" id="statCaptureSub">&nbsp;</div>
+      </div>
+      <div class="stat" title="What the customer effectively pays per kWh of solar, levelized over the term, versus what the utility charges per kWh over the same period.">
+        <div class="label">Solar $/kWh vs. utility</div>
+        <div class="value" id="statLcoe">—</div>
+        <div class="sub" id="statLcoeSub">&nbsp;</div>
+      </div>
+      <div class="stat" title="What the customer still pays the utility after solar in year 1. It never reaches $0 — fixed charges and the minimum bill survive.">
+        <div class="label">Residual bill, yr 1</div>
+        <div class="value" id="statResidual">—</div>
+        <div class="sub" id="statResidualSub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="statsActions no-print" style="display:flex;justify-content:flex-end;margin:2px 0 14px;">
       <button class="btn-secondary" id="savingsCardBtn">Generate savings card (image)</button>
     </div>
 
-    <div style="font-size:11.5px;color:var(--text3);margin:-10px 0 20px;">
-      <b>Saves from</b>: the year in which what the customer pays for the chosen option becomes lower than what they would have paid the utility that same year — from then on, every year is pure savings.
+    <div id="offsetAlert"></div>
+
+    <div style="font-size:11.5px;color:var(--text3);margin:0 0 20px;">
+      <b>Saves from</b>: the year in which what the customer pays in total for the chosen option &mdash; solar payment <i>plus</i> the residual utility bill &mdash; becomes lower than what they would have paid the utility that same year.
     </div>
 
     <div class="card" id="customerHeader" style="display:none;margin-bottom:20px;">
@@ -390,7 +519,8 @@
       <canvas id="chart"></canvas>
       <div class="legend">
         <span><i class="dot" style="background:var(--volt-red)"></i>Utility (no solar)</span>
-        <span><i class="dot" style="background:var(--volt-blue)"></i><span id="legendOptLbl">Option</span></span>
+        <span><i class="dot" style="background:var(--volt-blue)"></i><span id="legendOptLbl">Option</span> total</span>
+        <span><i class="dash"></i>Solar payment only</span>
       </div>
     </div>
 
@@ -402,10 +532,11 @@
             <thead>
               <tr>
                 <th>Year</th>
-                <th>Utility monthly</th>
                 <th>Utility annual</th>
+                <th>Solar payment</th>
+                <th>Residual bill</th>
+                <th>Option total</th>
                 <th>Option monthly</th>
-                <th>Option annual</th>
                 <th>Annual savings</th>
               </tr>
             </thead>
@@ -422,6 +553,7 @@
 const fmt$ = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const fmt$2 = n => n.toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtPct = n => (n*100).toLocaleString('en-US',{maximumFractionDigits:1})+'%';
+const fmtKwh = n => '$'+n.toFixed(3)+'/kWh';
 const VOLT_LOGO_DARK = document.querySelector('header .logo').src;   // transparent lockup, for dark surfaces
 let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, for the PDF
 (function(){
@@ -446,54 +578,91 @@ let docLang = 'en';
 const DOC = {
   en: {
     locale:'en-US', perMonth:'/mo', yearsWord:'years',
-    execTitle:'Executive Summary \u2014 Solar Savings',
+    execTitle:'Executive Summary — Solar Savings',
     proposalFor:n=>'Proposal for: '+n, proposalGeneric:'Solar savings proposal',
     generatedOn:d=>'Generated on '+d,
     utilityPayment:'Current utility payment', utilityIncrease:'Annual utility increase',
-    optionEvaluated:(l,t)=>'Option evaluated: '+l+'   \u00b7   Term: '+t+' years',
+    optionEvaluated:(l,t)=>'Option evaluated: '+l+'   ·   Term: '+t+' years',
     year:n=>'Year '+n, afterYear:n=>'After year '+n,
     totalSavings:'Total contract savings', savingsPct:'% savings vs. utility',
     savesFrom:'Saves from', totalCost:'Total utility / option cost',
     annualCost:l=>'Annual cost: Utility vs. '+l,
-    yearDetail:l=>'Year-by-year detail \u2014 '+l,
-    cols:['Year','Utility monthly','Utility annual','Option monthly','Option annual','Annual savings'],
+    yearDetail:l=>'Year-by-year detail — '+l,
+    cols:['Year','Utility annual','Solar payment','Residual bill','Option total','Annual savings'],
     cashPrice:'Total price (cash)', laterPayments:'Later payments', none:'None (one-time payment)',
-    pay136:'Payment months 1\u201336', pay37:'Payment month 37 onward',
+    pay136:'Payment months 1–36', pay37:'Payment month 37 onward',
     initialPay:'Initial monthly payment', escalator:'Annual escalator',
     firstMonths:m=>'First '+m+' months', noPayment:'No payment ($0)',
+    offsetWord:'Offset', residualYr1:'Residual bill, yr 1', solarKwh:'Solar $/kWh (levelized)',
+    valueCapture:'Value capture',
+    offsetLine:(o,r)=>'Offset '+o+'   ·   Residual utility bill after solar: '+r+'/mo in year 1',
     cardTagline:'Estimated solar savings', cardSub:t=>'in estimated savings over '+t+' years vs. your current utility',
     cardCols:['% SAVINGS','SAVES FROM','OPTION EVALUATED'],
-    disclaimer:'Estimate based on the assumptions entered by the sales team. It is not a financial guarantee; actual utility rates, solar production and contract/financing terms may vary.',
+    disclaimer:'Estimate based on the assumptions entered by the sales team, including solar offset and the residual utility bill that remains after solar. It is not a financial guarantee; actual utility rates, solar production, net-metering rules and contract/financing terms may vary.',
     clientWord:'Client', pdfName:'VOLT_Executive_Summary', cardName:'VOLT_Estimated_Savings'
   },
   es: {
-    locale:'es-MX', perMonth:'/mes', yearsWord:'a\u00f1os',
-    execTitle:'Resumen Ejecutivo \u2014 Ahorro Solar',
+    locale:'es-MX', perMonth:'/mes', yearsWord:'años',
+    execTitle:'Resumen Ejecutivo — Ahorro Solar',
     proposalFor:n=>'Propuesta para: '+n, proposalGeneric:'Propuesta de ahorro solar',
     generatedOn:d=>'Generado el '+d,
     utilityPayment:'Pago utility actual', utilityIncrease:'Incremento anual utility',
-    optionEvaluated:(l,t)=>'Opci\u00f3n evaluada: '+l+'   \u00b7   Plazo: '+t+' a\u00f1os',
-    year:n=>'A\u00f1o '+n, afterYear:n=>'Despu\u00e9s del a\u00f1o '+n,
+    optionEvaluated:(l,t)=>'Opción evaluada: '+l+'   ·   Plazo: '+t+' años',
+    year:n=>'Año '+n, afterYear:n=>'Después del año '+n,
     totalSavings:'Ahorro total del contrato', savingsPct:'% de ahorro vs. utility',
-    savesFrom:'Ahorra desde', totalCost:'Costo total utility / opci\u00f3n',
+    savesFrom:'Ahorra desde', totalCost:'Costo total utility / opción',
     annualCost:l=>'Costo anual: Utility vs. '+l,
-    yearDetail:l=>'Detalle a\u00f1o a a\u00f1o \u2014 '+l,
-    cols:['A\u00f1o','Utility mensual','Utility anual','Opci\u00f3n mensual','Opci\u00f3n anual','Ahorro anual'],
-    cashPrice:'Precio total (cash)', laterPayments:'Pagos posteriores', none:'Ninguno (pago \u00fanico)',
-    pay136:'Pago meses 1\u201336', pay37:'Pago mes 37 en adelante',
+    yearDetail:l=>'Detalle año a año — '+l,
+    cols:['Año','Utility anual','Pago solar','Factura residual','Total opción','Ahorro anual'],
+    cashPrice:'Precio total (cash)', laterPayments:'Pagos posteriores', none:'Ninguno (pago único)',
+    pay136:'Pago meses 1–36', pay37:'Pago mes 37 en adelante',
     initialPay:'Pago mensual inicial', escalator:'Escalador anual',
     firstMonths:m=>'Primeros '+m+' meses', noPayment:'Sin pago ($0)',
-    cardTagline:'Ahorro estimado en energ\u00eda solar', cardSub:t=>'de ahorro estimado en '+t+' a\u00f1os vs. tu utility actual',
-    cardCols:['% DE AHORRO','AHORRA DESDE','OPCI\u00d3N EVALUADA'],
-    disclaimer:'Estimaci\u00f3n basada en los supuestos ingresados por el equipo de ventas. No constituye una garant\u00eda financiera; las tarifas reales de la utility, la producci\u00f3n solar y las condiciones del contrato/financiamiento pueden variar.',
+    offsetWord:'Offset', residualYr1:'Factura residual, año 1', solarKwh:'$/kWh solar (nivelado)',
+    valueCapture:'Valor capturado',
+    offsetLine:(o,r)=>'Offset '+o+'   ·   Factura utility remanente después del solar: '+r+'/mes en el año 1',
+    cardTagline:'Ahorro estimado en energía solar', cardSub:t=>'de ahorro estimado en '+t+' años vs. tu utility actual',
+    cardCols:['% DE AHORRO','AHORRA DESDE','OPCIÓN EVALUADA'],
+    disclaimer:'Estimación basada en los supuestos ingresados por el equipo de ventas, incluidos el offset solar y la factura remanente de la utility después del solar. No constituye una garantía financiera; las tarifas reales de la utility, la producción solar, las reglas de net metering y las condiciones del contrato/financiamiento pueden variar.',
     clientWord:'Cliente', pdfName:'VOLT_Resumen_Ejecutivo', cardName:'VOLT_Ahorro_Estimado'
   }
 };
 const D = () => DOC[docLang];
 
+/* ─────────────────────── Utility presets (Florida) ───────────────────────
+   fixed   = recurring charges that survive at any offset ($/mo)
+   minBill = hard floor on the monthly bill ($/mo). FPL and Duke both enforce
+             a $30 minimum base bill, which is THE reason a 100% offset system
+             never produces a $0 bill in their territory.
+   nem     = value of an exported kWh relative to retail. 1 = true 1:1.
+   Sources verified Sep-2026: Rule 25-6.065 F.A.C. still gives investor-owned
+   utilities (FPL, Duke, TECO, FPUC) full-retail 1:1 with monthly rollover and a
+   December true-up at the COG-1 avoided-cost rate. Municipals and co-ops set
+   their own terms under s.366.91(6) F.S. and several are NOT 1:1.
+   ──────────────────────────────────────────────────────────────────────── */
+const UTILS = {
+  FPL:      {fixed:10.52, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1, monthly rollover, December true-up at COG-1. Minimum base bill $30/mo — this is the floor the bill cannot go below. FPL guideline caps system size at 115% of annual consumption.'},
+  DUKE:     {fixed:14.35, minBill:30.00, nem:1,    note:'Rule 25-6.065: full-retail 1:1. Minimum monthly bill $30. Winter energy rate is higher (Dec–Feb).'},
+  TECO:     {fixed:13.69, minBill:13.69, nem:1,    note:'Rule 25-6.065: full-retail 1:1 confirmed. Basic service charge $0.45/day. Energy Planner customers must move to the standard residential rate to net meter.'},
+  OUC:      {fixed:18.50, minBill:18.50, nem:1,    note:'CHECK THE INTERCONNECTION DATE. Full retail is grandfathered to 2045 only if interconnected on or before 30-Jun-2025. Newer systems lose the grace period on 31-Oct-2026, and from 1-Nov-2026 OUC ends credit banking and the annual true-up — excess is credited within the same billing period. A residential DemandLevel charge of $5–$15/mo also starts Nov-2026.'},
+  JEA:      {fixed:19.25, minBill:19.25, nem:0.37, note:'NOT 1:1. JEA credits exports at its fuel cost only ($0.04282 vs $0.11519 retail ≈ 0.37x). Self-consumption drives the economics here, so a battery changes the answer materially.'},
+  LAKELAND: {fixed:14.45, minBill:14.45, nem:0.75, note:'Nominally "full retail", but residential solar is forced onto the Solar/Demand Price Plan whose energy rate is far lower, plus a $5.77/kW solar demand charge not modeled here. Effective export value ≈ 0.68–0.82x the standard plan. Residential limit 10 kW.'},
+  KUA:      {fixed:10.17, minBill:10.17, nem:0.5,  note:'NOT PUBLISHED. Credit is set by the Tri-Party PPA with FMPA and is not in the public tariff; non-grandfathered customers get the avoided-cost rate. The 0.50x here is a placeholder — confirm with KUA before quoting.'},
+  OTHER:    {fixed:12.00, minBill:12.00, nem:1,    note:'Manual entry. Confirm the fixed charge, any minimum bill, and whether the utility credits exports at full retail before relying on the numbers.'}
+};
+
 const els = {
   utilStart: document.getElementById('utilStart'),
   utilRate: document.getElementById('utilRate'),
+  fixedMonthly: document.getElementById('fixedMonthly'),
+  minBill: document.getElementById('minBill'),
+  annualProd: document.getElementById('annualProd'),
+  postBillAurora: document.getElementById('postBillAurora'),
+  offset: document.getElementById('offset'),
+  exportRatio: document.getElementById('exportRatio'),
+  selfCons: document.getElementById('selfCons'),
+  cogRatio: document.getElementById('cogRatio'),
+  degr: document.getElementById('degr'),
   optType: document.getElementById('optType'),
   leaseProvider: document.getElementById('leaseProvider'),
   leasePay: document.getElementById('leasePay'),
@@ -507,6 +676,9 @@ const els = {
   term: document.getElementById('term'),
   custName: document.getElementById('custName'),
 };
+const selUtility = document.getElementById('utility');
+const selMode    = document.getElementById('postBillMode');
+const selNem     = document.getElementById('nem1to1');
 
 // ---------------------------------------------------------------------------
 // Financing engine — mirrors the logic used in the Sales Breakdown widget:
@@ -541,7 +713,115 @@ function getOptionConfig(){
   return { type:'escalating', pay, esc, deferMonths, label: finco+' (Loan)' };
 }
 
-function calc(utilStart, utilRate, term, opt){
+// ---------------------------------------------------------------------------
+// OFFSET ENGINE
+//
+// The whole point: offset is a PRODUCTION ratio, not a savings ratio. Going
+// solar does not delete the utility bill, it shrinks the variable part of it.
+// Three things break the "80% offset = 80% savings" intuition:
+//
+//   1. Fixed charges and the minimum bill survive at ANY offset. In FPL and
+//      Duke territory that floor is $30/mo, so a 100% offset system still
+//      leaves a $360/yr bill.
+//   2. Above 100% offset the marginal kWh is worth the avoided-cost rate, not
+//      retail — roughly a quarter of the value. The last 15 points of offset
+//      buy almost nothing while costing 15% more system.
+//   3. Panels degrade, so the offset the customer bought in year 1 is not the
+//      offset they have in year 15. The residual bill grows faster than the
+//      rate escalator alone would suggest.
+//
+// Everything below is normalized so annual consumption = 1.0, which makes the
+// math independent of the actual kWh figure and keeps it auditable.
+// ---------------------------------------------------------------------------
+function getSolarConfig(){
+  const nem1 = selNem.value === 'yes';
+  return {
+    mode:        selMode.value,
+    offsetInput: (parseFloat(els.offset.value)||0)/100,
+    auroraBill:  parseFloat(els.postBillAurora.value)||0,
+    annualProd:  parseFloat(els.annualProd.value)||0,
+    fixedMonthly:parseFloat(els.fixedMonthly.value)||0,
+    minBill:     parseFloat(els.minBill.value)||0,
+    exportRatio: nem1 ? 1 : (parseFloat(els.exportRatio.value)||0),
+    selfCons:    (parseFloat(els.selfCons.value)||0)/100,
+    cogRatio:    (parseFloat(els.cogRatio.value)||0)/100,
+    degr:        (parseFloat(els.degr.value)||0)/100,
+    nem1
+  };
+}
+
+// Splits today's bill into the part that survives solar and the part solar can attack.
+function splitBill(s, utilStart){
+  const fixed  = Math.min(s.fixedMonthly, utilStart);
+  const energy = Math.max(utilStart - fixed, 0);
+  return {fixed, energy};
+}
+
+// How much of one year's consumption the production actually pays for, and how
+// much spills over as year-end surplus. Both returned as fractions of consumption.
+function energyBalance(s, prod){
+  if(s.exportRatio >= 1){
+    // True 1:1 net metering. Self-consumption is irrelevant: every exported kWh
+    // cancels an imported kWh at the same price, so only the annual total matters.
+    return { billed: Math.max(1-prod, 0), surplus: Math.max(prod-1, 0) };
+  }
+  // Net billing. Now the split between what is consumed on-site and what is
+  // exported drives everything, because exports are discounted.
+  const self     = Math.min(prod*s.selfCons, 1);
+  const exported = Math.max(prod - self, 0);
+  const gridImp  = Math.max(1 - self, 0);
+  const credit   = exported * s.exportRatio;
+  return { billed: Math.max(gridImp-credit, 0), surplus: Math.max(credit-gridImp, 0) };
+}
+
+function residualForYear(s, utilStart, utilRate, y){
+  const {fixed, energy} = splitBill(s, utilStart);
+  const infl  = Math.pow(1+utilRate, y-1);
+  const prod  = s.offset * Math.pow(1-s.degr, y-1);
+  const bal   = energyBalance(s, prod);
+  const bill  = fixed*infl + energy*infl*bal.billed - energy*infl*bal.surplus*s.cogRatio;
+  return Math.max(bill, s.minBill*infl);
+}
+
+// Aurora mode: instead of trusting a separate offset field, we invert the model
+// against the post-solar bill Aurora produced. That bill is the anchor, and the
+// offset it implies falls out of it — which doubles as a cross-check: if Aurora
+// says 95% offset but its own post-solar bill implies 78%, something is wrong in
+// the proposal and the rep sees it before the customer does.
+function impliedOffset(s, utilStart){
+  const {fixed, energy} = splitBill(s, utilStart);
+  if(energy <= 0) return 0;
+  const bill = s.auroraBill;
+  if(bill >= fixed) return Math.max(1 - (bill-fixed)/energy, 0);
+  return s.cogRatio > 0 ? 1 + (fixed-bill)/(energy*s.cogRatio) : 1;
+}
+
+// Share of annual consumption value that the production actually captures.
+// At 80% offset with 1:1 this is 0.80 (100% efficient — every kWh is worth retail).
+// At 115% it is ~1.04 (90% efficient — the last 15 points are nearly worthless).
+function valueCaptured(s, prod){
+  if(prod <= 0) return 0;
+  if(s.exportRatio >= 1){
+    return Math.min(prod,1) + Math.max(prod-1,0)*s.cogRatio;
+  }
+  const self     = Math.min(prod*s.selfCons, 1);
+  const exported = Math.max(prod - self, 0);
+  const gridImp  = Math.max(1 - self, 0);
+  const credit   = exported * s.exportRatio;
+  return self + Math.min(credit, gridImp) + Math.max(credit-gridImp, 0)*s.cogRatio;
+}
+
+function calc(utilStart, utilRate, term, opt, s){
+  // Resolve the offset actually used by the model.
+  s.offset = (s.mode === 'aurora') ? impliedOffset(s, utilStart) : s.offsetInput;
+
+  // A post-solar bill sitting at (or below) the minimum bill is NOT invertible:
+  // once the floor is reached, every offset from there upward produces the exact
+  // same bill, so the implied figure is a lower bound rather than a reading.
+  // Worth surfacing — in FPL/Duke territory the $30 minimum swallows the top of
+  // the offset range, which is precisely where over-sizing stops paying.
+  const offsetFloored = (s.mode === 'aurora') && (s.auroraBill <= s.minBill + 0.01);
+
   const rows = [];
   for(let y=1;y<=term;y++){
     let utilAnnual;
@@ -549,39 +829,66 @@ function calc(utilStart, utilRate, term, opt){
     else { utilAnnual = rows[y-2].utilAnnual*(1+utilRate); }
     const utilMonthly = utilAnnual/12;
 
-    let optMonthly, optAnnual;
+    // Solar payment for the year
+    let payMonthly, payAnnual;
     if(opt.type==='cash'){
-      optMonthly = null;
-      optAnnual = (y===1) ? opt.price : 0;
+      payMonthly = null;
+      payAnnual = (y===1) ? opt.price : 0;
     } else if(opt.type==='tiered'){
-      optMonthly = (y<=opt.tierEndYear) ? opt.pay1 : opt.pay2;
-      optAnnual = optMonthly*12;
+      payMonthly = (y<=opt.tierEndYear) ? opt.pay1 : opt.pay2;
+      payAnnual = payMonthly*12;
     } else { // 'escalating' — also covers fixed payments when esc = 0
-      if(y===1){ optMonthly = opt.pay; }
-      else { optMonthly = rows[y-2].optMonthly*(1+opt.esc); }
+      if(y===1){ payMonthly = opt.pay; }
+      else { payMonthly = rows[y-2].payMonthly*(1+opt.esc); }
       const deferMonths = (y===1 && opt.deferMonths) ? opt.deferMonths : 0;
-      optAnnual = optMonthly*(12-deferMonths);
+      payAnnual = payMonthly*(12-deferMonths);
     }
-    rows.push({year:y, utilAnnual, utilMonthly, optAnnual, optMonthly});
+
+    // Residual utility bill that survives solar
+    const resMonthly = residualForYear(s, utilStart, utilRate, y);
+    const resAnnual  = resMonthly*12;
+
+    // What the customer actually writes cheques for
+    const optAnnual  = payAnnual + resAnnual;
+    const optMonthly = (payMonthly===null) ? null : (payMonthly + resMonthly);
+
+    // Production for the year, used for the levelized $/kWh
+    const prodKwh = s.annualProd * Math.pow(1-s.degr, y-1);
+
+    rows.push({year:y, utilAnnual, utilMonthly, payAnnual, payMonthly,
+               resAnnual, resMonthly, optAnnual, optMonthly, prodKwh});
   }
-  const totalUtil = rows.reduce((s,r)=>s+r.utilAnnual,0);
-  const totalOpt = rows.reduce((s,r)=>s+r.optAnnual,0);
-  const savings = totalUtil-totalOpt;
-  const savingsPct = totalUtil>0 ? savings/totalUtil : 0;
+
+  const totalUtil = rows.reduce((a,r)=>a+r.utilAnnual,0);
+  const totalOpt  = rows.reduce((a,r)=>a+r.optAnnual,0);
+  const totalPay  = rows.reduce((a,r)=>a+r.payAnnual,0);
+  const totalRes  = rows.reduce((a,r)=>a+r.resAnnual,0);
+  const totalProd = rows.reduce((a,r)=>a+r.prodKwh,0);
+  const savings   = totalUtil-totalOpt;
+  const savingsPct= totalUtil>0 ? savings/totalUtil : 0;
+
+  // Levelized cost of the solar itself, and of the utility, over the same term.
+  const consumption = s.offset>0 ? s.annualProd/s.offset : 0;   // kWh/yr
+  const solarKwh = totalProd>0 ? totalPay/totalProd : 0;
+  const utilKwh  = consumption>0 ? totalUtil/(consumption*term) : 0;
+
+  // Offset quality
+  const captured  = valueCaptured(s, s.offset);
+  const efficiency= s.offset>0 ? captured/s.offset : 0;
 
   // Savings start year: it's either/or — you either keep paying the utility,
-  // or you pay for the chosen option. This finds the first year where what
-  // you'd pay for the option THAT YEAR is already less than what you'd have
-  // paid the utility that same year — from there on, every year is savings.
+  // or you pay for the chosen option PLUS whatever the utility still bills you.
   let breakevenYear=null;
   rows.forEach(row=>{
     if(breakevenYear===null && row.optAnnual < row.utilAnnual) breakevenYear = row.year;
   });
 
-  return {rows, totalUtil, totalOpt, savings, savingsPct, breakevenYear};
+  return {rows, totalUtil, totalOpt, totalPay, totalRes, totalProd, savings, savingsPct,
+          breakevenYear, offset:s.offset, offsetFloored, captured, efficiency,
+          solarKwh, utilKwh, consumption};
 }
 
-function drawChart(rows, optLabel){
+function drawChart(rows){
   const canvas = document.getElementById('chart');
   const dpr = window.devicePixelRatio||1;
   const cssW = canvas.clientWidth || canvas.parentElement.clientWidth;
@@ -617,18 +924,25 @@ function drawChart(rows, optLabel){
     }
   });
 
-  function plot(key,color){
+  function plot(key,color,dashed){
     ctx.beginPath();
-    ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    ctx.setLineDash(dashed?[5,4]:[]);
+    ctx.strokeStyle=color; ctx.lineWidth=dashed?1.8:2.5;
     rows.forEach((r,i)=>{
       const x = padL+(i/(n-1))*w;
-      const y = padT+h-(r[key]/maxVal)*h;
+      const y = padT+h-(Math.max(r[key],0)/maxVal)*h;
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     });
     ctx.stroke();
+    ctx.setLineDash([]);
   }
-  plot('utilAnnual', getComputedStyle(document.documentElement).getPropertyValue('--volt-red').trim());
-  plot('optAnnual', getComputedStyle(document.documentElement).getPropertyValue('--volt-blue').trim());
+  const cs = getComputedStyle(document.documentElement);
+  plot('utilAnnual', cs.getPropertyValue('--volt-red').trim(), false);
+  // The dashed line is the solar payment on its own. The gap between it and the
+  // solid option line is the residual utility bill — the thing the old version
+  // of this calculator quietly assumed was zero.
+  plot('payAnnual',  cs.getPropertyValue('--volt-blue').trim(), true);
+  plot('optAnnual',  cs.getPropertyValue('--volt-blue').trim(), false);
 }
 
 function updateOptionVisibility(){
@@ -645,22 +959,94 @@ function updateOptionVisibility(){
   }
 }
 
+function updateSolarVisibility(){
+  const aurora = selMode.value==='aurora';
+  document.getElementById('auroraField').style.display = aurora ? '' : 'none';
+  // The offset field stays visible in both modes. In Aurora mode it does not
+  // drive the math — it is the cross-check: type what Aurora claims the offset
+  // is, and the calculator tells you whether Aurora's own post-solar bill agrees.
+  document.getElementById('offsetHint').textContent =
+    aurora ? 'Aurora’s figure — cross-check only' : 'production ÷ consumption';
+  document.getElementById('nemFields').style.display   = selNem.value==='no' ? '' : 'none';
+  const u = UTILS[selUtility.value];
+  document.getElementById('utilNote').textContent = u ? u.note : '';
+}
+
+function applyUtilityPreset(){
+  const u = UTILS[selUtility.value];
+  if(!u) return;
+  els.fixedMonthly.value = u.fixed.toFixed(2);
+  els.minBill.value      = u.minBill.toFixed(2);
+  selNem.value           = u.nem >= 1 ? 'yes' : 'no';
+  if(u.nem < 1) els.exportRatio.value = u.nem.toFixed(2);
+  updateSolarVisibility();
+}
+
 els.loanFinco.addEventListener('change', ()=>{
   if(els.loanFinco.value==='Sungage Sunrise'){ els.loanEsc.value='2.90'; }
   updateOptionVisibility();
   render();
 });
 els.optType.addEventListener('change', ()=>{ updateOptionVisibility(); render(); });
+selUtility.addEventListener('change', ()=>{ applyUtilityPreset(); render(); });
+selMode.addEventListener('change', ()=>{ updateSolarVisibility(); render(); });
+selNem.addEventListener('change', ()=>{ updateSolarVisibility(); render(); });
+
+function renderOffsetAlert(r, s, utilStart){
+  const box = document.getElementById('offsetAlert');
+  const msgs = [];
+  const {energy} = splitBill(s, utilStart);
+
+  if(r.offset > 1.001){
+    // Price the over-production explicitly. This is the number that stops a rep
+    // from up-selling 15 more points of offset that the customer never gets paid for.
+    const excess = r.offset - 1;
+    const excessKwh = r.consumption * excess;
+    const worthNow  = energy*12*excess*s.cogRatio;
+    const worthIfRetail = energy*12*excess;
+    msgs.push('<div class="alertbox warn"><b>Offset above 100% — '+fmtPct(r.offset)+'.</b> '+
+      'The '+fmtPct(excess)+' above consumption (about '+Math.round(excessKwh).toLocaleString('en-US')+' kWh/yr) is not credited at retail. '+
+      'At the year-end true-up it is worth roughly <b>'+fmt$(worthNow)+'/yr</b> instead of the '+fmt$(worthIfRetail)+'/yr it would be worth inside the 100%. '+
+      'The customer is paying for a system '+fmtPct(excess)+' larger to buy about '+fmtPct(worthNow/Math.max(worthIfRetail,1))+' of the value.</div>');
+  }
+  if(r.offset > 1.15){
+    msgs.push('<div class="alertbox warn"><b>Over the 115% cap.</b> FPL’s interconnection guideline is that the system produce less than 115% of annual consumption. Verify before submitting.</div>');
+  }
+  if(r.offsetFloored){
+    msgs.push('<div class="alertbox info"><b>The bill is already at the minimum.</b> Aurora’s post-solar bill of '+fmt$2(s.auroraBill)+
+      '/mo is at or below this utility’s '+fmt$2(s.minBill)+' floor, so the offset cannot be read back from it — '+fmtPct(r.offset)+
+      ' is a lower bound. Everything above that point produces the identical bill, which is exactly why adding more panels here stops paying. Switch to "Derive it from offset %" if you need the real figure.</div>');
+  }
+  if(s.mode === 'aurora' && !r.offsetFloored && s.offsetInput > 0 && Math.abs(r.offset - s.offsetInput) > 0.05){
+    msgs.push('<div class="alertbox info"><b>Aurora cross-check.</b> The post-solar bill entered implies an offset of <b>'+fmtPct(r.offset)+
+      '</b>, but the offset field says '+fmtPct(s.offsetInput)+'. One of the two is wrong — reconcile them before sending the proposal.</div>');
+  }
+  if(!s.nem1){
+    msgs.push('<div class="alertbox info"><b>No 1:1 net metering.</b> Exports are credited at '+s.exportRatio.toFixed(2)+
+      '× retail, so only the '+fmtPct(s.selfCons)+' of production consumed on site is worth full price. A battery raises self-consumption and is worth modeling here.</div>');
+  }
+  const lastRes = r.rows[r.rows.length-1];
+  if(lastRes && r.rows[0].resMonthly > 0){
+    const growth = lastRes.resMonthly / r.rows[0].resMonthly;
+    if(growth > 2.5){
+      msgs.push('<div class="alertbox info"><b>The residual bill compounds.</b> It starts at '+fmt$2(r.rows[0].resMonthly)+
+        '/mo and reaches '+fmt$2(lastRes.resMonthly)+'/mo by year '+lastRes.year+
+        ' — utility inflation and panel degradation both push it up. It is '+fmt$(r.totalRes)+' over the term, and it is real money the proposal has to account for.</div>');
+    }
+  }
+  box.innerHTML = msgs.join('');
+}
 
 function render(){
   const utilStart = parseFloat(els.utilStart.value)||0;
   const utilRate = (parseFloat(els.utilRate.value)||0)/100;
   const term = parseInt(els.term.value);
   const opt = getOptionConfig();
+  const s = getSolarConfig();
 
   document.getElementById('termLbl').textContent = term+' years';
 
-  const r = calc(utilStart, utilRate, term, opt);
+  const r = calc(utilStart, utilRate, term, opt, s);
 
   document.getElementById('statSavings').textContent = fmt$(r.savings);
   document.getElementById('statPct').textContent = fmtPct(r.savingsPct);
@@ -671,6 +1057,31 @@ function render(){
   document.getElementById('chartTitle').textContent = 'Annual cost: "Cost of doing nothing" vs. '+opt.label;
   document.getElementById('legendOptLbl').textContent = opt.label;
 
+  // ── Offset diagnostics ────────────────────────────────────────────────
+  const offEl = document.getElementById('statOffset');
+  offEl.textContent = (r.offsetFloored ? '≥ ' : '') + fmtPct(r.offset);
+  offEl.className = 'value' + (r.offset>1.15 ? ' warn' : (r.offset>=0.85 && r.offset<=1.05 ? ' good' : ''));
+  document.getElementById('statOffsetSub').textContent =
+    (s.mode==='aurora' ? (r.offsetFloored ? 'lower bound — bill is at the minimum' : 'implied by the Aurora bill') : 'entered') +
+    (r.consumption>0 ? ' · '+Math.round(r.consumption).toLocaleString('en-US')+' kWh/yr use' : '');
+
+  const capEl = document.getElementById('statCapture');
+  capEl.textContent = fmtPct(r.efficiency);
+  capEl.className = 'value' + (r.efficiency<0.95 ? ' warn' : ' good');
+  document.getElementById('statCaptureSub').textContent =
+    'covers '+fmtPct(r.captured)+' of the energy bill';
+
+  document.getElementById('statLcoe').textContent = r.solarKwh>0 ? fmtKwh(r.solarKwh) : '—';
+  document.getElementById('statLcoeSub').textContent =
+    r.utilKwh>0 ? ('utility '+fmtKwh(r.utilKwh)+' over '+term+' yrs') : ' ';
+
+  const res1 = r.rows[0] ? r.rows[0].resMonthly : 0;
+  document.getElementById('statResidual').textContent = fmt$2(res1)+'/mo';
+  document.getElementById('statResidualSub').textContent =
+    'floor '+fmt$2(s.minBill)+' · '+fmt$(r.totalRes)+' over the term';
+
+  renderOffsetAlert(r, s, utilStart);
+
   const name = els.custName.value.trim();
   const custBlock = document.getElementById('customerHeader');
   if(name){ custBlock.style.display='block'; document.getElementById('custNameOut').textContent = name; }
@@ -680,24 +1091,25 @@ function render(){
   tbody.innerHTML = r.rows.map(row=>{
     const yearSavings = row.utilAnnual-row.optAnnual;
     const optMonthlyTxt = row.optMonthly===null ? '—' : fmt$2(row.optMonthly);
-    return `<tr>
-      <td>${row.year}</td>
-      <td>${fmt$2(row.utilMonthly)}</td>
-      <td>${fmt$2(row.utilAnnual)}</td>
-      <td>${optMonthlyTxt}</td>
-      <td>${fmt$2(row.optAnnual)}</td>
-      <td style="color:${yearSavings>=0?'#34d399':'#f87171'}">${fmt$2(yearSavings)}</td>
-    </tr>`;
+    return '<tr>'+
+      '<td>'+row.year+'</td>'+
+      '<td>'+fmt$2(row.utilAnnual)+'</td>'+
+      '<td>'+fmt$2(row.payAnnual)+'</td>'+
+      '<td>'+fmt$2(row.resAnnual)+'</td>'+
+      '<td>'+fmt$2(row.optAnnual)+'</td>'+
+      '<td>'+optMonthlyTxt+'</td>'+
+      '<td style="color:'+(yearSavings>=0?'#34d399':'#f87171')+'">'+fmt$2(yearSavings)+'</td>'+
+    '</tr>';
   }).join('');
 
-  drawChart(r.rows, opt.label);
+  drawChart(r.rows);
 }
 
 ['input','change'].forEach(evt=>{
   Object.values(els).forEach(el=>el.addEventListener(evt, render));
 });
 // Force clean 2-decimal formatting on the % fields once the user finishes editing
-[els.utilRate, els.leaseEsc, els.loanEsc].forEach(el=>{
+[els.utilRate, els.leaseEsc, els.loanEsc, els.offset, els.degr].forEach(el=>{
   el.addEventListener('blur', ()=>{
     const v = parseFloat(el.value);
     el.value = isNaN(v) ? '0.00' : v.toFixed(2);
@@ -707,6 +1119,9 @@ function render(){
 window.addEventListener('resize', render);
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   els.utilStart.value=1787.85; els.utilRate.value='4.00';
+  selUtility.value='FPL'; applyUtilityPreset();
+  els.annualProd.value=20500; selMode.value='aurora'; els.postBillAurora.value=120; els.offset.value='95.00';
+  els.cogRatio.value=28; els.degr.value='0.50'; els.selfCons.value=35;
   els.optType.value='lease';
   els.leaseProvider.value='LightReach'; els.leasePay.value=2033.32; els.leaseEsc.value='2.99';
   els.loanFinco.value='Sungage Sunrise'; els.loanPay.value=2033.32; els.loanEsc.value='2.90';
@@ -714,6 +1129,7 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   els.cashPrice.value=45000;
   els.term.value=25; els.custName.value='';
   updateOptionVisibility();
+  updateSolarVisibility();
   render();
 });
 document.getElementById('printBtn').addEventListener('click', ()=>{
@@ -790,7 +1206,9 @@ async function generatePDF(){
     const utilRate = (parseFloat(els.utilRate.value)||0)/100;
     const term = parseInt(els.term.value);
     const opt = getOptionConfig();
-    const r = calc(utilStart, utilRate, term, opt);
+    const s = getSolarConfig();
+    const r = calc(utilStart, utilRate, term, opt, s);
+    const res1 = r.rows[0] ? r.rows[0].resMonthly : 0;
 
     // Assumptions box
     doc.setFillColor(250,243,214);
@@ -811,7 +1229,12 @@ async function generatePDF(){
     });
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,98,110);
     doc.text(D().optionEvaluated(opt.label, term), marginX+8, y+23);
-    y += 34;
+    y += 32;
+
+    // Offset line — the honest framing: solar shrinks the bill, it does not delete it.
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(90,98,110);
+    doc.text(D().offsetLine(fmtPct(r.offset), fmt$2(res1)), marginX, y);
+    y += 8;
 
     // Key stats
     const breakevenTxt = r.breakevenYear ? D().year(r.breakevenYear) : D().afterYear(term);
@@ -822,16 +1245,34 @@ async function generatePDF(){
       [D().totalCost, fmt$(r.totalUtil)+' / '+fmt$(r.totalOpt), [40,40,40]],
     ];
     const statW = (pageW-marginX*2-15)/4;
-    stats.forEach((s,i)=>{
+    stats.forEach((st,i)=>{
       const sx = marginX+i*(statW+5);
       doc.setDrawColor(221,227,234); doc.roundedRect(sx, y, statW, 24, 2, 2);
       doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(120,128,140);
-      doc.text(s[0], sx+4, y+8, {maxWidth:statW-8});
+      doc.text(st[0], sx+4, y+8, {maxWidth:statW-8});
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.setTextColor(s[2][0],s[2][1],s[2][2]);
-      doc.text(s[1], sx+4, y+18, {maxWidth:statW-8});
+      doc.setTextColor(st[2][0],st[2][1],st[2][2]);
+      doc.text(st[1], sx+4, y+18, {maxWidth:statW-8});
     });
-    y += 34;
+    y += 30;
+
+    // Second stat row: the offset diagnostics
+    const stats2 = [
+      [D().offsetWord, fmtPct(r.offset)],
+      [D().valueCapture, fmtPct(r.efficiency)],
+      [D().solarKwh, r.solarKwh>0 ? fmtKwh(r.solarKwh) : '—'],
+      [D().residualYr1, fmt$2(res1)+D().perMonth],
+    ];
+    stats2.forEach((st,i)=>{
+      const sx = marginX+i*(statW+5);
+      doc.setDrawColor(238,241,245); doc.setFillColor(250,250,250);
+      doc.roundedRect(sx, y, statW, 18, 2, 2, 'FD');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(140,148,160);
+      doc.text(st[0], sx+4, y+7, {maxWidth:statW-8});
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(60,60,60);
+      doc.text(st[1], sx+4, y+14, {maxWidth:statW-8});
+    });
+    y += 26;
 
     // Chart snapshot (captures exactly what's on screen right now)
     const canvas = document.getElementById('chart');
@@ -841,8 +1282,8 @@ async function generatePDF(){
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(120,90,10);
     doc.text(D().annualCost(opt.label), marginX, y+4);
     y += 8;
-    doc.addImage(chartImg, 'PNG', marginX, y, chartW, Math.min(chartH, 85));
-    y += Math.min(chartH, 85) + 10;
+    doc.addImage(chartImg, 'PNG', marginX, y, chartW, Math.min(chartH, 72));
+    y += Math.min(chartH, 72) + 9;
 
     doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(140,148,160);
     doc.text(D().disclaimer, marginX, y, {maxWidth:pageW-marginX*2});
@@ -858,10 +1299,10 @@ async function generatePDF(){
     y2 += 8;
 
     const cols = [
-      {label:D().cols[0], x:marginX, w:14, key:'year'},
-      {label:D().cols[1], x:marginX+16, w:32, key:'utilMonthly'},
-      {label:D().cols[2], x:marginX+50, w:32, key:'utilAnnual'},
-      {label:D().cols[3], x:marginX+84, w:32, key:'optMonthly'},
+      {label:D().cols[0], x:marginX,     w:14, key:'year'},
+      {label:D().cols[1], x:marginX+16,  w:32, key:'utilAnnual'},
+      {label:D().cols[2], x:marginX+50,  w:32, key:'payAnnual'},
+      {label:D().cols[3], x:marginX+84,  w:32, key:'resAnnual'},
       {label:D().cols[4], x:marginX+118, w:32, key:'optAnnual'},
       {label:D().cols[5], x:marginX+152, w:32, key:'savings'},
     ];
@@ -874,11 +1315,15 @@ async function generatePDF(){
     }
     y2 = tableHeader(y2);
     doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    r.rows.forEach((row,i)=>{
+    r.rows.forEach(row=>{
       if(y2 > 265){ doc.addPage(); y2 = 16; y2 = tableHeader(y2); }
       const yearSavings = row.utilAnnual-row.optAnnual;
-      const vals = {year:row.year, utilMonthly:fmt$2(row.utilMonthly), utilAnnual:fmt$2(row.utilAnnual),
-                    optMonthly: row.optMonthly===null?'—':fmt$2(row.optMonthly), optAnnual:fmt$2(row.optAnnual), savings:fmt$2(yearSavings)};
+      const vals = {year:row.year,
+                    utilAnnual:fmt$2(row.utilAnnual),
+                    payAnnual:fmt$2(row.payAnnual),
+                    resAnnual:fmt$2(row.resAnnual),
+                    optAnnual:fmt$2(row.optAnnual),
+                    savings:fmt$2(yearSavings)};
       cols.forEach(c=>{
         if(c.key==='savings') doc.setTextColor(yearSavings>=0?21:176, yearSavings>=0?128:32, yearSavings>=0?61:32);
         else doc.setTextColor(40,40,40);
@@ -888,9 +1333,9 @@ async function generatePDF(){
     });
 
     const fileSafeName = (name || D().clientWord)
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // strip accents (base + combining marks -> plain)
+      .normalize('NFD').replace(/[̀-ͯ]/g,'') // strip accents (base + combining marks -> plain)
       .replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
-    doc.save(`${D().pdfName}_${fileSafeName}.pdf`);
+    doc.save(D().pdfName+'_'+fileSafeName+'.pdf');
   } catch(err){
     console.error(err);
     alert('Something went wrong generating the PDF. The print dialog will open instead.');
@@ -932,8 +1377,10 @@ async function buildSavingsCard(){
   const utilRate = (parseFloat(els.utilRate.value)||0)/100;
   const term = parseInt(els.term.value);
   const opt = getOptionConfig();
-  const r = calc(utilStart, utilRate, term, opt);
+  const s = getSolarConfig();
+  const r = calc(utilStart, utilRate, term, opt, s);
   const name = els.custName.value.trim();
+  const res1 = r.rows[0] ? r.rows[0].resMonthly : 0;
 
   const W = 1200, H = 675;
   const canvas = document.createElement('canvas');
@@ -949,30 +1396,35 @@ async function buildSavingsCard(){
   // Logo mark
   const logoH = 48, logoW = Math.round(logoH * LOGO_RATIO);
   try { ctx.drawImage(await loadImg(VOLT_LOGO_DARK), 60, 50, logoW, logoH); }
-  catch(e){ ctx.fillStyle = '#fff'; ctx.font = `800 30px ${FONT}`; ctx.fillText('VOLT', 60, 88); }
+  catch(e){ ctx.fillStyle = '#fff'; ctx.font = '800 30px '+FONT; ctx.fillText('VOLT', 60, 88); }
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.font = `400 14px ${FONT}`;
+  ctx.font = '400 14px '+FONT;
   ctx.fillStyle = 'rgba(255,255,255,.75)';
   ctx.fillText(D().cardTagline, 60, 50 + logoH + 22);
 
   // Customer line
-  ctx.font = `400 20px ${FONT}`;
+  ctx.font = '400 20px '+FONT;
   ctx.fillStyle = '#fff';
-  ctx.fillText(name ? D().proposalFor(name).replace(':','') : D().proposalGeneric, 60, 172);
+  ctx.fillText(name ? D().proposalFor(name).replace(':','') : D().proposalGeneric, 60, 168);
 
   // Big savings number
-  ctx.font = `800 88px ${FONT}`;
+  ctx.font = '800 84px '+FONT;
   ctx.fillStyle = '#f4c537';
-  ctx.fillText(fmt$(r.savings), 58, 278);
+  ctx.fillText(fmt$(r.savings), 58, 268);
 
-  ctx.font = `400 21px ${FONT}`;
+  ctx.font = '400 21px '+FONT;
   ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.fillText(D().cardSub(term), 60, 316);
+  ctx.fillText(D().cardSub(term), 60, 304);
+
+  // Offset / residual line — keeps the card honest.
+  ctx.font = '400 15px '+FONT;
+  ctx.fillStyle = 'rgba(255,255,255,.62)';
+  ctx.fillText(D().offsetLine(fmtPct(r.offset), fmt$2(res1)), 60, 334);
 
   // Divider
   ctx.strokeStyle = '#f4c537';
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(60,356); ctx.lineTo(W-60,356); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(60,360); ctx.lineTo(W-60,360); ctx.stroke();
   ctx.lineWidth = 1;
 
   // Stat columns
@@ -984,18 +1436,18 @@ async function buildSavingsCard(){
   const colW = (W-120)/3;
   cols.forEach((c,i)=>{
     const x = 60+i*colW;
-    ctx.font = `600 13px ${FONT}`;
+    ctx.font = '600 13px '+FONT;
     ctx.fillStyle = '#a5a5a5';
-    ctx.fillText(c[0], x, 398);
-    ctx.font = `700 28px ${FONT}`;
+    ctx.fillText(c[0], x, 400);
+    ctx.font = '700 28px '+FONT;
     ctx.fillStyle = '#fff';
-    wrapCanvasText(ctx, c[1], x, 434, colW-24, 32);
+    wrapCanvasText(ctx, c[1], x, 436, colW-24, 32);
   });
 
   // Footer disclaimer
-  ctx.font = `400 12.5px ${FONT}`;
+  ctx.font = '400 12.5px '+FONT;
   ctx.fillStyle = 'rgba(255,255,255,.55)';
-  wrapCanvasText(ctx, D().disclaimer, 60, H-46, W-120, 17);
+  wrapCanvasText(ctx, D().disclaimer, 60, H-58, W-120, 17);
 
   return { canvas, name };
 }
@@ -1010,10 +1462,10 @@ async function downloadSavingsCard(){
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const fileSafeName = (name || D().clientWord)
-        .normalize('NFD').replace(new RegExp('[̀-ͯ]','g'),'')
+        .normalize('NFD').replace(/[̀-ͯ]/g,'')
         .replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
       a.href = url;
-      a.download = `${D().cardName}_${fileSafeName}.png`;
+      a.download = D().cardName+'_'+fileSafeName+'.png';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
       btn.textContent = originalLabel; btn.disabled = false;
@@ -1035,15 +1487,20 @@ document.getElementById('langSeg').addEventListener('click', function(e){
 });
 
 // --- Handoff desde Sales Breakdown (sessionStorage) ------------------------
+// Además de los campos financieros, ahora acepta offset, producción anual,
+// factura post-solar y utility, que es lo que Aurora ya entrega por proyecto.
 function loadHandoffSB(){
   let raw; try{ raw = sessionStorage.getItem('voltSavingsHandoff'); } catch(e){ return; }
   if(!raw) return;
   let p; try{ p = JSON.parse(raw); } catch(e){ return; }
+  if(p.utility && UTILS[p.utility]){ selUtility.value = p.utility; applyUtilityPreset(); }
+  if(p.postBillMode){ selMode.value = p.postBillMode; }
   Object.keys(p).forEach(k=>{
     if(els[k] && p[k]!==undefined && p[k]!==null) els[k].value = p[k];
   });
   try{ sessionStorage.removeItem('voltSavingsHandoff'); } catch(e){}
   updateOptionVisibility();
+  updateSolarVisibility();
   render();
   const note = document.createElement('div');
   note.style.cssText = 'max-width:1180px;margin:14px auto 0;padding:0 20px;';
@@ -1051,7 +1508,9 @@ function loadHandoffSB(){
   document.body.insertBefore(note, document.querySelector('.wrap'));
 }
 
+applyUtilityPreset();
 updateOptionVisibility();
+updateSolarVisibility();
 render();
 loadHandoffSB();
 </script>
