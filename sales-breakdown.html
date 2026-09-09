@@ -265,6 +265,11 @@ let region='SFL';
 let instances=[];
 let instCounter=0;
 let lastRes={},lastBest=null;
+// System size and offset from Aurora. They are project-level facts, but the widget
+// stores them per card, so they are remembered here and stamped onto every card —
+// including ones added after the Aurora data arrived.
+let auroraProject=null;
+const DEFAULT_SIZE_KW=11.61;   // the value detailFields() ships with
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
@@ -434,10 +439,30 @@ function buildCard(inst){
 
 function updateEmptyState(){const e=$('emptyState');if(e)e.style.display=instances.length?'none':'block';}
 
+// Writes Aurora's system size and offset into one card. Only fills a field that is
+// still empty, zero, or sitting on the shipped default — a number the rep typed is
+// never touched.
+function applyAuroraProjectTo(id){
+  if(!auroraProject)return 0;
+  let n=0;
+  const sEl=$('size-'+id), oEl=$('offset-'+id);
+  if(auroraProject.systemKw!=null&&sEl){
+    const cur=parseFloat(sEl.value);
+    if(sEl.value===''||isNaN(cur)||cur===0||Math.abs(cur-DEFAULT_SIZE_KW)<0.005){
+      sEl.value=auroraProject.systemKw;n++;}
+  }
+  if(auroraProject.offsetPct!=null&&oEl){
+    const cur=parseFloat(oEl.value);
+    if(oEl.value===''||isNaN(cur)||cur===0){ oEl.value=auroraProject.offsetPct;n++; }
+  }
+  return n;
+}
+
 function addInst(k){
   const id=k+'-'+(++instCounter);
   instances.push({id,k});
   buildCard({id,k});
+  applyAuroraProjectTo(id);
   updateEmptyState();
   calc();
   return id;
@@ -981,9 +1006,41 @@ function genPDF(){
 // --- INIT ---
 function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));return true;}
 
+// Branch Lookup hands off through sessionStorage, which is PER TAB. That works when
+// the rep navigates here from the lookup, but the Aurora bookmarklet opens this page
+// as a brand new tab from aurorasolar.com — a different origin — so the new tab gets
+// an empty sessionStorage and the lookup data vanished.
+// Fix: mirror the payload into localStorage (per origin, shared across tabs) every
+// time we see it, and fall back to that mirror when sessionStorage is empty. The
+// mirror expires so a stale address never loads silently into next week's quote.
+const BL_KEY='voltProject', BL_MIRROR='voltProjectLast', BL_TTL=12*60*60*1000;
+function readBranchLookup(){
+  let raw=null, fromMirror=false;
+  try{ raw=sessionStorage.getItem(BL_KEY); }catch(e){}
+  if(raw){
+    try{ localStorage.setItem(BL_MIRROR, JSON.stringify({t:Date.now(),p:raw})); }catch(e){}
+  } else {
+    try{
+      const m=JSON.parse(localStorage.getItem(BL_MIRROR)||'null');
+      if(m&&m.p&&(Date.now()-m.t)<BL_TTL){ raw=m.p; fromMirror=true; }
+    }catch(e){}
+  }
+  if(!raw) return null;
+  try{ return {p:JSON.parse(raw), fromMirror}; }catch(e){ return null; }
+}
+function clearBranchLookupMirror(){
+  try{ localStorage.removeItem(BL_MIRROR); }catch(e){}
+  try{ sessionStorage.removeItem(BL_KEY); }catch(e){}
+  ['projAddr','projBranch','projAHJ','projEta','projNameOnTitle','projRoofAge','projPrevPermits']
+    .forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  const bn=$('handoffBanner'); if(bn) bn.style.display='none';
+  calc();
+}
+
 function loadHandoff(){
-  let raw;try{raw=sessionStorage.getItem('voltProject');}catch(e){return;}
-  if(!raw)return;let p;try{p=JSON.parse(raw);}catch(e){return;}
+  const found=readBranchLookup();
+  if(!found)return;
+  const p=found.p, fromMirror=found.fromMirror;
   if(p.address)$('projAddr').value=p.address;
   const br=(p.branch||p.regionCode||'');
   if(br)$('projBranch').value=br+(p.county?(' - '+p.county+' County'):'');
@@ -993,11 +1050,22 @@ function loadHandoff(){
   if(p.roofAge)$('projRoofAge').value=p.roofAge;
   if(p.prevPermits)$('projPrevPermits').value=p.prevPermits;
   setRegion(p.regionCode);
-  let msg='Project loaded from Branch Lookup'+(p.address?': '+p.address:'');
+  let msg='Project loaded from Branch Lookup'+(fromMirror?' (earlier lookup)':'')+(p.address?': '+p.address:'');
   if(p.regionCode==='NFL')msg+=' - North Florida usa el pricing de Central Florida (CFL).';
   var bannerText = document.getElementById('handoffBannerText');
   var backBtn = document.getElementById('backToLookupBtn');
-  if(bannerText) bannerText.textContent=msg;
+  if(bannerText){
+    bannerText.textContent=msg;
+    // A mirrored lookup can be up to 12 hours old, so make it dismissible — a stale
+    // address silently riding into a new quote is worse than an extra click.
+    if(fromMirror){
+      const a=document.createElement('a');
+      a.href='#'; a.textContent=' Not this project?';
+      a.style.cssText='margin-left:8px;font-weight:700;text-decoration:underline';
+      a.onclick=function(e){e.preventDefault();clearBranchLookupMirror();};
+      bannerText.appendChild(a);
+    }
+  }
   else $('handoffBanner').textContent=msg;
   $('handoffBanner').style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px';
   if(backBtn) backBtn.style.display='inline-block';
@@ -1136,6 +1204,16 @@ function applyAuroraPayload(p){
   setIf('projGridUse',    p.postGridUse);
   setIf('projAuroraTotal',p.postTotal);
 
+  // System size and offset live on the cards, not at project level. Remember them
+  // BEFORE the financing block so any card it creates is born with them, then stamp
+  // the ones that already existed.
+  if(p.systemKw!=null||p.offsetPct!=null){
+    auroraProject={
+      systemKw : p.systemKw !=null ? p.systemKw  : (auroraProject&&auroraProject.systemKw),
+      offsetPct: p.offsetPct!=null ? p.offsetPct : (auroraProject&&auroraProject.offsetPct)
+    };
+  }
+
   // Financing: create the card if that lender has none yet, and only write into
   // payment/escalator fields that are still untouched. A number the rep typed is
   // never overwritten — it is reported instead.
@@ -1154,6 +1232,11 @@ function applyAuroraPayload(p){
       if(f.escalatorPct!=null&&escEl&&(escEl.value===''||parseFloat(escEl.value)===2.99)){escEl.value=f.escalatorPct.toFixed(2);n++;}
     });
   }
+
+  // Stamp size/offset on cards that already existed before this payload arrived.
+  instances.forEach(inst=>{ n+=applyAuroraProjectTo(inst.id); });
+  if(auroraProject&&!instances.length)
+    notes.push('System size and offset are held — they fill in the moment you add a card.');
 
   updateEmptyState();
   renderAuroraLink();
