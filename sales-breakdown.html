@@ -116,7 +116,15 @@ a{color:var(--accent)}
   <div class="vlt-aurora">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <span class="vlt-stitle" style="font-size:11px"><i class="ti ti-sun-electricity" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"></i>Aurora</span>
-      <span style="font-size:11px;color:var(--color-text-tertiary)">Optional &middot; copy from the project and from Sales Mode</span>
+      <span style="font-size:11px;color:var(--color-text-tertiary)">Type it in, or let the bookmarklet fill it</span>
+      <button id="auroraPasteBtn" class="vlt-chip" style="margin-left:auto" title="Paste the JSON copied by the Aurora bookmarklet"><i class="ti ti-clipboard-text" aria-hidden="true"></i> Paste from Aurora</button>
+    </div>
+    <div id="auroraPasteWrap" style="display:none;margin-bottom:12px">
+      <textarea id="auroraPasteBox" rows="3" placeholder='Paste the JSON from the bookmarklet here, then press Apply' style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="auroraPasteApply" class="vlt-chip"><i class="ti ti-check" aria-hidden="true"></i> Apply</button>
+        <button id="auroraPasteCancel" class="vlt-chip">Cancel</button>
+      </div>
     </div>
     <div class="vlt-fld">
       <label class="vlt-lbl">Aurora project URL</label>
@@ -1063,6 +1071,135 @@ AURORA_FIELDS.forEach(fid=>{
   ['input','change'].forEach(ev=>el.addEventListener(ev,()=>{renderAuroraLink();renderAuroraCheck();}));
 });
 renderAuroraLink();
+
+// ===================== AURORA BOOKMARKLET RECEIVER =====================
+// The bookmarklet runs inside the rep's Aurora tab (same-origin there, so it can
+// read the page) and hands the result over here — by postMessage if the pop-up
+// opened, otherwise through the clipboard and the Paste button. Both paths land
+// in applyAuroraPayload, so there is one mapping to maintain, not two.
+const AURORA_SENDER_ORIGIN='https://v2.aurorasolar.com';
+
+// Aurora writes utility names in full ("Duke Energy Florida (prev. Progress Energy
+// Florida)"); the widget keys are short. Match on the distinctive fragment.
+function matchUtility(name){
+  if(!name)return '';
+  const n=String(name).toLowerCase();
+  if(n.includes('duke'))return 'DUKE';
+  if(n.includes('florida power')||/\bfpl\b/.test(n))return 'FPL';
+  if(n.includes('tampa')||/\bteco\b/.test(n))return 'TECO';
+  if(n.includes('orlando')||/\bouc\b/.test(n))return 'OUC';
+  if(n.includes('jea'))return 'JEA';
+  if(n.includes('lakeland'))return 'LAKELAND';
+  if(n.includes('kissimmee')||/\bkua\b/.test(n))return 'KUA';
+  return 'OTHER';
+}
+// "Lightreach Solar Lease - 2.99%" -> the lightreach card
+function matchOption(name){
+  if(!name)return null;
+  const n=String(name).toLowerCase().replace(/[^a-z]/g,'');
+  if(n.includes('lightreach'))return 'lightreach';
+  if(n.includes('skylight'))return 'skylight';
+  if(n.includes('credithuman')||n.includes('participate'))return 'pch';
+  if(n.includes('enfin'))return 'enfin';
+  if(n.includes('powerwall'))return 'teslapw3';
+  if(n.includes('tesla'))return 'tesla';
+  if(n.includes('affordable'))return 'affordable';
+  if(n.includes('cash'))return 'cash';
+  return null;
+}
+const emptyNum=el=>!el||el.value===''||parseFloat(el.value)===0;
+
+function applyAuroraPayload(p){
+  if(!p||typeof p!=='object')return {applied:0,notes:['Payload unreadable.']};
+  let n=0; const notes=[];
+  const setIf=(id,val)=>{const el=$(id);if(el&&val!==undefined&&val!==null&&val!==''){el.value=val;n++;}};
+  const setIfEmpty=(id,val)=>{const el=$(id);if(el&&!String(el.value).trim()&&val)  {el.value=val;n++;}};
+
+  // Identity — address only fills a blank field, and the AHJ is never touched:
+  // Aurora's jurisdiction is unreliable, Branch Lookup owns that value.
+  setIfEmpty('projAddr', p.address);
+  setIfEmpty('projNameOnTitle', p.customer);
+  setIf('projAuroraUrl', p.url);
+
+  // Utility and bill
+  const uk=matchUtility(p.utilityName);
+  if(uk){const el=$('projUtility');if(el){el.value=uk;n++;}
+    if(uk==='OTHER'&&p.utilityName)notes.push('Utility "'+p.utilityName+'" is not in the list — set to Other.');}
+  setIf('projUtilBill', p.preBill);
+  setIf('projUtilRate', p.escalationPct);
+
+  // Design + the Compare pre/post-solar card
+  setIf('projAnnualProd', p.annualProductionKwh);
+  setIf('projOffset',     p.offsetPct);
+  setIf('projFixedPre',   p.preFixed);
+  setIf('projFixedPost',  p.postFixed);
+  setIf('projGridUse',    p.postGridUse);
+  setIf('projAuroraTotal',p.postTotal);
+
+  // Financing: create the card if that lender has none yet, and only write into
+  // payment/escalator fields that are still untouched. A number the rep typed is
+  // never overwritten — it is reported instead.
+  if(Array.isArray(p.financing)){
+    p.financing.forEach(f=>{
+      const k=matchOption(f.name);
+      if(!k){notes.push('No card matches "'+f.name+'" — enter it by hand.');return;}
+      let inst=instances.find(x=>x.k===k);
+      let id=inst?inst.id:addInst(k);
+      const payEl=$('pay1-'+id), escEl=$('esc-'+id);
+      if(f.payment!=null){
+        if(emptyNum(payEl)){payEl.value=f.payment;n++;}
+        else if(Math.abs(parseFloat(payEl.value)-f.payment)>0.01)
+          notes.push(OPTIONS.find(o=>o.k===k).n+': Aurora says $'+f.payment.toFixed(2)+', card has $'+parseFloat(payEl.value).toFixed(2)+' — left as is.');
+      }
+      if(f.escalatorPct!=null&&escEl&&(escEl.value===''||parseFloat(escEl.value)===2.99)){escEl.value=f.escalatorPct.toFixed(2);n++;}
+    });
+  }
+
+  updateEmptyState();
+  renderAuroraLink();
+  calc();
+  refreshCardOptSel();
+  renderAuroraCheck();
+
+  // Banner
+  const bt=$('handoffBannerText'), bn=$('handoffBanner');
+  if(bn){
+    const txt='Loaded from Aurora'+(p.address?': '+p.address:'')+' — '+n+' field'+(n===1?'':'s')+' filled.'+
+              (notes.length?' '+notes.join(' '):'');
+    if(bt)bt.textContent=txt; else bn.textContent=txt;
+    bn.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:13px';
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+  return {applied:n,notes};
+}
+
+// Only Aurora may push data in. Anything from another origin is ignored outright.
+window.addEventListener('message',function(ev){
+  if(ev.origin!==AURORA_SENDER_ORIGIN)return;
+  if(!ev.data||ev.data.type!=='VOLT_AURORA')return;
+  const res=applyAuroraPayload(ev.data.payload);
+  try{ ev.source.postMessage({type:'VOLT_AURORA_ACK',applied:res.applied},ev.origin); }catch(e){}
+});
+
+// Clipboard fallback, and the path Claude uses when reading a project in session.
+(function(){
+  const btn=$('auroraPasteBtn'), wrap=$('auroraPasteWrap'), box=$('auroraPasteBox');
+  if(!btn)return;
+  btn.addEventListener('click',async()=>{
+    wrap.style.display='block';
+    box.value='';
+    try{ const t=await navigator.clipboard.readText(); if(t&&t.trim().startsWith('{'))box.value=t.trim(); }catch(e){}
+    box.focus();
+  });
+  $('auroraPasteCancel').addEventListener('click',()=>{wrap.style.display='none';});
+  $('auroraPasteApply').addEventListener('click',()=>{
+    let p; try{ p=JSON.parse(box.value.trim()); }
+    catch(e){ alert('That is not valid JSON. Copy it again from the bookmarklet panel.'); return; }
+    const res=applyAuroraPayload(p);
+    wrap.style.display='none';
+    if(!res.applied)alert('Nothing recognisable in that payload.');
+  });
+})();
 
 // ===================== SAVINGS SIMULATOR (handoff) =====================
 function refreshCardOptSel(){
