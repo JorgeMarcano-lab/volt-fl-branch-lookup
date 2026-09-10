@@ -62,11 +62,29 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
 <b>Compare pre and post-solar</b> card. Nothing is typed twice, and nothing is guessed.</p>
 
 <div class="drag">
-  <a class="bm" id="bm" href="#">⚡ Aurora → Volt</a>
+  <a class="bm" id="bmLoader" href="#">⚡ Aurora → Volt</a>
   <div class="hint"><b>Drag that button to your bookmarks bar.</b><br>
   If the bar is hidden, press <code>⌘⇧B</code> (Mac) or <code>Ctrl+Shift+B</code> (Windows) first.<br>
   Clicking it here does nothing — it only works on an Aurora page.</div>
 </div>
+
+<div class="info">
+  <b>Drag it once and you are done for good.</b> This button holds a four-line loader that fetches the
+  current extractor from this page every time you click it. When the extractor is fixed or improved,
+  every rep picks it up on their next click — nobody re-drags anything, and nobody is left running a
+  stale copy against a changed Aurora.
+</div>
+
+<details>
+  <summary>Self-contained version (no network)</summary>
+  <p style="margin:10px 0 0">This one carries the whole extractor inside the bookmark. It works with no
+  connection to GitHub Pages, but it is a <b>snapshot</b>: it will not pick up any later fix, and you would
+  have to delete and re-drag it each time. Use it only if the loader above is blocked on your network.</p>
+  <div class="drag" style="margin-top:12px">
+    <a class="bm" id="bm" href="#" style="background:#2a2a2a;color:#d4d4d4;border:1px solid #3a3a3a">⚡ Aurora → Volt (frozen)</a>
+    <div class="hint">Snapshot of the extractor as of this page load.</div>
+  </div>
+</details>
 
 <h2>How to use it</h2>
 <div class="card">
@@ -91,16 +109,16 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   <p>Address, utility and consumption belong to the project and are shared. Production, offset, system
   size and every post-solar figure belong to <b>one design</b>, so they are filed under that design and
   never blended with another.</p>
-  <p style="margin:0">Open the design you are quoting in <b>Sales Mode</b> — the URL is what identifies it.
-  Capture as many as you like; the panel then shows a <b>Design to send</b> picker with each one's size and
-  offset, and only the selected design is sent.</p>
+  <p style="margin:0">One click on the <b>Dashboard</b> reads the whole design table — every design with
+  its cost, offset and system size. The panel then shows a <b>Design to send</b> picker; choose the one you
+  are quoting. Then open <b>that</b> design in Sales Mode and click again to add its production, post-solar
+  figures and financing. Only the selected design is ever sent.</p>
 </div>
 
 <div class="warn">
-  <b>On the dashboard, nothing design-level is captured while several designs exist.</b> The table has no
-  reliable way to tell the bookmarklet which row you mean, so instead of guessing it captures only the
-  project data and tells you to open one. A quote built from the wrong design looks completely normal —
-  that is exactly why it refuses to guess.
+  <b>With several designs, nothing is sent until you pick one.</b> The Send button refuses, and the picker
+  opens on "choose a design" rather than defaulting to the first. A quote built from the wrong design looks
+  completely normal, which is exactly why it will not guess for you.
 </div>
 
 <h2>What it captures</h2>
@@ -272,7 +290,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
      the one failure that produces a plausible-looking wrong quote: address and
      consumption are shared, but production, offset, size and every post-solar figure
      belong to ONE design. They are stored separately and never merged across. */
-  function scrape(){
+  function scrape(known){
     var P={}, D={}, out={project:P, design:D}, t=B();
 
     /* ---- project level: identical no matter which design is open ---- */
@@ -339,14 +357,26 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     var did=location.pathname.match(/designs\/([0-9a-f-]{36})/);
     if(did){
       out.designId=did[1];
-      /* the design switcher in the top bar carries the name */
-      var nameBtn=document.querySelector('button');
-      var cand=[].slice.call(document.querySelectorAll('button'))
-        .map(function(b){return (b.innerText||'').trim();})
-        .filter(function(s){return s && s.length<40 && /design|option|propuesta/i.test(s);})[0];
-      if(cand) out.designName=cand.replace(/\s*▾\s*$/,'').trim();
+      out.designName=detectDesignName(known);
     }
     return out;
+  }
+
+  /* The design switcher sits in the top bar. Designs are often named after the lender
+     ("Enfin", "Lightreach"), so matching on the word "design" misses them entirely.
+     Instead the names already read off the dashboard table are used as the vocabulary:
+     if a top-bar button matches one of them, that is the design. */
+  function detectDesignName(known){
+    var btns=[].slice.call(document.querySelectorAll('button'))
+      .filter(function(b){ var r=b.getBoundingClientRect(); return r.top<70 && r.width>30; })
+      .map(function(b){ return (b.innerText||'').replace(/\s*[▾▴]\s*$/,'').trim(); })
+      .filter(function(s){ return s && s.length<40 && !/^(exit|help|save|back|done|\d+)$/i.test(s); });
+    if(known && known.length){
+      for(var i=0;i<btns.length;i++)
+        for(var j=0;j<known.length;j++)
+          if(normName(btns[i])===normName(known[j])) return known[j];
+    }
+    return btns[0]||null;
   }
 
   /* ---------- merge + persist (same-origin storage, nothing leaves the browser) ----------
@@ -358,7 +388,13 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   if(store.v!==2) store={v:2,project:{},designs:{},activeDesign:null};
   store.project=store.project||{}; store.designs=store.designs||{};
 
-  var fresh=scrape(), added=0;
+  /* Names already seen give detectDesignName() a vocabulary to match the top bar against. */
+  var knownNames=[];
+  if(store.project.designList)
+    knownNames=store.project.designList.map(function(r){return r.name;}).filter(Boolean);
+  for(var kn in store.designs) if(store.designs[kn].name) knownNames.push(store.designs[kn].name);
+
+  var fresh=scrape(knownNames), added=0;
 
   for(var k in fresh.project){
     var pv=fresh.project[k];
@@ -367,13 +403,34 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     store.project[k]=pv;
   }
 
-  /* On a design page the URL names the design, so everything design-level lands there. */
-  var did=fresh.designId;
-  if(did){
-    if(store.activeDesign && store.activeDesign!==did) store.switched=true;
-    store.activeDesign=did;
-    var rec=store.designs[did]=store.designs[did]||{};
-    if(fresh.designName) rec.name=fresh.designName;
+  /* Designs are keyed by NAME, not by the URL id. The name is the only identifier that
+     appears on both screens — the dashboard table and the top bar — so it is what ties
+     "Enfin, 114.06%, 14.35 kW" from the list to the post-solar figures captured later.
+     This runs first so the records exist before the design page merges into them. */
+  if(fresh.designList){
+    store.project.designList=fresh.designList;
+    fresh.designList.forEach(function(row){
+      if(!row.name) return;
+      var rk=normName(row.name);
+      var r0=store.designs[rk]=store.designs[rk]||{name:row.name};
+      ['designCost','offsetPct','systemKw'].forEach(function(f){
+        if(row[f]!=null && r0[f]!==row[f]){ r0[f]=row[f]; added++; }
+      });
+    });
+    /* A single design cannot be confused with anything, so adopt it outright. */
+    if(fresh.designList.length===1 && fresh.designList[0].name && !store.activeDesign)
+      store.activeDesign=normName(fresh.designList[0].name);
+  }
+
+  /* On a design page, everything design-level lands on that design's record. */
+  var dname=fresh.designName;
+  var dkey=dname ? normName(dname) : (fresh.designId ? ('id:'+fresh.designId) : null);
+  if(dkey && (fresh.designId || Object.keys(fresh.design).length)){
+    if(store.activeDesign && store.activeDesign!==dkey) store.switched=true;
+    store.activeDesign=dkey;
+    var rec=store.designs[dkey]=store.designs[dkey]||{};
+    if(dname) rec.name=dname;
+    if(fresh.designId) rec.designId=fresh.designId;
 
     /* Financing accumulates: the Compare card brings payment and escalator, the rate
        modal brings Gross PPW, and they are different screens of the same design. */
@@ -392,32 +449,6 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       var before=JSON.stringify(rec.financing||[]);
       for(var fi=0;fi<incoming.length;fi++) rec.financing=mergeFinancing(rec.financing,incoming[fi]);
       if(JSON.stringify(rec.financing)!==before) added++;
-    }
-  }
-
-  /* The dashboard table lists every design. Rows are keyed by name, designs by id, so
-     they are reconciled by name — and when a project holds exactly one design there is
-     nothing to confuse, so it is adopted outright. */
-  if(fresh.designList){
-    store.project.designList=fresh.designList;
-    fresh.designList.forEach(function(row){
-      for(var id in store.designs){
-        if(store.designs[id].name && row.name &&
-           normName(store.designs[id].name)===normName(row.name)){
-          ['designCost','offsetPct','systemKw'].forEach(function(f){
-            if(row[f]!=null && store.designs[id][f]!==row[f]){ store.designs[id][f]=row[f]; added++; }
-          });
-        }
-      }
-    });
-    if(fresh.designList.length===1){
-      var only=fresh.designList[0];
-      var oid=store.activeDesign||('name:'+normName(only.name||'design'));
-      store.designs[oid]=store.designs[oid]||{name:only.name};
-      ['designCost','offsetPct','systemKw'].forEach(function(f){
-        if(only[f]!=null && store.designs[oid][f]!==only[f]){ store.designs[oid][f]=only[f]; added++; }
-      });
-      if(!store.activeDesign) store.activeDesign=oid;
     }
   }
   store.capturedAt=new Date().toISOString();
@@ -470,6 +501,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       'letter-spacing:.08em;margin-bottom:4px">DESIGN TO SEND</div>'+
       '<select id="vaDesign" style="width:100%;background:#191919;color:#f2f2f2;border:1px solid #3a3a3a;'+
       'border-radius:6px;padding:6px 8px;font-size:12px">'+
+      (store.activeDesign?'':'<option value="">— choose a design —</option>')+
       ids.map(function(id){
         var dd=store.designs[id];
         var lbl=(dd.name||'Design')+(dd.systemKw?(' · '+dd.systemKw+' kW'):'')+(dd.offsetPct?(' · '+dd.offsetPct+'%'):'');
@@ -485,8 +517,8 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   if(dl&&dl.length>1&&!store.activeDesign){
     listWarn='<div style="font-size:11px;color:#ffb4b4;background:rgba(248,113,113,.12);'+
       'border:1px solid rgba(248,113,113,.4);border-radius:7px;padding:7px 9px;margin-bottom:8px">'+
-      dl.length+' designs in this project. Open the one you are quoting in Sales Mode and click again — '+
-      'nothing design-level is captured until you do.</div>';
+      dl.length+' designs in this project. <b>Pick the one you are quoting below</b> — nothing is sent '+
+      'until you do, because the wrong design still produces a quote that looks right.</div>';
   }
   if(store.switched){
     listWarn+='<div style="font-size:11px;color:#f7d97a;background:rgba(244,197,55,.12);'+
@@ -524,6 +556,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
 
   var sel=document.getElementById('vaDesign');
   if(sel) sel.onchange=function(){
+    if(!this.value) return;
     store.activeDesign=this.value;
     try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
     /* flatten() reads the store when Send is pressed, so the switch takes effect at
@@ -550,6 +583,9 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   /* postMessage handshake: keep offering the payload until the widget acknowledges.
      Survives slow loads without needing to guess how long the widget takes. */
   document.getElementById('vaSend').onclick=function(){
+    if(ids.length>1 && !store.activeDesign){
+      msg('Pick which design to send first.','#f87171'); return;
+    }
     var w;
     try{ w=window.open(WIDGET,'voltSalesBreakdown'); }catch(e){ w=null; }
     if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
@@ -575,14 +611,36 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
 
 <script>
 (function(){
-  var src = document.getElementById('bmsrc').textContent;
-  document.getElementById('srcView').textContent = src.trim();
-  // Collapse to a single-line javascript: URL. Generated on every load so the button
-  // and the readable source above can never disagree.
-  document.getElementById('bm').href = 'javascript:' + encodeURIComponent(src.trim());
-  document.getElementById('bm').addEventListener('click', function(e){
-    e.preventDefault();
-    alert('Drag this button to your bookmarks bar — clicking it here does nothing.\n\nThen open an Aurora project and click the bookmark from there.');
+  var src = document.getElementById('bmsrc').textContent.trim();
+  document.getElementById('srcView').textContent = src;
+
+  // ── Frozen button: the whole extractor collapsed into the bookmark. Generated from
+  // the source above on every load, so button and source can never disagree.
+  document.getElementById('bm').href = 'javascript:' + encodeURIComponent(src);
+
+  // ── Loader button: a stub that pulls the extractor from THIS page at click time and
+  // runs it. One source of truth — no second file to keep in sync — and every rep gets
+  // fixes without re-dragging. Verified against Aurora: no CSP blocks the fetch or the
+  // dynamic evaluation, so this works there.
+  var PAGE = 'https://jorgemarcano-lab.github.io/volt-fl-branch-lookup/aurora-bookmarklet.html';
+  var loader =
+    "(function(){" +
+    "fetch('" + PAGE + "?t='+Date.now(),{cache:'no-store'})" +
+    ".then(function(r){return r.text();})" +
+    ".then(function(h){" +
+      "var m=h.match(/<script id=\"bmsrc\" type=\"text\\/plain\">([\\s\\S]*?)<\\/script>/);" +
+      "if(!m)throw new Error('extractor not found on the page');" +
+      "(new Function(m[1]))();" +
+    "})" +
+    ".catch(function(e){alert('Volt: could not load the extractor.\\n'+e.message);});" +
+    "})()";
+  document.getElementById('bmLoader').href = 'javascript:' + encodeURIComponent(loader);
+
+  ['bm','bmLoader'].forEach(function(id){
+    document.getElementById(id).addEventListener('click', function(e){
+      e.preventDefault();
+      alert('Drag this button to your bookmarks bar — clicking it here does nothing.\n\nThen open an Aurora project and click the bookmark from there.');
+    });
   });
 })();
 </script>
