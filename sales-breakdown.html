@@ -270,6 +270,7 @@ let lastRes={},lastBest=null;
 // including ones added after the Aurora data arrived.
 let auroraProject=null;
 const DEFAULT_SIZE_KW=11.61;   // the value detailFields() ships with
+const DEFAULT_CT=3.50;         // the Contract $/W a new card ships with
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
@@ -1230,6 +1231,22 @@ function applyAuroraPayload(p){
           notes.push(OPTIONS.find(o=>o.k===k).n+': Aurora says $'+f.payment.toFixed(2)+', card has $'+parseFloat(payEl.value).toFixed(2)+' — left as is.');
       }
       if(f.escalatorPct!=null&&escEl&&(escEl.value===''||parseFloat(escEl.value)===2.99)){escEl.value=f.escalatorPct.toFixed(2);n++;}
+
+      // Gross PPW from Aurora's "Select a solar rate" modal IS this widget's
+      // Contract $/W (Lender) — base price plus add-ons, all in, per watt. Filling
+      // it also lets the $3.50/W cap check run against the real number instead of
+      // against the placeholder default.
+      if(f.grossPPW!=null){
+        const ctEl=$('ct-'+id), cur=parseFloat(ctEl?ctEl.value:NaN);
+        const label=OPTIONS.find(o=>o.k===k).n;
+        if(ctEl&&(ctEl.value===''||isNaN(cur)||cur===0||Math.abs(cur-DEFAULT_CT)<0.005)){
+          ctEl.value=f.grossPPW; n++;
+          if(f.grossPPW>SOLAR_PRICE_CAP)
+            notes.push(label+': Aurora Gross PPW $'+f.grossPPW.toFixed(2)+'/W is over the $'+SOLAR_PRICE_CAP.toFixed(2)+' cap.');
+        } else if(ctEl&&Math.abs(cur-f.grossPPW)>0.005){
+          notes.push(label+': Aurora Gross PPW $'+f.grossPPW.toFixed(2)+'/W vs $'+cur.toFixed(2)+' on the card — left as is.');
+        }
+      }
     });
   }
 
