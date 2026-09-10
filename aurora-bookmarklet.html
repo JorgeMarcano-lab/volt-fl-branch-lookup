@@ -86,6 +86,23 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   merges what it finds. The panel tells you when it has enough.
 </div>
 
+<h2>Projects with several designs</h2>
+<div class="card">
+  <p>Address, utility and consumption belong to the project and are shared. Production, offset, system
+  size and every post-solar figure belong to <b>one design</b>, so they are filed under that design and
+  never blended with another.</p>
+  <p style="margin:0">Open the design you are quoting in <b>Sales Mode</b> — the URL is what identifies it.
+  Capture as many as you like; the panel then shows a <b>Design to send</b> picker with each one's size and
+  offset, and only the selected design is sent.</p>
+</div>
+
+<div class="warn">
+  <b>On the dashboard, nothing design-level is captured while several designs exist.</b> The table has no
+  reliable way to tell the bookmarklet which row you mean, so instead of guessing it captures only the
+  project data and tells you to open one. A quote built from the wrong design looks completely normal —
+  that is exactly why it refuses to guess.
+</div>
+
 <h2>What it captures</h2>
 <div class="card">
   <table>
@@ -182,49 +199,127 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     return o;
   }
 
-  /* ---------- scrape whatever this screen shows ---------- */
+  /* ---------- "Select a solar rate" modal ----------
+     Columns: Solar rate | Est. monthly payment | Base PPW | Add-ons PPW | Gross PPW.
+     Gross PPW is what the Sales Breakdown calls Contract $/W (Lender), so this is
+     the one field that removes a manual keystroke from every lease quote.
+     Only the checked row counts — that is the rate actually being sold. */
+  function readRateModal(){
+    var hdr=leaf('Gross PPW'); if(!hdr) return null;
+    var box=hdr;
+    for(var i=0;i<12 && box; i++, box=box.parentElement){
+      if(box.querySelector && box.querySelector('input[type=radio]')) break;
+    }
+    if(!box || !box.querySelector) return null;
+    var checked=box.querySelector('input[type=radio]:checked');
+    if(!checked) return null;
+
+    /* Climb to the row and pull the money out as TOKENS, not as lines. Table cells
+       laid out inline collapse into a single innerText line with no separators, so
+       splitting on newlines silently finds nothing. Matching currency patterns works
+       either way.
+       The 3..8 window keeps us on one row: climb too far and innerText covers the
+       whole table, which would hand back every rate at once. */
+    var row=checked, nums=[];
+    for(var j=0;j<10 && row; j++, row=row.parentElement){
+      var toks=((row.innerText||'').match(/\+?-?\$\s?[\d,]+(?:\.\d+)?/g)||[]);
+      if(toks.length>8) break;                       /* already the whole table */
+      if(toks.length>=3){
+        nums=toks.map(function(c){return parseFloat(c.replace(/[^0-9.]/g,''));});
+        break;
+      }
+    }
+    if(nums.length<2) return null;
+
+    var o={};
+    if(nums.length>=5){
+      o.solarRatePerKwh=nums[0]; o.payment=nums[1];
+      o.basePPW=nums[2]; o.addonsPPW=nums[3]; o.grossPPW=nums[4];
+    } else {
+      /* degraded but still useful: rate is the first column, Gross PPW the last */
+      o.solarRatePerKwh=nums[0];
+      o.grossPPW=nums[nums.length-1];
+      o.partial=true;
+    }
+    var nm=g(/Select a solar rate\s*\n\s*([^\n]+)/);
+    if(nm) o.name=nm.replace(/\s*ESC\s*$/i,'').trim();
+    var y=g(/Yield:\s*([\d,]+)\s*kWh\/kWp/);              if(y)  o.yieldKwhPerKwp=num(y);
+    var pr=g(/Pre-solar total rate:\s*\$([\d.]+)/);        if(pr) o.preSolarTotalRate=parseFloat(pr);
+    return o;
+  }
+
+  /* Financing entries arrive from two screens — the Compare card and this modal —
+     so they are merged by name rather than appended, or the same lease would show
+     up twice with half the fields each. */
+  function normName(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+  function mergeFinancing(list,entry){
+    list=list||[];
+    if(!entry||!entry.name) return list;
+    var key=normName(entry.name);
+    for(var i=0;i<list.length;i++){
+      var a=normName(list[i].name);
+      if(a===key || a.indexOf(key)===0 || key.indexOf(a)===0){
+        for(var f in entry){ if(entry[f]!==null&&entry[f]!==undefined) list[i][f]=entry[f]; }
+        return list;
+      }
+    }
+    list.push(entry);
+    return list;
+  }
+
+  /* ---------- scrape whatever this screen shows ----------
+     Split in two on purpose. A project can hold several designs, and mixing them is
+     the one failure that produces a plausible-looking wrong quote: address and
+     consumption are shared, but production, offset, size and every post-solar figure
+     belong to ONE design. They are stored separately and never merged across. */
   function scrape(){
-    var d={}, t=B();
+    var P={}, D={}, out={project:P, design:D}, t=B();
 
-    /* --- project dashboard --- */
+    /* ---- project level: identical no matter which design is open ---- */
     var addr=g(/Property address\s*\n([\s\S]+?)\n(?:Authority|Energy usage)/);
-    if(addr) d.address=addr.replace(/\s*\n\s*/g,', ');
-    var cust=g(/Customer profile\s*\nName\s*\n(.+)/); if(cust) d.customer=cust;
-    var util=g(/Utility provider\s*\n(.+)/);          if(util) d.utilityName=util;
-    var tar =g(/Utility provider\s*\n.+\n(.+)/);      if(tar)  d.tariff=tar;
-    var ab  =num(g(/Avg\. monthly bill\s*\n\$?([\d,.]+)/));  if(ab!=null) d.preBill=ab;
-    var ak  =num(g(/Annual energy\s*\n([\d,]+)/));           if(ak!=null) d.annualConsumptionKwh=ak;
-    /* design row: cost, offset, size */
-    var dr=t.match(/\$([\d,]+\.\d\d)\s*\n\s*([\d.]+)%\s*\n\s*([\d.]+)\s*kW/);
-    if(dr){ d.designCost=num(dr[1]); d.offsetPct=parseFloat(dr[2]); d.systemKw=parseFloat(dr[3]); }
+    if(addr) P.address=addr.replace(/\s*\n\s*/g,', ');
+    var cust=g(/Customer profile\s*\nName\s*\n(.+)/); if(cust) P.customer=cust;
+    var util=g(/Utility provider\s*\n(.+)/);          if(util) P.utilityName=util;
+    var tar =g(/Utility provider\s*\n.+\n(.+)/);      if(tar)  P.tariff=tar;
+    var ab  =num(g(/Avg\. monthly bill\s*\n\$?([\d,.]+)/));  if(ab!=null) P.preBill=ab;
+    var ak  =num(g(/Annual energy\s*\n([\d,]+)/));           if(ak!=null) P.annualConsumptionKwh=ak;
+    var esc=g(/Escalation\s*\n\s*([\d.]+)%/);   if(esc!=null) P.escalationPct=parseFloat(esc);
+    var ar =g(/Average rate\s*\n\s*\$([\d.]+)/); if(ar!=null)  P.avgRatePerKwh=parseFloat(ar);
+    var lt =g(/Utility bill lifetime total\s*\n?\s*\$([\d,]+\.\d\d)/); if(lt!=null) P.utilityLifetime=num(lt);
 
-    /* --- sales mode / proposal --- */
-    var prod=g(/([\d,]+)\s*kWh\s*\n\s*Yearly energy produced/);
-    if(prod!=null) d.annualProductionKwh=num(prod);
-    var esc=g(/Escalation\s*\n\s*([\d.]+)%/);   if(esc!=null) d.escalationPct=parseFloat(esc);
-    var ar =g(/Average rate\s*\n\s*\$([\d.]+)/); if(ar!=null)  d.avgRatePerKwh=parseFloat(ar);
-    var lt =g(/Utility bill lifetime total\s*\n?\s*\$([\d,]+\.\d\d)/); if(lt!=null) d.utilityLifetime=num(lt);
-
-    /* --- Compare pre and post-solar --- */
     var need=['Grid use','Average monthly payment'];
     var pre=money(lines(cardFor('Pre-solar',need)));
     if(pre['Grid use']!=null){
-      d.preGridUse=pre['Grid use'];
-      d.preFixed=pre['Fixed costs'];
-      d.preBill=pre['Average monthly payment'];
+      P.preGridUse=pre['Grid use']; P.preFixed=pre['Fixed costs'];
+      P.preBill=pre['Average monthly payment'];
     }
+
+    /* ---- the dashboard's design table: every row, not just the first ---- */
+    var list=[], re=/\$([\d,]+\.\d\d)\s*\n\s*([\d.]+)%\s*\n\s*([\d.]+)\s*kW/g, m;
+    while((m=re.exec(t))!==null){
+      var before=t.slice(0,m.index).split('\n').map(function(s){return s.trim();}).filter(Boolean);
+      var nm=null;
+      for(var bi=before.length-1; bi>=0 && bi>before.length-6; bi--){
+        if(before[bi]!=='—' && !/^\$/.test(before[bi])){ nm=before[bi]; break; }
+      }
+      list.push({name:nm, designCost:num(m[1]), offsetPct:parseFloat(m[2]), systemKw:parseFloat(m[3])});
+    }
+    if(list.length) out.designList=list;
+
+    /* ---- design level ---- */
+    var prod=g(/([\d,]+)\s*kWh\s*\n\s*Yearly energy produced/);
+    if(prod!=null) D.annualProductionKwh=num(prod);
+
     var postEl=cardFor('Post-solar',need), postLs=lines(postEl), post=money(postLs);
     if(post['Grid use']!=null){
-      d.postGridUse=post['Grid use'];
-      d.postFixed=post['Fixed costs'];
-      d.postTotal=post['Average monthly payment'];
-      /* the figure printed after the total is the monthly saving */
+      D.postGridUse=post['Grid use'];
+      D.postFixed=post['Fixed costs'];
+      D.postTotal=post['Average monthly payment'];
       var ti=postLs.indexOf('Average monthly payment');
       if(ti>-1 && postLs[ti+2]){
         var sv=postLs[ti+2].match(/^-?\$([\d,]+(?:\.\d+)?)$/);
-        if(sv) d.monthlySavings=parseFloat(sv[1].replace(/,/g,''));
+        if(sv) D.monthlySavings=parseFloat(sv[1].replace(/,/g,''));
       }
-      /* financing: name / "2.99% ESC - $0.11 per kWh" / $payment */
       var fin=[];
       for(var i=0;i<postLs.length;i++){
         var sub=postLs[i].match(/([\d.]+)%\s*ESC[^$]*\$([\d.]+)\s*per kWh/i);
@@ -234,52 +329,176 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
                             ratePerKwh:parseFloat(sub[2]),payment:parseFloat(pay[1].replace(/,/g,''))});
         }
       }
-      if(fin.length) d.financing=fin;
+      if(fin.length) D.financing=fin;
     }
+    var rm=readRateModal(); if(rm) D.rateModal=rm;
 
-    /* identity */
+    /* ---- identity ---- */
     var pid=location.pathname.match(/projects\/([0-9a-f-]{36})/);
-    if(pid){ d.projectId=pid[1]; d.url='https://v2.aurorasolar.com/projects/'+pid[1]+'/overview/dashboard'; }
-    var did=location.pathname.match(/designs\/([0-9a-f-]{36})/); if(did) d.designId=did[1];
-    return d;
+    if(pid){ P.projectId=pid[1]; P.url='https://v2.aurorasolar.com/projects/'+pid[1]+'/overview/dashboard'; }
+    var did=location.pathname.match(/designs\/([0-9a-f-]{36})/);
+    if(did){
+      out.designId=did[1];
+      /* the design switcher in the top bar carries the name */
+      var nameBtn=document.querySelector('button');
+      var cand=[].slice.call(document.querySelectorAll('button'))
+        .map(function(b){return (b.innerText||'').trim();})
+        .filter(function(s){return s && s.length<40 && /design|option|propuesta/i.test(s);})[0];
+      if(cand) out.designName=cand.replace(/\s*▾\s*$/,'').trim();
+    }
+    return out;
   }
 
-  /* ---------- merge + persist (same-origin storage, nothing leaves the browser) ---------- */
+  /* ---------- merge + persist (same-origin storage, nothing leaves the browser) ----------
+     Shape: { v:2, project:{...}, designs:{ <designId>:{...} }, activeDesign }
+     Project data merges freely across screens; design data is filed under the design
+     it came from, so capturing Design 1 and then Design 2 keeps them apart. */
   var store={};
   try{ store=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ store={}; }
+  if(store.v!==2) store={v:2,project:{},designs:{},activeDesign:null};
+  store.project=store.project||{}; store.designs=store.designs||{};
+
   var fresh=scrape(), added=0;
-  for(var k in fresh){
-    if(fresh[k]===null||fresh[k]===undefined||fresh[k]==='') continue;
-    if(JSON.stringify(store[k])!==JSON.stringify(fresh[k])) added++;
-    store[k]=fresh[k];
+
+  for(var k in fresh.project){
+    var pv=fresh.project[k];
+    if(pv===null||pv===undefined||pv==='') continue;
+    if(JSON.stringify(store.project[k])!==JSON.stringify(pv)) added++;
+    store.project[k]=pv;
   }
-  store.v=1; store.source='aurora-bookmarklet'; store.capturedAt=new Date().toISOString();
+
+  /* On a design page the URL names the design, so everything design-level lands there. */
+  var did=fresh.designId;
+  if(did){
+    if(store.activeDesign && store.activeDesign!==did) store.switched=true;
+    store.activeDesign=did;
+    var rec=store.designs[did]=store.designs[did]||{};
+    if(fresh.designName) rec.name=fresh.designName;
+
+    /* Financing accumulates: the Compare card brings payment and escalator, the rate
+       modal brings Gross PPW, and they are different screens of the same design. */
+    var incoming=[];
+    if(fresh.design.financing) incoming=incoming.concat(fresh.design.financing);
+    if(fresh.design.rateModal) incoming.push(fresh.design.rateModal);
+    delete fresh.design.financing; delete fresh.design.rateModal;
+
+    for(var dk in fresh.design){
+      var dv=fresh.design[dk];
+      if(dv===null||dv===undefined||dv==='') continue;
+      if(JSON.stringify(rec[dk])!==JSON.stringify(dv)) added++;
+      rec[dk]=dv;
+    }
+    if(incoming.length){
+      var before=JSON.stringify(rec.financing||[]);
+      for(var fi=0;fi<incoming.length;fi++) rec.financing=mergeFinancing(rec.financing,incoming[fi]);
+      if(JSON.stringify(rec.financing)!==before) added++;
+    }
+  }
+
+  /* The dashboard table lists every design. Rows are keyed by name, designs by id, so
+     they are reconciled by name — and when a project holds exactly one design there is
+     nothing to confuse, so it is adopted outright. */
+  if(fresh.designList){
+    store.project.designList=fresh.designList;
+    fresh.designList.forEach(function(row){
+      for(var id in store.designs){
+        if(store.designs[id].name && row.name &&
+           normName(store.designs[id].name)===normName(row.name)){
+          ['designCost','offsetPct','systemKw'].forEach(function(f){
+            if(row[f]!=null && store.designs[id][f]!==row[f]){ store.designs[id][f]=row[f]; added++; }
+          });
+        }
+      }
+    });
+    if(fresh.designList.length===1){
+      var only=fresh.designList[0];
+      var oid=store.activeDesign||('name:'+normName(only.name||'design'));
+      store.designs[oid]=store.designs[oid]||{name:only.name};
+      ['designCost','offsetPct','systemKw'].forEach(function(f){
+        if(only[f]!=null && store.designs[oid][f]!==only[f]){ store.designs[oid][f]=only[f]; added++; }
+      });
+      if(!store.activeDesign) store.activeDesign=oid;
+    }
+  }
+  store.capturedAt=new Date().toISOString();
   try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
+
+  /* What actually gets sent: project + the ACTIVE design, flattened into the shape
+     the Sales Breakdown already understands. One design per send, never a blend. */
+  function flatten(){
+    var d=store.designs[store.activeDesign]||{}, p={};
+    for(var a in store.project) if(a!=='designList') p[a]=store.project[a];
+    for(var b in d) if(b!=='name') p[b]=d[b];
+    p.designName=d.name||null;
+    p.designId=store.activeDesign||null;
+    p.v=1; p.source='aurora-bookmarklet'; p.capturedAt=store.capturedAt;
+    return p;
+  }
 
   /* ---------- panel ---------- */
   var old=document.getElementById('voltAuroraPanel'); if(old) old.remove();
   var need=[
     ['address','Address'],['utilityName','Utility'],['preBill','Bill / mo'],
     ['annualConsumptionKwh','Annual kWh'],['annualProductionKwh','Production'],
-    ['offsetPct','Offset'],['escalationPct','Escalation'],
+    ['offsetPct','Offset'],['systemKw','System kW'],['escalationPct','Escalation'],
     ['preFixed','Fixed pre'],['postFixed','Fixed post'],['postGridUse','Grid use post'],
     ['postTotal','Post-solar total'],['financing','Financing']
   ];
-  var have=0;
+  var pay=flatten(), have=0;
   var rows=need.map(function(f){
-    var v=store[f[0]], ok=(v!==undefined&&v!==null&&v!=='');
+    var v=pay[f[0]], ok=(v!==undefined&&v!==null&&v!=='');
     if(ok) have++;
-    var shown = !ok ? '—'
-      : (f[0]==='financing' ? v.length+' option'+(v.length>1?'s':'')
-      : (typeof v==='number' ? v.toLocaleString('en-US') : String(v).slice(0,30)));
+    var shown;
+    if(!ok) shown='—';
+    else if(f[0]==='financing'){
+      var wp=v.filter(function(x){return x.grossPPW!=null;}).length;
+      shown=v.length+' opt'+(v.length>1?'s':'')+(wp?' · '+wp+' w/ PPW':' · no PPW');
+    }
+    else shown=(typeof v==='number' ? v.toLocaleString('en-US') : String(v).slice(0,30));
     return '<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0">'+
       '<span style="color:'+(ok?'#9aa':'#6a6a6a')+'">'+f[1]+'</span>'+
       '<span style="color:'+(ok?'#34d399':'#6a6a6a')+';font-weight:600;text-align:right">'+shown+'</span></div>';
   }).join('');
 
+  /* Which design is this? With more than one in the project, the rep chooses — and
+     the choice is explicit, because silently sending the wrong design would produce
+     a quote that looks perfectly reasonable and is wrong. */
+  var ids=Object.keys(store.designs);
+  var designBlock='';
+  if(ids.length>1){
+    designBlock='<div style="margin-bottom:8px"><div style="font-size:10.5px;color:#f4c537;'+
+      'letter-spacing:.08em;margin-bottom:4px">DESIGN TO SEND</div>'+
+      '<select id="vaDesign" style="width:100%;background:#191919;color:#f2f2f2;border:1px solid #3a3a3a;'+
+      'border-radius:6px;padding:6px 8px;font-size:12px">'+
+      ids.map(function(id){
+        var dd=store.designs[id];
+        var lbl=(dd.name||'Design')+(dd.systemKw?(' · '+dd.systemKw+' kW'):'')+(dd.offsetPct?(' · '+dd.offsetPct+'%'):'');
+        return '<option value="'+id+'"'+(id===store.activeDesign?' selected':'')+'>'+lbl+'</option>';
+      }).join('')+'</select></div>';
+  } else if(ids.length===1){
+    var d1=store.designs[ids[0]];
+    designBlock='<div style="font-size:11px;color:#a8a8a8;margin-bottom:8px">Design: <b style="color:#f2f2f2">'+
+      (d1.name||'—')+'</b>'+(d1.systemKw?(' · '+d1.systemKw+' kW'):'')+'</div>';
+  }
+  var listWarn='';
+  var dl=store.project.designList;
+  if(dl&&dl.length>1&&!store.activeDesign){
+    listWarn='<div style="font-size:11px;color:#ffb4b4;background:rgba(248,113,113,.12);'+
+      'border:1px solid rgba(248,113,113,.4);border-radius:7px;padding:7px 9px;margin-bottom:8px">'+
+      dl.length+' designs in this project. Open the one you are quoting in Sales Mode and click again — '+
+      'nothing design-level is captured until you do.</div>';
+  }
+  if(store.switched){
+    listWarn+='<div style="font-size:11px;color:#f7d97a;background:rgba(244,197,55,.12);'+
+      'border:1px solid rgba(244,197,55,.4);border-radius:7px;padding:7px 9px;margin-bottom:8px">'+
+      'Switched design. Each one is stored separately — pick which to send above.</div>';
+    store.switched=false;
+    try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
+  }
+
   var p=document.createElement('div');
   p.id='voltAuroraPanel';
-  p.style.cssText='position:fixed;right:18px;bottom:18px;z-index:2147483647;width:310px;'+
+  p.style.cssText='position:fixed;right:18px;bottom:18px;z-index:2147483647;width:320px;'+
     'background:#1a1a1a;color:#f2f2f2;border:1px solid #f4c537;border-radius:12px;padding:14px 16px;'+
     'font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;'+
     'box-shadow:0 10px 40px rgba(0,0,0,.6)';
@@ -287,9 +506,10 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">'+
       '<b style="color:#f4c537;letter-spacing:.1em;font-size:11px">AURORA → VOLT</b>'+
       '<span id="vaX" style="cursor:pointer;color:#909090;font-size:17px;line-height:1">&times;</span></div>'+
+    listWarn+designBlock+
     '<div style="font-size:11.5px;color:#a8a8a8;margin-bottom:8px">'+have+' of '+need.length+' captured'+
       (added?' &middot; <span style="color:#34d399">+'+added+' on this screen</span>':' &middot; nothing new here')+'</div>'+
-    '<div style="max-height:210px;overflow:auto;font-size:11.5px;border-top:1px solid #2a2a2a;'+
+    '<div style="max-height:200px;overflow:auto;font-size:11.5px;border-top:1px solid #2a2a2a;'+
       'border-bottom:1px solid #2a2a2a;padding:7px 0;margin-bottom:10px">'+rows+'</div>'+
     '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
       '<button id="vaSend" style="flex:1;background:#f4c537;color:#141414;border:none;border-radius:7px;'+
@@ -302,6 +522,16 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     '<div id="vaMsg" style="font-size:11px;color:#909090;margin-top:8px"></div>';
   document.body.appendChild(p);
 
+  var sel=document.getElementById('vaDesign');
+  if(sel) sel.onchange=function(){
+    store.activeDesign=this.value;
+    try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
+    /* flatten() reads the store when Send is pressed, so the switch takes effect at
+       once; only the checklist above is stale until the next click. */
+    var d=store.designs[store.activeDesign]||{};
+    msg('Now sending <b>'+(d.name||'that design')+'</b>. Click the bookmarklet again to refresh the list.','#f7d97a');
+  };
+
   var msg=function(t,c){ var e=document.getElementById('vaMsg'); e.style.color=c||'#909090'; e.innerHTML=t; };
   document.getElementById('vaX').onclick=function(){ p.remove(); };
   document.getElementById('vaClr').onclick=function(){
@@ -309,7 +539,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     p.remove(); alert('Capture cleared. Click the bookmarklet again to start over.');
   };
   document.getElementById('vaCopy').onclick=function(){
-    var txt=JSON.stringify(store);
+    var txt=JSON.stringify(flatten());
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(txt).then(function(){
         msg('Copied. Open the Sales Breakdown and hit <b>Paste from Aurora</b>.','#34d399');
@@ -323,11 +553,12 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     var w;
     try{ w=window.open(WIDGET,'voltSalesBreakdown'); }catch(e){ w=null; }
     if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
-    msg('Opening the widget…');
+    var sending=flatten();
+    msg('Sending '+(sending.designName?('<b>'+sending.designName+'</b>'):'the capture')+'…');
     var tries=0;
     var timer=setInterval(function(){
       tries++;
-      try{ w.postMessage({type:'VOLT_AURORA',payload:store},ORIGIN); }catch(e){}
+      try{ w.postMessage({type:'VOLT_AURORA',payload:sending},ORIGIN); }catch(e){}
       if(tries>40){ clearInterval(timer);
         msg('No answer from the widget. Use <b>Copy JSON</b> and paste it there.','#f87171'); }
     },400);
