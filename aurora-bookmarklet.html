@@ -266,6 +266,39 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     return o;
   }
 
+  /* ---------- Pricing tab ($ icon in the top bar) ----------
+     The dashboard "Cost" column is the price the CUSTOMER finances, so on any option
+     with a dealer fee it already carries that fee inside. Dividing it by watts gives a
+     $/W that is inflated by 1/(1−DF) — for Sungage Sunrise at 32.99% points that turns
+     a real $3.50/W into $5.22/W, which would blow the cap check and every commission
+     on the card.
+     The Pricing tab has the number before the fee, so this is the only safe source for
+     Contract $/W on financed options. Leases carry no fee and are fine either way. */
+  var PRICE_SECTIONS=['Solar','Storage','Battery','Roofing','Adders','Discounts','Incentives'];
+  function readPricingTab(){
+    var t=B();
+    if(t.indexOf('Total system price')<0) return null;
+    var o={};
+    var tot=g(/Total system price[\s\S]{0,90}?\$([\d,]+\.\d\d)/); if(tot) o.totalSystemPrice=num(tot);
+    var sz =g(/System size\s*\n\s*([\d.]+)\s*kW/);                if(sz)  o.systemKw=parseFloat(sz);
+    var gp =g(/Gross PPW\s*\n\s*\$([\d.]+)/);                     if(gp)  o.grossPPW=parseFloat(gp);
+
+    /* Section subtotals in the Summary: the label on one line, its amount on the next. */
+    var ls=t.split('\n').map(function(s){return s.trim();}).filter(Boolean), secs={};
+    for(var i=0;i<ls.length-1;i++){
+      if(PRICE_SECTIONS.indexOf(ls[i])<0) continue;
+      var m=ls[i+1].match(/^(-?)\$([\d,]+\.\d\d)$/);
+      if(m) secs[ls[i].toLowerCase()]=(m[1]==='-'?-1:1)*num(m[2]);
+    }
+    if(Object.keys(secs).length) o.sections=secs;
+
+    /* Everything before the dealer fee: what the widget calls Contract $/W x watts. */
+    var sum=0, any=false;
+    for(var k in secs){ sum+=secs[k]; any=true; }
+    if(any) o.preFeeTotal=Math.round(sum*100)/100;
+    return o;
+  }
+
   /* Financing entries arrive from two screens — the Compare card and this modal —
      so they are merged by name rather than appended, or the same lease would show
      up twice with half the fields each. */
@@ -350,6 +383,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       if(fin.length) D.financing=fin;
     }
     var rm=readRateModal(); if(rm) D.rateModal=rm;
+    var pr=readPricingTab(); if(pr) D.pricing=pr;
 
     /* ---- identity ---- */
     var pid=location.pathname.match(/projects\/([0-9a-f-]{36})/);
@@ -475,13 +509,26 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       var d=store.designs[id], e={};
       for(var b in d) e[b]=d[b];
 
-      /* Gross PPW straight from the dashboard: design cost ÷ watts. Verified against
-         Aurora's own rate modal — $34,296.50 / 14,350 W = $2.39, the exact Gross PPW
-         it prints. That means Contract $/W is available for every design from one
-         click on the dashboard, without opening the modal design by design. The modal
-         still wins when it was opened, since it also splits base from add-ons. */
-      if(e.grossPPW==null && e.designCost!=null && e.systemKw>0)
-        e.grossPPWDerived=Math.round(e.designCost/(e.systemKw*1000)*10000)/10000;
+      /* Contract $/W, best source first:
+           1. the Pricing tab's own Gross PPW   — authoritative, fee already excluded
+           2. Pricing pre-fee total ÷ watts     — authoritative, verified $60,952.50/17,415 W = $3.50
+           3. dashboard cost ÷ watts            — LEASES ONLY; on financed options this
+                                                  carries the dealer fee and reads high
+         Level 3 is tagged so the widget can refuse it on purchase options instead of
+         quietly filling a price that is inflated by 1/(1−DF). */
+      var P=e.pricing;
+      if(P){
+        var w=(P.systemKw||e.systemKw||0)*1000;
+        if(P.grossPPW!=null)            e.contractPPW=P.grossPPW;
+        else if(P.preFeeTotal!=null&&w>0) e.contractPPW=Math.round(P.preFeeTotal/w*10000)/10000;
+        /* Dealer fee falls out of the gap between the pre-fee price and what the
+           customer actually finances: DF = 1 − preFee/total. */
+        if(P.preFeeTotal>0&&P.totalSystemPrice>0&&P.totalSystemPrice>P.preFeeTotal)
+          e.dfPct=Math.round((1-P.preFeeTotal/P.totalSystemPrice)*10000)/100;
+      }
+      if(e.contractPPW==null && e.designCost!=null && e.systemKw>0){
+        e.contractPPWFromDashboard=Math.round(e.designCost/(e.systemKw*1000)*10000)/10000;
+      }
 
       /* Same trick for production when Sales Mode was not visited: yield × size.
          18,704 kWh × 115.34% ÷ 14.35 kW = 1,503 kWh/kWp, which is what Aurora shows. */
