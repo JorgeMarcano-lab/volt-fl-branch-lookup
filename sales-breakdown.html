@@ -1165,6 +1165,18 @@ function matchUtility(name){
   if(n.includes('kissimmee')||/\bkua\b/.test(n))return 'KUA';
   return 'OTHER';
 }
+// Aurora names financed designs after the lender too: "Affordable Solar - Sungage Sunrise".
+function matchFinco(name){
+  if(!name)return null;
+  const n=String(name).toLowerCase();
+  if(n.includes('sunrise'))     return 'Sungage Sunrise (2.9% annual escalator)';
+  if(n.includes('brightstart')) return 'Sungage Brightstart';
+  if(n.includes('level'))       return 'Sungage Level Pay';
+  if(n.includes('ygrene'))      return 'Ygrene';
+  if(n.includes('climate'))     return 'Climate First Bank';
+  if(n.includes('almika'))      return 'Almika';
+  return null;
+}
 // "Lightreach Solar Lease - 2.99%" -> the lightreach card
 function matchOption(name){
   if(!name)return null;
@@ -1313,13 +1325,38 @@ function applyAuroraPayload(raw){
 
     (Array.isArray(dz.financing)?dz.financing:[]).forEach(f=>{ n+=applyFinancingTo(id,k,f,notes); });
 
-    // No rate modal was opened for this design? Contract $/W still comes through:
-    // the dashboard's design cost divided by the watts is the same Gross PPW.
-    const derivedPPW = (dz.grossPPW!=null) ? dz.grossPPW
-                     : (dz.grossPPWDerived!=null ? dz.grossPPWDerived
-                     : (dz.designCost!=null&&dz.systemKw>0 ? dz.designCost/(dz.systemKw*1000) : null));
-    if(derivedPPW!=null&&isFinite(derivedPPW))
-      n+=applyContractPPW(id,k,Math.round(derivedPPW*10000)/10000,notes);
+    // Aurora design names carry the lender: "Affordable Solar - Sungage Sunrise".
+    const fc=matchFinco(dz.name), coEl=$('co-'+id);
+    if(fc&&coEl&&coEl.value!==fc){ coEl.value=fc; syncRateSheet(id); n++; }
+
+    // ── Contract $/W ────────────────────────────────────────────────────────
+    // The dashboard "Cost" is what the customer finances, so on any option with a
+    // dealer fee it already contains that fee: $90,960.30 / 17,415 W reads $5.22/W
+    // where the real price is $3.50/W. Using it on a financed option would break the
+    // cap check and every commission on the card, so it is refused there outright.
+    const oDef=OPTIONS.find(o=>o.k===k), isLease=oDef.t==='Lease', oLabel=oDef.n;
+    let ppw = (dz.contractPPW!=null) ? dz.contractPPW : null;
+    if(ppw==null&&dz.pricing){
+      const w=(dz.pricing.systemKw||dz.systemKw||0)*1000;
+      if(dz.pricing.grossPPW!=null) ppw=dz.pricing.grossPPW;
+      else if(dz.pricing.preFeeTotal>0&&w>0) ppw=dz.pricing.preFeeTotal/w;
+    }
+    if(ppw==null){
+      const fromDash=(dz.contractPPWFromDashboard!=null)?dz.contractPPWFromDashboard
+                    :(dz.designCost!=null&&dz.systemKw>0?dz.designCost/(dz.systemKw*1000):null);
+      if(fromDash!=null){
+        if(isLease) ppw=fromDash;
+        else notes.push(oLabel+': Contract $/W left blank — the dashboard cost implies $'+
+             fromDash.toFixed(2)+'/W but includes the dealer fee. Open that design’s Pricing tab and click again.');
+      }
+    }
+    if(ppw!=null&&isFinite(ppw)) n+=applyContractPPW(id,k,Math.round(ppw*10000)/10000,notes);
+
+    // The gap between the pre-fee price and the financed total IS the dealer fee.
+    if(dz.dfPct!=null){
+      const dfEl=$('df-'+id);
+      if(dfEl&&(dfEl.value===''||parseFloat(dfEl.value)===0)){ dfEl.value=dz.dfPct; n++; }
+    }
 
     // Production likewise falls out of yield × size when Sales Mode was skipped.
     if(dz.annualProductionKwh==null&&dz.annualProductionKwhDerived!=null)
