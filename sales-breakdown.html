@@ -1105,7 +1105,10 @@ function renderAuroraCheck(){
 
   if(grid===null&&fixed===null&&total===null){el.textContent='';return;}
   const residual=(grid||0)+(fixed||0);
-  let msg='Residual utility bill: <b>'+money(residual)+'/mo</b> (grid use + fixed costs).';
+  const src=instId&&instances.find(x=>x.id===instId);
+  const dn=src&&auroraByOption[src.k]&&auroraByOption[src.k].designName;
+  let msg=(dn?('Aurora design <b>'+dn+'</b> &middot; '):'')+
+          'Residual utility bill: <b>'+money(residual)+'/mo</b> (grid use + fixed costs).';
   if(pay>0&&total!==null){
     const model=pay+residual, diff=model-total;
     msg+=' With '+(optName||'the selected option')+' at '+money(pay)+': '+money(model)+' total vs Aurora\'s '+money(total)+
@@ -1178,8 +1181,89 @@ function matchOption(name){
 }
 const emptyNum=el=>!el||el.value===''||parseFloat(el.value)===0;
 
-function applyAuroraPayload(p){
-  if(!p||typeof p!=='object')return {applied:0,notes:['Payload unreadable.']};
+// Post-solar figures for the Savings Calculator, kept per option. They belong to ONE
+// design, so when the rep switches which option to simulate, the Aurora block follows.
+let auroraByOption={};
+
+// Two payload shapes reach here: the current one ({project, designs:[…]}) and the older
+// flat one still produced by the frozen bookmarklet and by hand-pasted JSON. Normalising
+// once means the rest of this file only ever sees the modern shape.
+function normalizeAuroraPayload(p){
+  if(!p||typeof p!=='object') return {project:{},designs:[]};
+  if(p.project&&Array.isArray(p.designs)) return p;
+  const DESIGN_KEYS=['designName','designId','offsetPct','systemKw','designCost',
+                     'annualProductionKwh','postGridUse','postFixed','postTotal',
+                     'monthlySavings','financing'];
+  const proj={}, d={};
+  Object.keys(p).forEach(k=>{ if(DESIGN_KEYS.indexOf(k)>=0) d[k]=p[k]; else proj[k]=p[k]; });
+  d.name=p.designName||null;
+  return {project:proj, designs:[d], primary:0};
+}
+
+// Which card does a design belong to? Designs are usually named after the lender
+// ("Enfin", "Lightreach"); when they are not, the financing rows inside give it away.
+function optionForDesign(dz){
+  var k=matchOption(dz.name);
+  if(!k&&Array.isArray(dz.financing)){
+    for(var i=0;i<dz.financing.length;i++){ k=matchOption(dz.financing[i].name); if(k) break; }
+  }
+  return k;
+}
+
+// Repaints the project-level Aurora block from one option's stored design figures.
+function fillAuroraBlockFrom(k){
+  const a=auroraByOption[k]; if(!a) return false;
+  const set=(id,v)=>{const el=$(id); if(el&&v!=null) el.value=v;};
+  set('projAnnualProd', a.annualProductionKwh);
+  set('projOffset',     a.offsetPct);
+  set('projGridUse',    a.postGridUse);
+  set('projFixedPost',  a.postFixed);
+  set('projAuroraTotal',a.postTotal);
+  return true;
+}
+
+// One financing row from Aurora onto one card. Nothing the rep typed is overwritten —
+// a disagreement is reported instead. Returns how many fields it filled.
+function applyFinancingTo(id,k,f,notes){
+  let n=0;
+  const label=OPTIONS.find(o=>o.k===k).n;
+  const payEl=$('pay1-'+id), escEl=$('esc-'+id);
+  if(f.payment!=null&&payEl){
+    if(emptyNum(payEl)){payEl.value=f.payment;n++;}
+    else if(Math.abs(parseFloat(payEl.value)-f.payment)>0.01)
+      notes.push(label+': Aurora $'+f.payment.toFixed(2)+'/mo vs $'+parseFloat(payEl.value).toFixed(2)+' on the card — left as is.');
+  }
+  if(f.escalatorPct!=null&&escEl&&(escEl.value===''||parseFloat(escEl.value)===2.99)){
+    escEl.value=f.escalatorPct.toFixed(2);n++;
+  }
+  // Gross PPW — the figure Aurora also calls the EPC — IS Contract $/W (Lender):
+  // base price plus add-ons, all in, per watt. It is NOT the redline, which is a Volt
+  // number that varies by partner group and stays manual. Filling this also lets the
+  // $3.50/W cap check run against the real price instead of the placeholder default.
+  const ppw = (f.grossPPW!=null) ? f.grossPPW
+            : (f.epc!=null ? parseFloat(f.epc) : null);
+  if(ppw!=null&&isFinite(ppw)) n+=applyContractPPW(id,k,ppw,notes);
+  return n;
+}
+
+function applyContractPPW(id,k,ppw,notes){
+  const ctEl=$('ct-'+id); if(!ctEl) return 0;
+  const label=OPTIONS.find(o=>o.k===k).n, cur=parseFloat(ctEl.value);
+  if(ctEl.value===''||isNaN(cur)||cur===0||Math.abs(cur-DEFAULT_CT)<0.005){
+    ctEl.value=ppw;
+    if(ppw>SOLAR_PRICE_CAP)
+      notes.push(label+': Aurora $'+ppw.toFixed(2)+'/W is over the $'+SOLAR_PRICE_CAP.toFixed(2)+' cap.');
+    return 1;
+  }
+  if(Math.abs(cur-ppw)>0.005)
+    notes.push(label+': Aurora $'+ppw.toFixed(2)+'/W vs $'+cur.toFixed(2)+' on the card — left as is.');
+  return 0;
+}
+
+function applyAuroraPayload(raw){
+  const NORM=normalizeAuroraPayload(raw);
+  const p=NORM.project||{}, designs=NORM.designs||[];
+  if(!Object.keys(p).length&&!designs.length)return {applied:0,notes:['Payload unreadable.']};
   let n=0; const notes=[];
   const setIf=(id,val)=>{const el=$(id);if(el&&val!==undefined&&val!==null&&val!==''){el.value=val;n++;}};
   const setIfEmpty=(id,val)=>{const el=$(id);if(el&&!String(el.value).trim()&&val)  {el.value=val;n++;}};
@@ -1197,63 +1281,74 @@ function applyAuroraPayload(p){
   setIf('projUtilBill', p.preBill);
   setIf('projUtilRate', p.escalationPct);
 
-  // Design + the Compare pre/post-solar card
-  setIf('projAnnualProd', p.annualProductionKwh);
-  setIf('projOffset',     p.offsetPct);
-  setIf('projFixedPre',   p.preFixed);
-  setIf('projFixedPost',  p.postFixed);
-  setIf('projGridUse',    p.postGridUse);
-  setIf('projAuroraTotal',p.postTotal);
+  setIf('projFixedPre', p.preFixed);
 
-  // System size and offset live on the cards, not at project level. Remember them
-  // BEFORE the financing block so any card it creates is born with them, then stamp
-  // the ones that already existed.
-  if(p.systemKw!=null||p.offsetPct!=null){
-    auroraProject={
-      systemKw : p.systemKw !=null ? p.systemKw  : (auroraProject&&auroraProject.systemKw),
-      offsetPct: p.offsetPct!=null ? p.offsetPct : (auroraProject&&auroraProject.offsetPct)
+  // ── One Aurora design → one card ──────────────────────────────────────────
+  // This widget exists to compare alternatives, so every design that came across
+  // becomes its own card with its own size, offset, Gross PPW and payment. Cards
+  // added by hand keep working alongside them; nothing here removes anything.
+  const pi = (typeof NORM.primary==='number' && designs[NORM.primary]) ? NORM.primary : 0;
+  let primaryKey=null, made=0;
+
+  designs.forEach((dz,idx)=>{
+    const k=optionForDesign(dz);
+    if(!k){
+      notes.push('Design "'+(dz.name||'untitled')+'" matches no lender card — add that option by hand.');
+      return;
+    }
+    const existing=instances.find(x=>x.k===k);
+    const id=existing?existing.id:addInst(k);
+    if(!existing) made++;
+
+    // size and offset are per design, so they go on that design's card only
+    const sEl=$('size-'+id), oEl=$('offset-'+id);
+    if(dz.systemKw!=null&&sEl){
+      const c=parseFloat(sEl.value);
+      if(sEl.value===''||isNaN(c)||c===0||Math.abs(c-DEFAULT_SIZE_KW)<0.005){sEl.value=dz.systemKw;n++;}
+    }
+    if(dz.offsetPct!=null&&oEl){
+      const c=parseFloat(oEl.value);
+      if(oEl.value===''||isNaN(c)||c===0){oEl.value=dz.offsetPct;n++;}
+    }
+
+    (Array.isArray(dz.financing)?dz.financing:[]).forEach(f=>{ n+=applyFinancingTo(id,k,f,notes); });
+
+    // No rate modal was opened for this design? Contract $/W still comes through:
+    // the dashboard's design cost divided by the watts is the same Gross PPW.
+    const derivedPPW = (dz.grossPPW!=null) ? dz.grossPPW
+                     : (dz.grossPPWDerived!=null ? dz.grossPPWDerived
+                     : (dz.designCost!=null&&dz.systemKw>0 ? dz.designCost/(dz.systemKw*1000) : null));
+    if(derivedPPW!=null&&isFinite(derivedPPW))
+      n+=applyContractPPW(id,k,Math.round(derivedPPW*10000)/10000,notes);
+
+    // Production likewise falls out of yield × size when Sales Mode was skipped.
+    if(dz.annualProductionKwh==null&&dz.annualProductionKwhDerived!=null)
+      dz.annualProductionKwh=dz.annualProductionKwhDerived;
+    if(dz.annualProductionKwh==null&&dz.yieldKwhPerKwp>0&&dz.systemKw>0)
+      dz.annualProductionKwh=Math.round(dz.yieldKwhPerKwp*dz.systemKw);
+
+    // Post-solar figures stay filed per option so the Savings Calculator block can
+    // follow whichever one the rep decides to simulate.
+    auroraByOption[k]={
+      annualProductionKwh:dz.annualProductionKwh, offsetPct:dz.offsetPct,
+      postGridUse:dz.postGridUse, postFixed:dz.postFixed, postTotal:dz.postTotal,
+      designName:dz.name||null
     };
-  }
+    if(idx===pi||primaryKey===null) primaryKey=k;
+  });
 
-  // Financing: create the card if that lender has none yet, and only write into
-  // payment/escalator fields that are still untouched. A number the rep typed is
-  // never overwritten — it is reported instead.
-  if(Array.isArray(p.financing)){
-    p.financing.forEach(f=>{
-      const k=matchOption(f.name);
-      if(!k){notes.push('No card matches "'+f.name+'" — enter it by hand.');return;}
-      let inst=instances.find(x=>x.k===k);
-      let id=inst?inst.id:addInst(k);
-      const payEl=$('pay1-'+id), escEl=$('esc-'+id);
-      if(f.payment!=null){
-        if(emptyNum(payEl)){payEl.value=f.payment;n++;}
-        else if(Math.abs(parseFloat(payEl.value)-f.payment)>0.01)
-          notes.push(OPTIONS.find(o=>o.k===k).n+': Aurora says $'+f.payment.toFixed(2)+', card has $'+parseFloat(payEl.value).toFixed(2)+' — left as is.');
-      }
-      if(f.escalatorPct!=null&&escEl&&(escEl.value===''||parseFloat(escEl.value)===2.99)){escEl.value=f.escalatorPct.toFixed(2);n++;}
-
-      // Gross PPW from Aurora's "Select a solar rate" modal IS this widget's
-      // Contract $/W (Lender) — base price plus add-ons, all in, per watt. Filling
-      // it also lets the $3.50/W cap check run against the real number instead of
-      // against the placeholder default.
-      if(f.grossPPW!=null){
-        const ctEl=$('ct-'+id), cur=parseFloat(ctEl?ctEl.value:NaN);
-        const label=OPTIONS.find(o=>o.k===k).n;
-        if(ctEl&&(ctEl.value===''||isNaN(cur)||cur===0||Math.abs(cur-DEFAULT_CT)<0.005)){
-          ctEl.value=f.grossPPW; n++;
-          if(f.grossPPW>SOLAR_PRICE_CAP)
-            notes.push(label+': Aurora Gross PPW $'+f.grossPPW.toFixed(2)+'/W is over the $'+SOLAR_PRICE_CAP.toFixed(2)+' cap.');
-        } else if(ctEl&&Math.abs(cur-f.grossPPW)>0.005){
-          notes.push(label+': Aurora Gross PPW $'+f.grossPPW.toFixed(2)+'/W vs $'+cur.toFixed(2)+' on the card — left as is.');
-        }
-      }
-    });
-  }
-
-  // Stamp size/offset on cards that already existed before this payload arrived.
-  instances.forEach(inst=>{ n+=applyAuroraProjectTo(inst.id); });
+  // The project-level Aurora block is single-design by nature — it feeds one savings
+  // simulation. It opens on the primary design and follows the option selector.
+  if(primaryKey) fillAuroraBlockFrom(primaryKey);
+  const pd=designs[pi]||designs[0];
+  if(pd&&(pd.systemKw!=null||pd.offsetPct!=null))
+    auroraProject={systemKw:pd.systemKw, offsetPct:pd.offsetPct};
   if(auroraProject&&!instances.length)
     notes.push('System size and offset are held — they fill in the moment you add a card.');
+  if(designs.length>1)
+    notes.push(designs.length+' designs loaded as cards'+(made?(', '+made+' created'):'')+
+               '. Savings figures shown are '+(auroraByOption[primaryKey]&&auroraByOption[primaryKey].designName||'the first design')+
+               ' — switch the option selector to change that.');
 
   updateEmptyState();
   renderAuroraLink();
@@ -1369,7 +1464,13 @@ function openSavingsCalculator(){
   window.open('savings-calculator.html','_blank');
 }
 document.getElementById('savingsCardBtn').addEventListener('click',openSavingsCalculator);
-document.getElementById('cardOptSel').addEventListener('change',renderAuroraCheck);
+// Switching which option to simulate also swaps the Aurora post-solar figures, because
+// grid use, fixed costs and the post-solar total belong to that option's design.
+document.getElementById('cardOptSel').addEventListener('change',function(){
+  const inst=instances.find(x=>x.id===this.value);
+  if(inst&&fillAuroraBlockFrom(inst.k)) calc();
+  renderAuroraCheck();
+});
 // Call loadHandoff with multiple fallbacks to ensure it runs
 try { loadHandoff(); } catch(e){}
 setTimeout(function(){ try { loadHandoff(); } catch(e){} }, 100);
