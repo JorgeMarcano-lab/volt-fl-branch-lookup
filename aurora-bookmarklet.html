@@ -281,7 +281,12 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     var o={};
     var tot=g(/Total system price[\s\S]{0,90}?\$([\d,]+\.\d\d)/); if(tot) o.totalSystemPrice=num(tot);
     var sz =g(/System size\s*\n\s*([\d.]+)\s*kW/);                if(sz)  o.systemKw=parseFloat(sz);
-    var gp =g(/Gross PPW\s*\n\s*\$([\d.]+)/);                     if(gp)  o.grossPPW=parseFloat(gp);
+    /* CAREFUL: Aurora's own "Gross PPW" here is the FEE-INCLUSIVE figure — verified
+       live at $5.47, which is $95,223.40 / 17,415 W. It is kept for reference only and
+       must never be used as Contract $/W on a financed option. The honest price is the
+       Summary subtotal below: $60,952.50 / 17,415 W = $3.50. On a lease the two agree
+       because there is no fee, which is exactly why this was easy to get wrong. */
+    var gp =g(/Gross PPW\s*\n\s*\$([\d.]+)/);                     if(gp)  o.grossPPWWithFee=parseFloat(gp);
 
     /* Section subtotals in the Summary: the label on one line, its amount on the next. */
     var ls=t.split('\n').map(function(s){return s.trim();}).filter(Boolean), secs={};
@@ -297,6 +302,39 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     for(var k in secs){ sum+=secs[k]; any=true; }
     if(any) o.preFeeTotal=Math.round(sum*100)/100;
     return o;
+  }
+
+  /* ---------- Financing block (proposal page, or the Financing details panel) ----------
+     APR and Duration are the two keys that unlock the widget's own Sungage rate sheet:
+     product + years + APR identifies the exact row, which carries the Sellers Points
+     (the DF) and the payment factor. Everything else then falls out of arithmetic the
+     widget already does. Starting payment is captured too, as a check on that result. */
+  function readFinancingBlock(){
+    var t=B();
+    if(t.indexOf('Financed amount')<0 && t.indexOf('Your financing option')<0) return null;
+    var o={};
+    var prod=g(/Selected financing product\s*\n\s*([^\n]+)/) ||
+             g(/Your financing option\s*\n\s*([^\n]+)/);
+    if(prod) o.product=prod.replace(/\s*\.\.\.$/,'').trim();
+    var apr=g(/\bAPR\s*\n\s*([\d.]+)\s*%/);                if(apr) o.aprPct=parseFloat(apr);
+    var dur=g(/\bDuration\s*\n\s*(\d+)\s*year/i);          if(dur) o.durationYears=parseInt(dur,10);
+    var fin=g(/Financed amount[\s\S]{0,70}?\$([\d,]+\.\d\d)/); if(fin) o.financedAmount=num(fin);
+    var net=g(/Net cost[\s\S]{0,70}?\$([\d,]+\.\d\d)/);        if(net) o.netCost=num(net);
+    var dwn=g(/Down payment\s*\n\s*\$([\d,]+\.\d\d)/);         if(dwn) o.downPayment=num(dwn);
+
+    /* Two layouts seen: label/value pairs (proposal) and three labels followed by three
+       values (side panel). Try the pair form first, then the positional form. */
+    var sp=g(/Starting monthly payment\s*\n\s*\$([\d,]+\.\d\d)/);
+    var es=g(/escalation rate\s*\n\s*([\d.]+)\s*%/);
+    var fp=g(/Final monthly payment\s*\n\s*\$([\d,]+\.\d\d)/);
+    if(sp==null||fp==null){
+      var trio=t.match(/Final monthly payment\s*\n\s*\$([\d,]+\.\d\d)\s*\n\s*([\d.]+)\s*%\s*\n\s*\$([\d,]+\.\d\d)/);
+      if(trio){ sp=trio[1]; es=trio[2]; fp=trio[3]; }
+    }
+    if(sp!=null) o.startingPayment=num(sp);
+    if(es!=null) o.escalationPct=parseFloat(es);
+    if(fp!=null) o.finalPayment=num(fp);
+    return Object.keys(o).length?o:null;
   }
 
   /* Financing entries arrive from two screens — the Compare card and this modal —
@@ -384,6 +422,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     }
     var rm=readRateModal(); if(rm) D.rateModal=rm;
     var pr=readPricingTab(); if(pr) D.pricing=pr;
+    var fb=readFinancingBlock(); if(fb) D.financingDetails=fb;
 
     /* ---- identity ---- */
     var pid=location.pathname.match(/projects\/([0-9a-f-]{36})/);
@@ -519,10 +558,12 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       var P=e.pricing;
       if(P){
         var w=(P.systemKw||e.systemKw||0)*1000;
-        if(P.grossPPW!=null)            e.contractPPW=P.grossPPW;
-        else if(P.preFeeTotal!=null&&w>0) e.contractPPW=Math.round(P.preFeeTotal/w*10000)/10000;
-        /* Dealer fee falls out of the gap between the pre-fee price and what the
-           customer actually finances: DF = 1 − preFee/total. */
+        /* Only the Summary subtotals give the price before the dealer fee. Aurora's
+           own Gross PPW is the fee-inclusive one and is deliberately not used here. */
+        if(P.preFeeTotal!=null&&w>0) e.contractPPW=Math.round(P.preFeeTotal/w*10000)/10000;
+        /* Dealer fee falls out of the gap: DF = 1 − preFee/total.
+           Live check: 1 − 60,952.50/95,223.40 = 35.99%, which is the Sellers Points of
+           Sungage Sunrise 25-year at 3.99% in the widget's own rate sheet. */
         if(P.preFeeTotal>0&&P.totalSystemPrice>0&&P.totalSystemPrice>P.preFeeTotal)
           e.dfPct=Math.round((1-P.preFeeTotal/P.totalSystemPrice)*10000)/100;
       }
