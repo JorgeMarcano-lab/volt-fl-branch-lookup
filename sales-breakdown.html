@@ -1258,6 +1258,38 @@ function applyFinancingTo(id,k,f,notes){
   return n;
 }
 
+// APR + Duration + product identify exactly one row of the published Sungage sheet, and
+// that row carries the Sellers Points and the payment factor. Selecting it fills Rate %,
+// Term and DF %, and hands calc() everything it needs to derive the monthly payment —
+// which then reproduces Aurora's own starting payment to the cent.
+function applyFinancingDetails(id,k,fd,dz,notes){
+  const coEl=$('co-'+id); if(!coEl) return 0;      // financed cards only
+  let n=0;
+  const label=OPTIONS.find(o=>o.k===k).n;
+  const finco=matchFinco(fd.product)||matchFinco(dz&&dz.name);
+  if(finco&&coEl.value!==finco){ coEl.value=finco; syncRateSheet(id); n++; }
+
+  const sh=RATE_SHEETS[coEl.value];
+  if(sh&&fd.durationYears&&fd.aprPct!=null){
+    const rows=sh.terms[fd.durationYears]||[];
+    let idx=-1;
+    for(let i=0;i<rows.length;i++) if(Math.abs(rows[i][0]-fd.aprPct)<0.005){ idx=i; break; }
+    if(idx>=0){
+      const ts=$('rsTerm-'+id), rs=$('rsRate-'+id);
+      if(ts){ ts.value=String(fd.durationYears); fillRsRates(id); }
+      if(rs){ rs.value=String(idx); applyRsRate(id); n++; }
+    } else {
+      notes.push(label+': APR '+fd.aprPct+'% over '+fd.durationYears+
+                 ' years is not on the '+sh.src+' — set Rate %, Term and DF by hand.');
+    }
+  }
+  // Straight fills for lenders with no sheet, or when the row was not found.
+  const tEl=$('tasa-'+id), mEl=$('term-'+id);
+  if(fd.aprPct!=null&&tEl&&(tEl.value===''||parseFloat(tEl.value)===0)){ tEl.value=fd.aprPct.toFixed(2); n++; }
+  if(fd.durationYears&&mEl&&(mEl.value===''||parseFloat(mEl.value)===0)){ mEl.value=fd.durationYears*12; n++; }
+  return n;
+}
+
 function applyContractPPW(id,k,ppw,notes){
   const ctEl=$('ct-'+id); if(!ctEl) return 0;
   const label=OPTIONS.find(o=>o.k===k).n, cur=parseFloat(ctEl.value);
@@ -1301,6 +1333,8 @@ function applyAuroraPayload(raw){
   // added by hand keep working alongside them; nothing here removes anything.
   const pi = (typeof NORM.primary==='number' && designs[NORM.primary]) ? NORM.primary : 0;
   let primaryKey=null, made=0;
+  const payChecks=[];                       // filled below, verified after calc()
+  const oDefName=k=>OPTIONS.find(o=>o.k===k).n;
 
   designs.forEach((dz,idx)=>{
     const k=optionForDesign(dz);
@@ -1328,6 +1362,14 @@ function applyAuroraPayload(raw){
     // Aurora design names carry the lender: "Affordable Solar - Sungage Sunrise".
     const fc=matchFinco(dz.name), coEl=$('co-'+id);
     if(fc&&coEl&&coEl.value!==fc){ coEl.value=fc; syncRateSheet(id); n++; }
+
+    // APR, Duration and the financing product resolve Rate %, Term, DF % and the
+    // payment factor against the widget's own rate sheet.
+    if(dz.financingDetails){
+      n+=applyFinancingDetails(id,k,dz.financingDetails,dz,notes);
+      if(dz.financingDetails.startingPayment!=null)
+        payChecks.push({id:id,label:oDefName(k),expected:dz.financingDetails.startingPayment});
+    }
 
     // ── Contract $/W ────────────────────────────────────────────────────────
     // The dashboard "Cost" is what the customer finances, so on any option with a
@@ -1392,6 +1434,19 @@ function applyAuroraPayload(raw){
   calc();
   refreshCardOptSel();
   renderAuroraCheck();
+
+  // The payment the widget derives — Cash + DF, plus the FL doc stamp, times the sheet
+  // factor — should land on Aurora's own starting payment. When it does, the whole
+  // chain is proven end to end; when it does not, something upstream is off and saying
+  // so is worth more than a silent number.
+  payChecks.forEach(c=>{
+    const got=parseFloat($('pay1-'+c.id)?.value)||0;
+    if(!got) return;
+    const d=Math.abs(got-c.expected);
+    if(d<=0.02) notes.push(c.label+': payment $'+got.toFixed(2)+' matches Aurora. ✓');
+    else notes.push(c.label+': widget derives $'+got.toFixed(2)+' but Aurora shows $'+
+                    c.expected.toFixed(2)+' — off by $'+d.toFixed(2)+', check Contract $/W and DF.');
+  });
 
   // Banner
   const bt=$('handoffBannerText'), bn=$('handoffBanner');
