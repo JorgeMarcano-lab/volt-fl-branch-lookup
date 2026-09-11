@@ -449,21 +449,49 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
       var before=JSON.stringify(rec.financing||[]);
       for(var fi=0;fi<incoming.length;fi++) rec.financing=mergeFinancing(rec.financing,incoming[fi]);
       if(JSON.stringify(rec.financing)!==before) added++;
+      /* Yield describes the array, not the loan, so it is lifted out of the financing
+         row onto the design — that is what lets production be derived from size. */
+      for(var yi=0;yi<incoming.length;yi++){
+        if(incoming[yi].yieldKwhPerKwp!=null && rec.yieldKwhPerKwp!==incoming[yi].yieldKwhPerKwp){
+          rec.yieldKwhPerKwp=incoming[yi].yieldKwhPerKwp; added++;
+        }
+        if(incoming[yi].preSolarTotalRate!=null) store.project.preSolarTotalRate=incoming[yi].preSolarTotalRate;
+      }
     }
   }
   store.capturedAt=new Date().toISOString();
   try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
 
-  /* What actually gets sent: project + the ACTIVE design, flattened into the shape
-     the Sales Breakdown already understands. One design per send, never a blend. */
-  function flatten(){
-    var d=store.designs[store.activeDesign]||{}, p={};
-    for(var a in store.project) if(a!=='designList') p[a]=store.project[a];
-    for(var b in d) if(b!=='name') p[b]=d[b];
-    p.designName=d.name||null;
-    p.designId=store.activeDesign||null;
-    p.v=1; p.source='aurora-bookmarklet'; p.capturedAt=store.capturedAt;
-    return p;
+  /* What gets sent: the project once, and EVERY captured design as its own entry.
+     The Sales Breakdown is a comparator — each design becomes a card there, so sending
+     only one would defeat the point. `primary` just marks which design's post-solar
+     figures open in the savings block; the rep can switch it in the widget. */
+  function buildPayload(){
+    var ids=Object.keys(store.designs);
+    var out={v:2, source:'aurora-bookmarklet', capturedAt:store.capturedAt,
+             project:{}, designs:[], primary:0};
+    for(var a in store.project) if(a!=='designList') out.project[a]=store.project[a];
+    ids.forEach(function(id,i){
+      var d=store.designs[id], e={};
+      for(var b in d) e[b]=d[b];
+
+      /* Gross PPW straight from the dashboard: design cost ÷ watts. Verified against
+         Aurora's own rate modal — $34,296.50 / 14,350 W = $2.39, the exact Gross PPW
+         it prints. That means Contract $/W is available for every design from one
+         click on the dashboard, without opening the modal design by design. The modal
+         still wins when it was opened, since it also splits base from add-ons. */
+      if(e.grossPPW==null && e.designCost!=null && e.systemKw>0)
+        e.grossPPWDerived=Math.round(e.designCost/(e.systemKw*1000)*10000)/10000;
+
+      /* Same trick for production when Sales Mode was not visited: yield × size.
+         18,704 kWh × 115.34% ÷ 14.35 kW = 1,503 kWh/kWp, which is what Aurora shows. */
+      if(e.annualProductionKwh==null && e.yieldKwhPerKwp>0 && e.systemKw>0)
+        e.annualProductionKwhDerived=Math.round(e.yieldKwhPerKwp*e.systemKw);
+
+      out.designs.push(e);
+      if(id===store.activeDesign) out.primary=i;
+    });
+    return out;
   }
 
   /* ---------- panel ---------- */
@@ -475,9 +503,10 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     ['preFixed','Fixed pre'],['postFixed','Fixed post'],['postGridUse','Grid use post'],
     ['postTotal','Post-solar total'],['financing','Financing']
   ];
-  var pay=flatten(), have=0;
+  var pay=buildPayload(), prim=pay.designs[pay.primary]||{}, have=0;
   var rows=need.map(function(f){
-    var v=pay[f[0]], ok=(v!==undefined&&v!==null&&v!=='');
+    var v=(f[0] in pay.project)?pay.project[f[0]]:prim[f[0]];
+    var ok=(v!==undefined&&v!==null&&v!=='');
     if(ok) have++;
     var shown;
     if(!ok) shown='—';
@@ -498,7 +527,8 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   var designBlock='';
   if(ids.length>1){
     designBlock='<div style="margin-bottom:8px"><div style="font-size:10.5px;color:#f4c537;'+
-      'letter-spacing:.08em;margin-bottom:4px">DESIGN TO SEND</div>'+
+      'letter-spacing:.08em;margin-bottom:4px">SAVINGS FIGURES FROM'+
+      '<span style="color:#6a6a6a;font-weight:400;letter-spacing:0"> · all '+ids.length+' are sent</span></div>'+
       '<select id="vaDesign" style="width:100%;background:#191919;color:#f2f2f2;border:1px solid #3a3a3a;'+
       'border-radius:6px;padding:6px 8px;font-size:12px">'+
       (store.activeDesign?'':'<option value="">— choose a design —</option>')+
@@ -514,11 +544,15 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   }
   var listWarn='';
   var dl=store.project.designList;
-  if(dl&&dl.length>1&&!store.activeDesign){
-    listWarn='<div style="font-size:11px;color:#ffb4b4;background:rgba(248,113,113,.12);'+
-      'border:1px solid rgba(248,113,113,.4);border-radius:7px;padding:7px 9px;margin-bottom:8px">'+
-      dl.length+' designs in this project. <b>Pick the one you are quoting below</b> — nothing is sent '+
-      'until you do, because the wrong design still produces a quote that looks right.</div>';
+  if(dl&&dl.length>1){
+    var missing=dl.filter(function(r){
+      var rr=store.designs[normName(r.name||'')]; return !rr||rr.postTotal==null;
+    }).length;
+    listWarn='<div style="font-size:11px;color:#f7d97a;background:rgba(244,197,55,.12);'+
+      'border:1px solid rgba(244,197,55,.4);border-radius:7px;padding:7px 9px;margin-bottom:8px">'+
+      dl.length+' designs — <b>all of them go over as cards</b> so you can compare.'+
+      (missing?(' '+missing+' still need their Sales Mode figures: open each one and click again.'):'')+
+      '</div>';
   }
   if(store.switched){
     listWarn+='<div style="font-size:11px;color:#f7d97a;background:rgba(244,197,55,.12);'+
@@ -559,10 +593,10 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     if(!this.value) return;
     store.activeDesign=this.value;
     try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){}
-    /* flatten() reads the store when Send is pressed, so the switch takes effect at
+    /* buildPayload() reads the store when Send is pressed, so this takes effect at
        once; only the checklist above is stale until the next click. */
     var d=store.designs[store.activeDesign]||{};
-    msg('Now sending <b>'+(d.name||'that design')+'</b>. Click the bookmarklet again to refresh the list.','#f7d97a');
+    msg('Savings figures will come from <b>'+(d.name||'that design')+'</b>. All designs are still sent.','#f7d97a');
   };
 
   var msg=function(t,c){ var e=document.getElementById('vaMsg'); e.style.color=c||'#909090'; e.innerHTML=t; };
@@ -572,7 +606,7 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     p.remove(); alert('Capture cleared. Click the bookmarklet again to start over.');
   };
   document.getElementById('vaCopy').onclick=function(){
-    var txt=JSON.stringify(flatten());
+    var txt=JSON.stringify(buildPayload());
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(txt).then(function(){
         msg('Copied. Open the Sales Breakdown and hit <b>Paste from Aurora</b>.','#34d399');
@@ -583,14 +617,11 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
   /* postMessage handshake: keep offering the payload until the widget acknowledges.
      Survives slow loads without needing to guess how long the widget takes. */
   document.getElementById('vaSend').onclick=function(){
-    if(ids.length>1 && !store.activeDesign){
-      msg('Pick which design to send first.','#f87171'); return;
-    }
     var w;
     try{ w=window.open(WIDGET,'voltSalesBreakdown'); }catch(e){ w=null; }
     if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
-    var sending=flatten();
-    msg('Sending '+(sending.designName?('<b>'+sending.designName+'</b>'):'the capture')+'…');
+    var sending=buildPayload();
+    msg('Sending '+sending.designs.length+' design'+(sending.designs.length===1?'':'s')+'…');
     var tries=0;
     var timer=setInterval(function(){
       tries++;
