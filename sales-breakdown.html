@@ -41,9 +41,12 @@ a{color:var(--accent)}
 .vlt-stitle{display:inline-flex;align-items:center;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);border-left:3px solid var(--accent);padding-left:10px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- defer: none of these is needed until the rep presses Generate PDF or Load PDF, but
+     without it all three block the page's own script — pdf.js alone is ~300 KB. That
+     delay is what made the Aurora bookmarklet time out waiting for this page to answer. -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -1537,6 +1540,14 @@ window.addEventListener('message',function(ev){
   const res=applyAuroraPayload(ev.data.payload);
   try{ ev.source.postMessage({type:'VOLT_AURORA_ACK',applied:res.applied},ev.origin); }catch(e){}
 });
+
+// Announce readiness to whoever opened this tab. The bookmarklet starts offering its
+// payload the moment window.open returns, which can be well before this page finishes
+// loading — so instead of making it guess how long to keep trying, we tell it. This is
+// what fixes "No answer from the widget" on a slow load.
+try{
+  if(window.opener) window.opener.postMessage({type:'VOLT_SB_READY'},AURORA_SENDER_ORIGIN);
+}catch(e){}
 
 // Clipboard fallback, and the path Claude uses when reading a project in session.
 (function(){
