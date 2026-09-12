@@ -210,7 +210,11 @@ let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, 
   img.src = VOLT_LOGO_DARK;
 })();
 const LOGO_H=26,LOGO_W=Math.round(26*440/108);
-const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
+// Adder Sheet 08262026 redline references. NOTHING reads this table — the Redline $/W
+// field is typed by hand because it varies by partner group. Kept only as a written
+// record of the sheet; wiring it up would change every commission, so do that
+// deliberately or not at all. Skylight is not in the sheet.
+const REGIONS={SFL:{lightreach:2.00,enfin:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}};
 // termMonths = contract length for the lease options. LightReach, Skylight and Enfin
 // run 25 years.
 //
@@ -224,8 +228,11 @@ const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,t
 // front, which is why the savings simulation carries no upfront cost for it either.
 const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease',termMonths:300},
   {k:'skylight',n:'Skylight',t:'Lease',termMonths:300},
+  // The Adder Sheet 08262026 shows a second Enfin column (QPEAK DC (AC), CFL redline
+  // $2.00/W), but that column is HIDDEN in the sheet — it is retired, not in use. It
+  // was modelled here once and removed; do not add it back without checking that the
+  // column has actually been unhidden.
   {k:'enfin',n:'Enfin',t:'Lease',termMonths:300},
-  {k:'enfin2',n:'Enfin (config 2)',t:'Lease',termMonths:300},
   {k:'pch',n:'Participate & Credit Human',t:'Lease',termMonths:240,prepaid:true,noEscalator:true,prepayPct:30},
   {k:'tesla',n:'Tesla Program',t:'Purchase'},
   {k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},
@@ -234,7 +241,7 @@ const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease',termMonths:300},
 const optDef=k=>OPTIONS.find(o=>o.k===k)||{};
 // The badge on the card and in the table: a prepaid lease is not the same product.
 const optTypeLabel=o=>o.prepaid?'Prepaid Lease':o.t;
-const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Almika'];
+const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Concert','Almika'];
 // ===================== SUNGAGE RATE SHEETS =====================
 // Transcribed verbatim from the official sheets; rates and fees as of 9/8/2026.
 // BSLP row = [borrowerRate%, sellersPoints%, INIT, MAX, LEVEL, ratesOver999Flag]
@@ -272,14 +279,14 @@ const noteAmount=financed=>financed*(1+FL_DOC_STAMP);
 // rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
 // Cleared when the user edits a payment by hand or changes the finance company.
 let rateSel={};
-const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],enfin2:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
+const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
-const LEASE_KEYS=['lightreach','skylight','enfin','enfin2','pch']; // lease + pre-paid lease: Q.Peak base panel
+const LEASE_KEYS=['lightreach','skylight','enfin','pch']; // lease + pre-paid lease: Q.Peak base panel
 const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
@@ -305,11 +312,11 @@ function panelRate(k,p){if(p==='base')return{r:0,ok:true};
   const lease=LEASE_KEYS.includes(k), teslaK=(k==='tesla'||k==='teslapw3'), sfl=(region==='SFL');
   if(p==='qtron'){if(!lease)return{r:0,ok:false};                       // NA on every purchase option
     if(sfl)return{r:0.05,ok:true};
-    return{r:(k==='enfin2'||k==='pch')?0.05:0.10,ok:true};}             // CFL: LightReach/Skylight/Enfin = 0.10
-  if(p==='mission'){if(k==='enfin2')return{r:0,ok:false};               // NA in both regions
+    return{r:(k==='pch')?0.05:0.10,ok:true};}                           // CFL: LightReach/Skylight/Enfin 0.10, PCH 0.05
+  if(p==='mission'){
     if(sfl){if(lease)return{r:0,ok:false};return{r:teslaK?0.10:0.15,ok:true};}
     return{r:0.20,ok:true};}                                            // CFL: 0.20 across the board
-  if(p==='rec'){if(k==='enfin2')return{r:0,ok:false};                   // NA in both regions
+  if(p==='rec'){
     if(sfl)return{r:0.20,ok:true};                                      // SFL: 0.20 across the board
     return teslaK?{r:0.45,ok:true}:{r:0,ok:false};}                     // CFL: only Tesla options
   return{r:0,ok:true};}
@@ -703,12 +710,13 @@ function calc(){
     if($('cfa-'+id))$('cfa-'+id).textContent=money(custFinances);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
-    // Sales Rebate cap: MIN(25% of contract, 12 x monthly payment) — Adder Sheet
-    const contractAmt=contract*W;
-    const cap25=contractAmt*0.25;
+    // Sales Rebate cap — Adder Sheet 08262026: "Sum of 12 Monthly Payments", marked
+    // "no exceptions allowed". The older MIN(25% of contract, 12 payments) rule is
+    // retired: its 25% leg was the binding one on larger systems and was rejecting
+    // rebates the sheet actually allows. With no monthly payment on the card (Cash)
+    // there is nothing to cap against, so nothing is flagged.
     const pago=parseFloat($('pay1-'+id)?.value)||0;
-    const cap12=pago>0?pago*12:Infinity;
-    const rebateCap=Math.min(cap25,cap12);
+    const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
     res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,
@@ -1225,6 +1233,7 @@ function matchFinco(name){
   if(n.includes('level'))       return 'Sungage Level Pay';
   if(n.includes('ygrene'))      return 'Ygrene';
   if(n.includes('climate'))     return 'Climate First Bank';
+  if(n.includes('concert'))     return 'Concert';
   if(n.includes('almika'))      return 'Almika';
   return null;
 }
