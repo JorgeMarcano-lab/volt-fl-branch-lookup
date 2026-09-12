@@ -706,7 +706,12 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
      Survives slow loads without needing to guess how long the widget takes. */
   document.getElementById('vaSend').onclick=function(){
     var w;
-    try{ w=window.open(WIDGET,'voltSalesBreakdown'); }catch(e){ w=null; }
+    /* Cache-buster on the widget URL. GitHub Pages caches HTML for minutes, so without
+       this the tab can open a stale build — the payload arrives correctly and the rep
+       sees old labels and old behaviour, which looks like the bookmarklet failing.
+       window.open with a name already re-navigates an existing tab, so this costs
+       nothing that was not already being lost. */
+    try{ w=window.open(WIDGET+'?v='+Date.now(),'voltSalesBreakdown'); }catch(e){ w=null; }
     if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
     var sending=buildPayload();
     msg('Sending '+sending.designs.length+' design'+(sending.designs.length===1?'':'s')+'…');
