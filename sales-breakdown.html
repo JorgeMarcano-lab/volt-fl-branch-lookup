@@ -211,7 +211,21 @@ let VOLT_LOGO_PRINT = null;   // black-tile JPEG derived from the lockup above, 
 })();
 const LOGO_H=26,LOGO_W=Math.round(26*440/108);
 const REGIONS={SFL:{lightreach:2.00,enfin:2.00,enfin2:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,enfin2:2.00,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}}; // Adder Sheet 08262026 - reference only, the Redline $/W field stays manual. Skylight is not in the sheet.
-const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease'},{k:'skylight',n:'Skylight',t:'Lease'},{k:'enfin',n:'Enfin',t:'Lease'},{k:'enfin2',n:'Enfin (config 2)',t:'Lease'},{k:'pch',n:'Participate & Credit Human',t:'Lease'},{k:'tesla',n:'Tesla Program',t:'Purchase'},{k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},{k:'affordable',n:'Affordable Solar',t:'Purchase'},{k:'cash',n:'Cash',t:'Cash'}];
+// termMonths = contract length for the lease options. LightReach, Skylight and Enfin
+// run 25 years; Participate & Credit Human is a PREPAID lease through Credit Human —
+// 20 years, a fixed payment with NO escalator, and a prepayment taken up front.
+const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease',termMonths:300},
+  {k:'skylight',n:'Skylight',t:'Lease',termMonths:300},
+  {k:'enfin',n:'Enfin',t:'Lease',termMonths:300},
+  {k:'enfin2',n:'Enfin (config 2)',t:'Lease',termMonths:300},
+  {k:'pch',n:'Participate & Credit Human',t:'Lease',termMonths:240,prepaid:true,noEscalator:true,prepayPct:30},
+  {k:'tesla',n:'Tesla Program',t:'Purchase'},
+  {k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},
+  {k:'affordable',n:'Affordable Solar',t:'Purchase'},
+  {k:'cash',n:'Cash',t:'Cash'}];
+const optDef=k=>OPTIONS.find(o=>o.k===k)||{};
+// The badge on the card and in the table: a prepaid lease is not the same product.
+const optTypeLabel=o=>o.prepaid?'Prepaid Lease':o.t;
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Almika'];
 // ===================== SUNGAGE RATE SHEETS =====================
 // Transcribed verbatim from the official sheets; rates and fees as of 9/8/2026.
@@ -381,7 +395,7 @@ function buildCard(inst){
   card.className='vlt-card';card.id='card-'+id;
   card.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-      <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${o.t}</span></span>
+      <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${optTypeLabel(o)}</span></span>
       <span style="display:flex;align-items:center;gap:8px">
         <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Total commission</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
         <button onclick="removeInst('${id}')" title="Remove" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
@@ -401,14 +415,22 @@ function buildCard(inst){
               <div id="rsNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
               <div id="rsFin-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px"></div>
             </div>`
-            :(o.t==='Lease'?`<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`:'')}
+            :(o.t==='Lease'?
+              `<div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="lterm-${id}" class="vlt-num" value="${o.termMonths||300}"></div>`+
+              (o.noEscalator
+                ? `<div><label class="vlt-lbl">Prepayment %</label><input type="number" step="0.01" id="prepay-${id}" class="vlt-num" value="${o.prepayPct||0}"></div>`
+                : `<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`)
+              :'')}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
       <div><span class="vlt-lbl">TOTAL / ${purchase?'Cash':'Cash Price'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
       ${financedOpt?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
       <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
       ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
-            :(o.t==='Lease'?`<div><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`:'')}
+            :(o.t==='Lease'?
+              `<div><label class="vlt-lbl">${o.noEscalator?'Fixed monthly payment (ref.)':'Monthly payment (ref.)'}</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`+
+              (o.prepaid?`<div><span class="vlt-lbl">Prepayment</span><span id="ppa-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:'')
+              :'')}
     </div>
     <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Project details</button>
     <div id="det-${id}" style="display:none">${detailFields(id)}</div>
@@ -662,6 +684,11 @@ function calc(){
       }
     }
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
+    // Lease contract length, and the prepayment a prepaid lease takes up front.
+    const lterm=parseFloat($('lterm-'+id)?.value)||0;
+    const prepayPct=parseFloat($('prepay-'+id)?.value)||0;
+    const prepayAmt=prepayPct>0?cash*prepayPct/100:0;
+    if($('ppa-'+id))$('ppa-'+id).textContent=money(prepayAmt);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
     if($('off-'+id))$('off-'+id).textContent=offTxt;
     // Sales Rebate cap: MIN(25% of contract, 12 x monthly payment) — Adder Sheet
@@ -672,7 +699,8 @@ function calc(){
     const rebateCap=Math.min(cap25,cap12);
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,
+      lterm,prepayPct,prepayAmt,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
       solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
@@ -729,16 +757,21 @@ function renderCmp(res,bestId){
       ['Total commission',(inst,r)=>money(r.comm),{a:1,bold:1}],
       ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
       ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
-      ['Term (months)',(inst,r)=>r.loan&&r.term>0?r.term+'m':'—'],
+      ['Term (months)',(inst,r)=>r.loan&&r.term>0?(r.term+'m'):(r.lterm>0?(r.lterm+'m ('+Math.round(r.lterm/12)+' yr)'):'—')],
       ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
-      ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id):(r.o.t==='Lease'?esc(inst.id):'—')],
+      ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id)
+        :(r.o.t==='Lease'?(r.o.noEscalator?'Credit Human · fixed, no escalator':esc(inst.id)):'—')],
+      ['Prepayment',(inst,r)=>r.prepayAmt>0?(money(r.prepayAmt)+' · '+r.prepayPct.toFixed(0)+'%'):'—'],
       ['Year 1 monthly payment',(inst,r)=>pay(inst.id)],
       ['Month 37+ monthly payment',(inst,r)=>pay2(inst.id)]
     ]}
   ];
   const ncol=1+sel.length;
   let html='<table class="vlt-tbl"><thead><tr><th></th>';
-  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id):(r.o.t==='Lease'?('Escalator '+esc(inst.id)):'One-time payment'))+'</span></th>';});
+  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id)
+  :(r.o.t==='Lease'
+     ?(r.o.noEscalator?('Prepaid · '+Math.round((r.lterm||240)/12)+' yr fixed'):('Escalator '+esc(inst.id)))
+     :'One-time payment'))+'</span></th>';});
   html+='</tr></thead><tbody>';
   blocks.forEach(bk=>{
     const vis=bk.rows.filter(row=>(row[2]&&row[2].a)?true:sel.some(inst=>!emptyV(row[1](inst,res[inst.id]))));
@@ -992,7 +1025,11 @@ function genPDF(){
         term:(r.loan&&r.term>0)?r.term:null,
         tasa:(r.loan&&r.tasa>0)?r.tasa:null,
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
-        escalator:(!r.loan&&r.o.t==='Lease')?($('esc-'+id)?$('esc-'+id).value+'%':''):null,
+        escalator:(!r.loan&&r.o.t==='Lease')
+          ?(r.o.noEscalator?'Credit Human - fixed, no escalator':($('esc-'+id)?$('esc-'+id).value+'%':'')):null,
+        term_lease:(!r.loan&&r.lterm>0)?r.lterm:null,
+        prepago:(r.prepayAmt>0)?Math.round(r.prepayAmt):null,
+        prepago_pct:(r.prepayPct>0)?r.prepayPct:null,
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
         pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
         rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
@@ -1216,10 +1253,17 @@ function normalizeAuroraPayload(p){
 // ("Enfin", "Lightreach"); when they are not, the financing rows inside give it away.
 function optionForDesign(dz){
   var k=matchOption(dz.name);
-  if(!k&&Array.isArray(dz.financing)){
-    for(var i=0;i<dz.financing.length;i++){ k=matchOption(dz.financing[i].name); if(k) break; }
-  }
-  return k;
+  if(!k&&Array.isArray(dz.financing))
+    for(var i=0;i<dz.financing.length&&!k;i++) k=matchOption(dz.financing[i].name);
+  if(k) return {k:k,assumed:false};
+  // A name like "sungage Sunrise escalator" identifies only the LENDER, not which Volt
+  // purchase option it is. That used to drop the design silently. It is a financed
+  // purchase either way, so it lands on Affordable Solar — the generic purchase card —
+  // and the note tells the rep to move it if it should be Tesla or Cash.
+  var fc=matchFinco(dz.name)||
+        (Array.isArray(dz.financing)&&dz.financing.length?matchFinco(dz.financing[0].name):null);
+  if(fc) return {k:'affordable',assumed:true,finco:fc};
+  return null;
 }
 
 // Repaints the project-level Aurora block from one option's stored design figures.
@@ -1337,11 +1381,14 @@ function applyAuroraPayload(raw){
   const oDefName=k=>OPTIONS.find(o=>o.k===k).n;
 
   designs.forEach((dz,idx)=>{
-    const k=optionForDesign(dz);
-    if(!k){
+    const m=optionForDesign(dz);
+    if(!m){
       notes.push('Design "'+(dz.name||'untitled')+'" matches no lender card — add that option by hand.');
       return;
     }
+    const k=m.k;
+    if(m.assumed)
+      notes.push('Design "'+dz.name+'" only names the lender, so it went to Affordable Solar — move it if it should be Tesla or Cash.');
     const existing=instances.find(x=>x.k===k);
     const id=existing?existing.id:addInst(k);
     if(!existing) made++;
@@ -1502,7 +1549,9 @@ function buildSavingsHandoff(instId){
   const o=r.o;
   const utilStart=$('projUtilBill')?.value||'0';
   const utilRate=$('projUtilRate')?.value||'4.00';
-  const termMonths=parseFloat($('term-'+inst.id)?.value)||0;
+  // Financed cards carry term-<id>; leases now carry lterm-<id> (300 months for
+  // LightReach/Enfin, 240 for the Credit Human prepaid lease).
+  const termMonths=parseFloat($('term-'+inst.id)?.value)||parseFloat($('lterm-'+inst.id)?.value)||0;
   let term=termMonths>0?Math.round(termMonths/12):25;
   term=Math.min(30,Math.max(5,term));
   const custName=($('projAddr')?.value||'').trim()||($('projNameOnTitle')?.value||'').trim();
@@ -1530,7 +1579,8 @@ function buildSavingsHandoff(instId){
     payload.optType='lease';
     payload.leaseProvider=o.n;
     payload.leasePay=pago;
-    payload.leaseEsc=$('esc-'+inst.id)?.value||'2.99';
+    // A prepaid lease has no escalator: the payment is flat for the whole term.
+    payload.leaseEsc=o.noEscalator?'0':($('esc-'+inst.id)?.value||'2.99');
   } else {
     payload.optType='loan';
     const finRaw=$('co-'+inst.id)?.value||'Ygrene';
@@ -1585,7 +1635,7 @@ function renderClientPDF(p){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (months)',o=>o.term?o.term+'m':null],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Prepayment',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
