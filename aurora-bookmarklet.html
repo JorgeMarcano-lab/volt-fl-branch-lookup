@@ -715,20 +715,53 @@ Sales Breakdown widget: address, utility, consumption, production, offset, and t
     if(!w){ msg('Pop-up blocked. Use <b>Copy JSON</b> and paste it in the widget.','#f87171'); return; }
     var sending=buildPayload();
     msg('Sending '+sending.designs.length+' design'+(sending.designs.length===1?'':'s')+'…');
-    var tries=0;
+
+    function deliver(){ try{ w.postMessage({type:'VOLT_AURORA',payload:sending},ORIGIN); }catch(e){} }
+
+    /* Two independent ways for this to land, because the widget can take a while to
+       come up. Either it announces itself the moment its script runs (VOLT_SB_READY)
+       and we deliver on the spot, or the poll below eventually catches it. The window
+       is 60s instead of 16s — the old one expired while the page was still loading,
+       which is what produced "No answer from the widget" on a perfectly good send. */
+    var tries=0, done=false, sawReady=false, seenAny=0;
+    deliver();
     var timer=setInterval(function(){
-      tries++;
-      try{ w.postMessage({type:'VOLT_AURORA',payload:sending},ORIGIN); }catch(e){}
-      if(tries>40){ clearInterval(timer);
-        msg('No answer from the widget. Use <b>Copy JSON</b> and paste it there.','#f87171'); }
+      tries++; deliver();
+      if(tries>150 && !done){ clearInterval(timer); onFail(); }
     },400);
-    function onAck(ev){
-      if(ev.origin!==ORIGIN || !ev.data || ev.data.type!=='VOLT_AURORA_ACK') return;
+
+    function onFail(){
+      done=true;
+      window.removeEventListener('message',onMsg);
+      /* The failure line carries its own diagnosis. "No answer" on its own is
+         unactionable; knowing whether the tab opened, whether the widget ever
+         announced itself, and whether any message came back at all says exactly which
+         link broke. Screenshot this and it is diagnosable in one read. */
+      var why = !w ? 'the tab never opened'
+              : (w.closed ? 'the widget tab was closed before it answered'
+              : (sawReady ? 'the widget loaded but never confirmed — it is probably an old cached build'
+              : (seenAny ? 'messages came back but none were the expected reply'
+              : 'the widget never announced itself — it may be a cached build without the listener')));
+      var diag=' ['+why+' · '+tries+' attempts · ready='+(sawReady?'yes':'no')+']';
+      var txt=JSON.stringify(sending);
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){
+          msg('Not delivered — the data is already on your clipboard. Open the Sales Breakdown and press <b>Paste from Aurora</b>.'+
+              '<br><span style="color:#6a6a6a">'+diag+'</span>','#f7d97a');
+        },function(){ msg('Not delivered. Use <b>Copy JSON</b> and paste it there.<br><span style="color:#6a6a6a">'+diag+'</span>','#f87171'); });
+      } else { msg('Not delivered. Use <b>Copy JSON</b> and paste it there.<br><span style="color:#6a6a6a">'+diag+'</span>','#f87171'); }
+    }
+    function onMsg(ev){
+      if(ev.origin!==ORIGIN || !ev.data) return;
+      seenAny++;
+      if(ev.data.type==='VOLT_SB_READY'){ sawReady=true; deliver(); return; }
+      if(ev.data.type!=='VOLT_AURORA_ACK') return;
+      done=true;
       clearInterval(timer);
-      window.removeEventListener('message',onAck);
+      window.removeEventListener('message',onMsg);
       msg('Delivered — '+(ev.data.applied||0)+' fields filled in the widget.','#34d399');
     }
-    window.addEventListener('message',onAck);
+    window.addEventListener('message',onMsg);
   };
 })();
 </script>
