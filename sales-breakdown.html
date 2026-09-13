@@ -752,7 +752,7 @@ function renderCmp(res,bestId){
   const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
     {title:'Project',rows:[
-      ['Type',(inst,r)=>r.o.t,{a:1}],
+      ['Type',(inst,r)=>optTypeLabel(r.o),{a:1}],
       ['System size (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
       ['Offset',(inst,r)=>r.offTxt],
       ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
@@ -1032,7 +1032,7 @@ function genPDF(){
     aurora_url:($('projAuroraUrl').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
-      return{opcion:o.n,tipo:o.t,tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
+      return{opcion:o.n,tipo:optTypeLabel(o),tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
         superficie:c.mount==='ground'?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
