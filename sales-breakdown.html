@@ -278,6 +278,11 @@ const RATE_SHEETS={
 // calculator: 40,635 cash / 35.99% points -> 63,482.27 + 222.19 = 63,704.46 -> $248.32.
 const FL_DOC_STAMP=0.0035;
 const noteAmount=financed=>financed*(1+FL_DOC_STAMP);
+// BrightStart's Deferred Payment Portion: 25% of the financed amount, due before month 37 to
+// avoid the MAX payment (customers normally cover it with the federal tax credit). Verified
+// against the Sungage calculator: 62,484.25 x 0.25 = 15,621.06.
+const DPP_SHARE=0.25;
+const isBrightstart=id=>$('co-'+id)?.value==='Sungage Brightstart';
 
 // rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
 // Cleared when the user edits a payment by hand or changes the finance company.
@@ -306,7 +311,11 @@ const DEFAULT_CT=3.50;         // the Contract $/W a new card ships with
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
-function basePanelName(k){if(LEASE_KEYS.includes(k))return 'Q.Peak DUO BLK 410W';return region==='SFL'?'Hyundai HIS-S400YH (BK)':'LONGi LR5-54HPB-405M';}
+// Base panel. 2026-09-14: the supplier dropped the LONGi LR5-54HPB-405M, so CFL moved to the
+// Hyundai that SFL already used — one base panel for all of Florida on loan / cash / purchase.
+// Leases keep the Q.Peak. Pending: the Dealer Adder Sheet has not been reissued yet; re-check
+// panelRate() against it when Jorge sends the new one.
+function basePanelName(k){if(LEASE_KEYS.includes(k))return 'Q.Peak DUO BLK 410W';return 'Hyundai HIS-S400YH (BK)';}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
 function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
 // Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
@@ -443,6 +452,7 @@ function buildCard(inst){
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
       <div><span class="vlt-lbl">TOTAL / ${purchase?'Cash':'Cash Price'}</span><span id="cash-${id}" style="font-size:14px">$0</span></div>
       ${financedOpt?`<div><span class="vlt-lbl">Cash + DF</span><span id="fin-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
+      ${financedOpt?`<div id="dppw-${id}" style="display:none"><span class="vlt-lbl" title="25% of the financed amount, due before month 37 to avoid the MAX payment">Deferred Payment (25%)</span><span id="dpp-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:''}
       <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
       ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
             :(o.t==='Lease'?
@@ -691,9 +701,14 @@ function calc(){
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
     const comm=solarComm+battComm;
     const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
-    let financed=cash,df=0,term=0,tasa=0;
+    let financed=cash,df=0,term=0,tasa=0,dpp=0;
     if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;
       // A rate-sheet selection keeps the payment fields live against the current Cash + DF.
+      // BrightStart only: the 25% deferred portion, off the note amount. Computed from the
+      // financed amount rather than the sheet pick, so a hand-typed DF still shows it.
+      dpp=isBrightstart(id)?noteAmount(financed)*DPP_SHARE:0;
+      if($('dppw-'+id))$('dppw-'+id).style.display=dpp>0?'block':'none';
+      if($('dpp-'+id))$('dpp-'+id).textContent=money(dpp);
       const rs=rateSel[id];
       if(rs){
         const note=noteAmount(financed);
@@ -722,7 +737,7 @@ function calc(){
     const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,battTxt,offTxt,notes,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
@@ -780,6 +795,7 @@ function renderCmp(res,bestId){
       ['Total commission',(inst,r)=>money(r.comm),{a:1,bold:1}],
       ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
       ['Cash + DF',(inst,r)=>r.loan&&r.df>0?money(r.financed):'—'],
+      ['Deferred Payment (25%)',(inst,r)=>r.dpp>0?money(r.dpp):'—'],
       ['Term (months)',(inst,r)=>r.loan&&r.term>0?(r.term+'m'):(r.lterm>0?(r.lterm+'m ('+Math.round(r.lterm/12)+' yr)'):'—')],
       ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
       ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id)
@@ -1057,6 +1073,7 @@ function genPDF(){
         cliente_financia:(r.custFinances>0)?Math.round(r.custFinances):null,
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
         pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
+        pago_diferido:r.dpp>0?Math.round(r.dpp):null,
         rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
         battCapExceeded:r.battCapExceeded||false,
         solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
@@ -1669,7 +1686,7 @@ function renderClientPDF(p){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
