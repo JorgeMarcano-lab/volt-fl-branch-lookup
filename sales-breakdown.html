@@ -289,13 +289,26 @@ const isBrightstart=id=>$('co-'+id)?.value==='Sungage Brightstart';
 let rateSel={};
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
-const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
+const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mitrx:'MITRX M405-L3H',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
+// Adder Sheet 08192026, "Stand Alone Battery" and "Additional Services" (rows 41-49 SFL,
+// 93-101 CFL — identical in both regions). Redline cost per unit; the price charged sits
+// inside Contract x W like the battery, so each one nets its redline out of the commission.
+const ADDON={
+  exp   :{label:'Powerwall 3 Expansion Pack', first:8500, addl:8500, cap:null},   // cap TBC in the sheet
+  enph5p:{label:'Enphase IQ 5P',              first:9350, addl:6850, cap:18000},  // $18,000 PER BATTERY
+  span  :{label:'Span Panel',                 first:8000, addl:8000, cap:15000}   // $15,000 PER SPAN
+};
+const ADDON_KEYS=Object.keys(ADDON);
+// Permit fee allowance — Adder Sheet 08192026 rows 20 / 73. The Tesla columns carry a
+// $3,000 total allowance; every other column is "Up to $1,000 included". Anything above
+// the allowance is treated as a passthrough cost against the commission.
+const permitAllowance=k=>(k==='tesla'||k==='teslapw3')?3000:1000;
 const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
 const LEASE_KEYS=['lightreach','skylight','enfin','pch']; // lease + pre-paid lease: Q.Peak base panel
-const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
 // instances: array of {id, k} — id is unique, k is the option key
@@ -325,12 +338,19 @@ function panelRate(k,p){if(p==='base')return{r:0,ok:true};
   if(p==='qtron'){if(!lease)return{r:0,ok:false};                       // NA on every purchase option
     if(sfl)return{r:0.05,ok:true};
     return{r:(k==='pch')?0.05:0.10,ok:true};}                           // CFL: LightReach/Skylight/Enfin 0.10, PCH 0.05
+  // MITRX M405-L3H — Adder Sheet 08192026 rows 11 / 64: "included" on every purchase
+  // column (no adder) and NA on lease and prepaid lease, in both regions.
+  if(p==='mitrx')return lease?{r:0,ok:false}:{r:0,ok:true};
   if(p==='mission'){
     if(sfl){if(lease)return{r:0,ok:false};return{r:teslaK?0.10:0.15,ok:true};}
     return{r:0.20,ok:true};}                                            // CFL: 0.20 across the board
+  // REC 460W AA PURE-RX. Adder Sheet 08192026 rows 14 / 67: SFL 0.20 everywhere;
+  // CFL is 0.20 on the three purchase columns and NA on lease / prepaid lease.
+  // (Until 2026-09-15 the widget had CFL at 0.45 for the Tesla options and NA for
+  // Affordable/Cash — both wrong against the sheet.)
   if(p==='rec'){
-    if(sfl)return{r:0.20,ok:true};                                      // SFL: 0.20 across the board
-    return teslaK?{r:0.45,ok:true}:{r:0,ok:false};}                     // CFL: only Tesla options
+    if(sfl)return{r:0.20,ok:true};
+    return lease?{r:0,ok:false}:{r:0.20,ok:true};}
   return{r:0,ok:true};}
 function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
 // Mixed roof: the system is split in kW across shingle/tile/flat. The surface adder is
@@ -369,7 +389,7 @@ function detailFields(id){
   <div class="vlt-grid">
     <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mitrx','MITRX M405-L3H'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
     <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
@@ -398,6 +418,26 @@ function detailFields(id){
       <div class="vlt-fld"><label class="vlt-lbl">Quantity</label><input class="vlt-num" type="number" id="battQty-${id}" value="0" min="0" step="1"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Total battery price ($)</label><input class="vlt-num" type="number" id="battPrice-${id}" value="15000" step="100" min="0"></div>
       <div class="vlt-fld"><label class="vlt-lbl">Sales rebate ($)</label><input class="vlt-num" type="number" id="rebate-${id}" value="0" step="50" min="0"></div>
+    </div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Stand-alone battery &amp; services &mdash; redline editable</div>
+    ${ADDON_KEYS.map(a=>`
+    <div class="vlt-grid" style="margin-bottom:6px">
+      <div class="vlt-fld"><label class="vlt-lbl">${ADDON[a].label} &mdash; qty</label><input class="vlt-num" type="number" id="${a}Qty-${id}" value="0" min="0" step="1"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Total price ($)</label><input class="vlt-num" type="number" id="${a}Price-${id}" value="0" step="100" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">First redline ($)</label><input class="vlt-num" type="number" id="${a}R1-${id}" value="${ADDON[a].first}" step="50" min="0"></div>
+      <div class="vlt-fld"><label class="vlt-lbl">Add'l redline ($)</label><input class="vlt-num" type="number" id="${a}RA-${id}" value="${ADDON[a].addl}" step="50" min="0"></div>
+      <div class="vlt-fld"><span class="vlt-lbl">Commission</span><span id="${a}C-${id}" style="font-size:14px;font-weight:500">$0</span></div>
+    </div>`).join('')}
+    <div id="addonNote-${id}" style="font-size:11px;margin-top:2px"></div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Permit fee</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Permit fee ($)</label><input class="vlt-num" type="number" id="permit-${id}" value="0" step="50" min="0"></div>
+      <div class="vlt-fld"><span class="vlt-lbl">Allowance</span><span id="permitAllow-${id}" style="font-size:14px">$0</span></div>
+      <div class="vlt-fld"><span class="vlt-lbl">Over allowance</span><span id="permitOver-${id}" style="font-size:14px;font-weight:500">$0</span></div>
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
@@ -657,7 +697,13 @@ function readOptCfg(id){
   const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',mix:readMix(id),
     dirt:parseFloat(g('dirt')?.value)||0,hard:parseFloat(g('hard')?.value)||0,septic:parseFloat(g('septic')?.value)||0,
     battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
-    rebate:parseFloat(g('rebate')?.value)||0};
+    rebate:parseFloat(g('rebate')?.value)||0,
+    permit:parseFloat(g('permit')?.value)||0,
+    addons:Object.fromEntries(ADDON_KEYS.map(a=>[a,{
+      qty:parseInt(g(a+'Qty')?.value)||0,
+      price:parseFloat(g(a+'Price')?.value)||0,
+      r1:parseFloat(g(a+'R1')?.value),
+      rA:parseFloat(g(a+'RA')?.value)}]))};
   const ns=[['ns_hvac','HVAC'],['ns_fence','Fence'],['ns_gutters','Gutters'],['ns_water','Water Filter'],['ns_doors','Doors & Windows'],['ns_roof','Roof']];
   let noSolar=0;const nsItems=[];
   ns.forEach(([fid,lbl])=>{const v=parseFloat(g(fid)?.value)||0;if(v>0){noSolar+=v;nsItems.push(lbl+' '+money(v));}});
@@ -697,9 +743,32 @@ function calc(){
         if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
         else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
     if($('bt-'+id))$('bt-'+id).textContent=battTxt;
-    const otrosFull=sz.fixed+gmFixed+cfg.noSolar;
-    const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis);
-    const comm=solarComm+battComm;
+    // Stand-alone battery & services. Same shape as the battery: the price charged lives
+    // inside Contract x W, so subtracting the price here and adding (price - redline) back
+    // leaves the redline as the only net effect on commission.
+    let addonPriceTot=0,addonComm=0;const addonWarn=[];
+    ADDON_KEYS.forEach(a=>{
+      const cfgA=cfg.addons[a],spec=ADDON[a];let cA=0;
+      if(cfgA.qty>0){
+        addonPriceTot+=cfgA.price;
+        const r1=isNaN(cfgA.r1)?spec.first:cfgA.r1, rA=isNaN(cfgA.rA)?spec.addl:cfgA.rA;
+        cA=cfgA.price-(r1+(cfgA.qty-1)*rA);
+        addonComm+=cA;
+        if(spec.cap&&cfgA.price>spec.cap*cfgA.qty)
+          addonWarn.push(spec.label+' over cap '+money(spec.cap*cfgA.qty)+' (+'+money(cfgA.price-spec.cap*cfgA.qty)+')');
+      }
+      if($(a+'C-'+id))$(a+'C-'+id).textContent=money(cA);
+    });
+    if($('addonNote-'+id)){const n=$('addonNote-'+id);n.textContent=addonWarn.join(' \u00b7 ');
+      n.style.color=addonWarn.length?'#fca5a5':'var(--color-text-tertiary)';}
+    // Permit fee over the allowance is a passthrough cost, like the non-solar adders.
+    const pAllow=permitAllowance(k), pOver=Math.max(0,cfg.permit-pAllow);
+    if($('permitAllow-'+id))$('permitAllow-'+id).textContent=money(pAllow);
+    if($('permitOver-'+id)){const el=$('permitOver-'+id);el.textContent=money(pOver);
+      el.style.color=pOver>0?'#fca5a5':'var(--color-text-primary)';}
+    const otrosFull=sz.fixed+gmFixed+cfg.noSolar+pOver;
+    const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
+    const comm=solarComm+battComm+addonComm;
     const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
     let financed=cash,df=0,term=0,tasa=0,dpp=0;
     if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;
@@ -737,7 +806,7 @@ function calc(){
     const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battTxt,offTxt,notes,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,addonComm,addonWarn,pAllow,pOver,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
@@ -787,6 +856,12 @@ function renderCmp(res,bestId){
       ['Battery',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
       ['Battery price',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
       ['Battery comm. (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
+    ]},
+    {title:'Stand-alone battery & services',rows:[
+      ...ADDON_KEYS.map(a=>[ADDON[a].label,(inst,r)=>r.cfg.addons[a].qty>0?(r.cfg.addons[a].qty+'x '+money(r.cfg.addons[a].price)):'—']),
+      ['Add-ons commission',(inst,r)=>r.addonComm!==0?money(r.addonComm):'—'],
+      ['Permit fee',(inst,r)=>r.cfg.permit>0?money(r.cfg.permit):'—'],
+      ['Permit over allowance',(inst,r)=>r.pOver>0?(money(r.pOver)+' \u26a0 allowance '+money(r.pAllow)):'—']
     ]},
     {title:'Results',rows:[
       ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
@@ -1074,6 +1149,10 @@ function genPDF(){
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
         pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
         pago_diferido:r.dpp>0?Math.round(r.dpp):null,
+        addons:ADDON_KEYS.filter(a=>r.cfg.addons[a].qty>0).map(a=>ADDON[a].label+' x'+r.cfg.addons[a].qty+' '+money(r.cfg.addons[a].price)).join(' + ')||null,
+        comision_addons:r.addonComm!==0?Math.round(r.addonComm):null,
+        permit_fee:r.cfg.permit>0?Math.round(r.cfg.permit):null,
+        permit_excedente:r.pOver>0?Math.round(r.pOver):null,
         rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
         battCapExceeded:r.battCapExceeded||false,
         solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
@@ -1686,7 +1765,7 @@ function renderClientPDF(p){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
