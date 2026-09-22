@@ -217,7 +217,13 @@ const LOGO_H=26,LOGO_W=Math.round(26*440/108);
 // field is typed by hand because it varies by partner group. Kept only as a written
 // record of the sheet; wiring it up would change every commission, so do that
 // deliberately or not at all. Skylight is not in the sheet.
-const REGIONS={SFL:{lightreach:2.00,enfin:2.00,pch:2.30,tesla:2.20,teslapw3:2.10,affordable:1.90},CFL:{lightreach:1.85,enfin:1.85,pch:2.20,tesla:2.10,teslapw3:2.00,affordable:1.80}};
+// Redlines — Adder Sheet 09192026. Skylight is now its own visible column (it used to be
+// the hidden second Enfin); LightReach and Participate each dropped $0.10/W in both regions.
+// NOTE: REGIONS is a reference table only. calc() reads the Redline $/W the rep types into
+// the card; nothing derives the redline automatically. It is surfaced as the field's
+// placeholder so the sheet value is visible without overriding what the rep enters.
+const REGIONS={SFL:{lightreach:1.90,enfin:2.00,skylight:2.25,pch:2.20,tesla:2.20,teslapw3:2.10,affordable:1.90},
+               CFL:{lightreach:1.80,enfin:1.85,skylight:2.15,pch:2.10,tesla:2.10,teslapw3:2.00,affordable:1.80}};
 // termMonths = contract length for the lease options. LightReach, Skylight and Enfin
 // run 25 years.
 //
@@ -231,10 +237,8 @@ const REGIONS={SFL:{lightreach:2.00,enfin:2.00,pch:2.30,tesla:2.20,teslapw3:2.10
 // front, which is why the savings simulation carries no upfront cost for it either.
 const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease',termMonths:300},
   {k:'skylight',n:'Skylight',t:'Lease',termMonths:300},
-  // The Adder Sheet 08262026 shows a second Enfin column (QPEAK DC (AC), CFL redline
-  // $2.00/W), but that column is HIDDEN in the sheet — it is retired, not in use. It
-  // was modelled here once and removed; do not add it back without checking that the
-  // column has actually been unhidden.
+  // Column D used to be a hidden second Enfin. In the Adder Sheet 09192026 it is
+  // unhidden and relabelled Skylight, with its own redline and Mission as its base panel.
   {k:'enfin',n:'Enfin',t:'Lease',termMonths:300},
   {k:'pch',n:'Participate & Credit Human',t:'Lease',termMonths:240,prepaid:true,noEscalator:true,prepayPct:30},
   {k:'tesla',n:'Tesla Program',t:'Purchase'},
@@ -289,7 +293,8 @@ const isBrightstart=id=>$('co-'+id)?.value==='Sungage Brightstart';
 let rateSel={};
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
-const PANEL_NAME={base:'Base',qtron:'Q.Tron BLK 430',mitrx:'MITRX M405-L3H',mission:'Mission MSX10-435',rec:'REC 460W AA'};
+// MITRX M405-L3H removed 2026-09-21: gone from the sheet and out of stock.
+const PANEL_NAME={base:'Base',qpeak:'Q.Peak DUO BLK 410',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 // Adder Sheet 08192026, "Stand Alone Battery" and "Additional Services" (rows 41-49 SFL,
@@ -301,6 +306,13 @@ const ADDON={
   span  :{label:'Span Panel',                 first:8000, addl:8000, cap:15000}   // $15,000 PER SPAN
 };
 const ADDON_KEYS=Object.keys(ADDON);
+// Solar Insure (SI-30 Total) — Adder Sheet 09192026 rows 49-50 / 101-102, under Additional
+// Services, quoted in the redline column: PV is $0.10/W of system; PV + EESS adds $0.12 per
+// Wh of battery on top. No cap in the sheet. It is a cost, so it comes straight off the
+// commission like the other passthroughs.
+const SOLAR_INSURE_W=0.10, SOLAR_INSURE_WH=0.12;
+// Nameplate Wh per battery, used only for the Solar Insure PV+EESS leg.
+const BATT_WH={pw3:13500,enphase:10000};
 // Permit fee allowance — Adder Sheet 08192026 rows 20 / 73. The Tesla columns carry a
 // $3,000 total allowance; every other column is "Up to $1,000 included". Anything above
 // the allowance is treated as a passthrough cost against the commission.
@@ -308,7 +320,7 @@ const permitAllowance=k=>(k==='tesla'||k==='teslapw3')?3000:1000;
 const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
 const LEASE_KEYS=['lightreach','skylight','enfin','pch']; // lease + pre-paid lease: Q.Peak base panel
-const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','si','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
 // instances: array of {id, k} — id is unique, k is the option key
@@ -324,34 +336,43 @@ const DEFAULT_CT=3.50;         // the Contract $/W a new card ships with
 const $=id=>document.getElementById(id);
 const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
-// Base panel. 2026-09-14: the supplier dropped the LONGi LR5-54HPB-405M, so CFL moved to the
-// Hyundai that SFL already used — one base panel for all of Florida on loan / cash / purchase.
-// Leases keep the Q.Peak. Pending: the Dealer Adder Sheet has not been reissued yet; re-check
-// panelRate() against it when Jorge sends the new one.
-function basePanelName(k){if(LEASE_KEYS.includes(k))return 'Q.Peak DUO BLK 410W';return 'Hyundai HIS-S400YH (BK)';}
+// Base panel — Adder Sheet 09192026 row 5 / 58. It is now per financing company, not one
+// panel for all leases: LightReach and Participate carry the REC, Skylight carries the
+// Mission, Enfin keeps the Q.Peak. Purchase stays on the Hyundai in both regions.
+// Participate: row 5 says REC while its adder rows still read like the old Q.Peak column —
+// Jorge confirmed 2026-09-21 that row 5 governs, so REC is the base and carries no adder.
+const BASE_PANEL={lightreach:'REC 460W AA PURE-RX',pch:'REC 460W AA PURE-RX',
+                  enfin:'Q.Peak DUO BLK ML-G10.C1+/AC 410W',skylight:'MISSION MSX10-435HN0B'};
+function basePanelName(k){return BASE_PANEL[k]||'Hyundai HIS-S400YH (BK)';}
+// Sheet redline for the current region, or null when the sheet has no column for it (Cash).
+function sheetRedline(k){const v=REGIONS[region]?.[k];return (v===undefined)?null:v.toFixed(2);}
+// Region switch has to refresh the hints on the cards already on screen.
+function refreshRedlineHints(){instances.forEach(({id,k})=>{const el=$('rl-'+id);
+  if(el)el.placeholder=sheetRedline(k)??'0.00';});}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
 function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
 // Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
 // sheet; it is treated like LightReach. Cash is treated like Affordable Solar (purchase).
-function panelRate(k,p){if(p==='base')return{r:0,ok:true};
-  const lease=LEASE_KEYS.includes(k), teslaK=(k==='tesla'||k==='teslapw3'), sfl=(region==='SFL');
-  if(p==='qtron'){if(!lease)return{r:0,ok:false};                       // NA on every purchase option
-    if(sfl)return{r:0.05,ok:true};
-    return{r:(k==='pch')?0.05:0.10,ok:true};}                           // CFL: LightReach/Skylight/Enfin 0.10, PCH 0.05
-  // MITRX M405-L3H — Adder Sheet 08192026 rows 11 / 64: "included" on every purchase
-  // column (no adder) and NA on lease and prepaid lease, in both regions.
-  if(p==='mitrx')return lease?{r:0,ok:false}:{r:0,ok:true};
-  if(p==='mission'){
-    if(sfl){if(lease)return{r:0,ok:false};return{r:teslaK?0.10:0.15,ok:true};}
-    return{r:0.20,ok:true};}                                            // CFL: 0.20 across the board
-  // REC 460W AA PURE-RX. Adder Sheet 08192026 rows 14 / 67: SFL 0.20 everywhere;
-  // CFL is 0.20 on the three purchase columns and NA on lease / prepaid lease.
-  // (Until 2026-09-15 the widget had CFL at 0.45 for the Tesla options and NA for
-  // Affordable/Cash — both wrong against the sheet.)
-  if(p==='rec'){
-    if(sfl)return{r:0.20,ok:true};
-    return lease?{r:0,ok:false}:{r:0.20,ok:true};}
-  return{r:0,ok:true};}
+// Panel adders — Adder Sheet 09192026 rows 9-13 (SFL) and 62-66 (CFL).
+// The base panel of each column is always $0: it is inside the redline.
+// PENDING: in CFL the Mission purchase adders sit on an orphan row (64) left behind when the
+// MITRX row was deleted; $0.20 is carried over from the 08/19 sheet and matches that row.
+// Jorge is reissuing the sheet — re-check this line against it.
+const PANEL_ADDER={
+  SFL:{qtron  :{lightreach:null,enfin:0.05,skylight:null,pch:0.05,tesla:null,teslapw3:null,affordable:null,cash:null},
+       mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.10,teslapw3:0.10,affordable:0.15,cash:0.15},
+       rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
+       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null}},
+  CFL:{qtron  :{lightreach:null,enfin:0.05,skylight:null,pch:0.05,tesla:null,teslapw3:null,affordable:null,cash:null},
+       mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
+       rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
+       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null}}};
+function panelRate(k,p){
+  if(p==='base')return{r:0,ok:true};
+  const row=PANEL_ADDER[region]?.[p];
+  if(!row)return{r:0,ok:true};
+  const v=row[k];
+  return (v===null||v===undefined)?{r:0,ok:false}:{r:v,ok:true};}
 function roofRate(k,s){if(s==='shingle')return 0;const incl=(k==='tesla'||k==='teslapw3');if(s==='tile')return incl?0:0.10;if(s==='flat')return incl?0:0.12;return 0;}
 // Mixed roof: the system is split in kW across shingle/tile/flat. The surface adder is
 // the sum of each surface's rate x its kW, so the flat/tile adder only applies to its share.
@@ -389,7 +410,7 @@ function detailFields(id){
   <div class="vlt-grid">
     <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qtron','Q.Tron BLK 430'],['mitrx','MITRX M405-L3H'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qpeak','Q.Peak DUO BLK 410'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
     <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
@@ -441,6 +462,14 @@ function detailFields(id){
     </div>
   </div>
   <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Solar Insure (SI-30 Total)</div>
+    <div class="vlt-grid">
+      <div class="vlt-fld"><label class="vlt-lbl">Coverage</label>${sel('si',[['none','None'],['pv','PV only'],['pveess','PV + EESS']],'none')}</div>
+      <div class="vlt-fld"><span class="vlt-lbl">Cost</span><span id="siCost-${id}" style="font-size:14px;font-weight:500">$0</span></div>
+    </div>
+    <div id="siNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
+  </div>
+  <div style="border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Non-solar adders</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
       <div class="vlt-row"><span style="font-size:12px">HVAC</span><input class="vlt-num" type="number" id="ns_hvac-${id}" value="0" step="50" min="0"></div>
@@ -469,7 +498,7 @@ function buildCard(inst){
       </span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
-      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="0.00"></div>
+      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="${sheetRedline(k)??'0.00'}" title="Adder Sheet 09192026 redline for this option and region. Shown as a hint only — type the value you are actually using."></div>
       <div><label class="vlt-lbl">Contract $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
       ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Finance Co.</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Rate %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
             +`<div id="rsWrap-${id}" style="grid-column:1/-1;display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:10px">
@@ -699,6 +728,7 @@ function readOptCfg(id){
     battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
     rebate:parseFloat(g('rebate')?.value)||0,
     permit:parseFloat(g('permit')?.value)||0,
+    si:g('si')?.value||'none',
     addons:Object.fromEntries(ADDON_KEYS.map(a=>[a,{
       qty:parseInt(g(a+'Qty')?.value)||0,
       price:parseFloat(g(a+'Price')?.value)||0,
@@ -766,7 +796,19 @@ function calc(){
     if($('permitAllow-'+id))$('permitAllow-'+id).textContent=money(pAllow);
     if($('permitOver-'+id)){const el=$('permitOver-'+id);el.textContent=money(pOver);
       el.style.color=pOver>0?'#fca5a5':'var(--color-text-primary)';}
-    const otrosFull=sz.fixed+gmFixed+cfg.noSolar+pOver;
+    // Solar Insure. PV = $0.10/W; PV + EESS adds $0.12 per Wh of battery nameplate.
+    let siCost=0,siTxt='';
+    if(cfg.si!=='none'){
+      const pvLeg=SOLAR_INSURE_W*W;
+      const wh=(BATT_WH[cfg.battType]||0)*cfg.battQty;
+      const whLeg=(cfg.si==='pveess')?SOLAR_INSURE_WH*wh:0;
+      siCost=pvLeg+whLeg;
+      siTxt=cfg.kw.toFixed(2)+' kW \u00d7 $'+SOLAR_INSURE_W.toFixed(2)+' = '+money(pvLeg)
+        +(cfg.si==='pveess'?('  +  '+wh.toLocaleString('en-US')+' Wh \u00d7 $'+SOLAR_INSURE_WH.toFixed(2)+' = '+money(whLeg)):'');
+    }
+    if($('siCost-'+id))$('siCost-'+id).textContent=money(siCost);
+    if($('siNote-'+id))$('siNote-'+id).textContent=siTxt;
+    const otrosFull=sz.fixed+gmFixed+cfg.noSolar+pOver+siCost;
     const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
     const comm=solarComm+battComm+addonComm;
     const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
@@ -806,7 +848,7 @@ function calc(){
     const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,addonComm,addonWarn,pAllow,pOver,battTxt,offTxt,notes,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
@@ -861,7 +903,8 @@ function renderCmp(res,bestId){
       ...ADDON_KEYS.map(a=>[ADDON[a].label,(inst,r)=>r.cfg.addons[a].qty>0?(r.cfg.addons[a].qty+'x '+money(r.cfg.addons[a].price)):'—']),
       ['Add-ons commission',(inst,r)=>r.addonComm!==0?money(r.addonComm):'—'],
       ['Permit fee',(inst,r)=>r.cfg.permit>0?money(r.cfg.permit):'—'],
-      ['Permit over allowance',(inst,r)=>r.pOver>0?(money(r.pOver)+' \u26a0 allowance '+money(r.pAllow)):'—']
+      ['Permit over allowance',(inst,r)=>r.pOver>0?(money(r.pOver)+' \u26a0 allowance '+money(r.pAllow)):'—'],
+      ['Solar Insure',(inst,r)=>r.siCost>0?({pv:'PV',pveess:'PV + EESS'}[r.cfg.si]+' — '+money(r.siCost)):'—']
     ]},
     {title:'Results',rows:[
       ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
@@ -1153,6 +1196,7 @@ function genPDF(){
         comision_addons:r.addonComm!==0?Math.round(r.addonComm):null,
         permit_fee:r.cfg.permit>0?Math.round(r.cfg.permit):null,
         permit_excedente:r.pOver>0?Math.round(r.pOver):null,
+        solar_insure:r.siCost>0?({pv:'PV',pveess:'PV + EESS'}[r.cfg.si]+' - '+money(r.siCost)):null,
         rebateCapExceeded:r.rebateCapExceeded||false,rebateCap:r.rebateCap||0,
         battCapExceeded:r.battCapExceeded||false,
         solarCapExceeded:r.solarCapExceeded||false,solarEffectiveWatt:r.solarEffectiveWatt||0,
@@ -1163,7 +1207,7 @@ function genPDF(){
 }
 
 // --- INIT ---
-function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));return true;}
+function setRegion(code){if(code==='NFL')code='CFL';if(code!=='SFL'&&code!=='CFL')return false;region=code;document.querySelectorAll('#regSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r===code));refreshRedlineHints();return true;}
 
 // Branch Lookup hands off through sessionStorage, which is PER TAB. That works when
 // the rep navigates here from the lookup, but the Aurora bookmarklet opens this page
@@ -1697,7 +1741,14 @@ function buildSavingsHandoff(instId){
   const util=$('projUtility')?.value||'';
   if(util) payload.utility=util;
   const prod=auroraNum('projAnnualProd');       if(prod!==null) payload.annualProd=String(prod);
-  const off=auroraNum('projOffset');            if(off!==null)  payload.offset=String(off);
+  // Offset: the Aurora block's nameplate figure is the precise one, but it is only filled
+  // when a design was loaded. Without that fallback the rep's own Offset (%) on the card —
+  // the normal path when there is no Aurora design — never reached the savings calculator
+  // and it silently fell back to its own 99.8% default.
+  const off=auroraNum('projOffset');
+  const cardOff=parseFloat($('offset-'+inst.id)?.value);
+  const offVal=(off!==null)?off:(isNaN(cardOff)?null:cardOff);
+  if(offVal!==null) payload.offset=String(offVal);
   const fPre=auroraNum('projFixedPre');         if(fPre!==null) payload.fixedMonthly=String(fPre);
   const fPost=auroraNum('projFixedPost');       if(fPost!==null)payload.postFixed=String(fPost);
   const grid=auroraNum('projGridUse');          if(grid!==null) payload.postGridUse=String(grid);
@@ -1765,7 +1816,7 @@ function renderClientPDF(p){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Solar Insure',o=>o.solar_insure],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
