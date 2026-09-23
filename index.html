@@ -3104,7 +3104,7 @@ function askClaude(raw, zip, rec, out, btn){
     renderCard({
       raw:raw, zip:zip, city:rec.city, county:rec.county,
       branch:rec.branch, pa:rec.pa,
-      ahj:rec.ahj, ahj_type:"municipal", source:"db-fallback",
+      ahj:rec.ahj, ahj_type:(/(County\s+(Building|Development|Permitting|Growth)|Permitting,\s*Licensing)/i.test(rec.ahj||"")?"county-unincorporated":"municipal"), source:"db-fallback",
       note:"ZIP "+zip+" is a mixed area - AI unavailable, verify AHJ manually"
     });
   }).finally(function(){
