@@ -772,9 +772,15 @@ function calc(){
     const adder23=(pr.r+rr+sz.rate+gmRate)*W+cfg.rebate;
     const adderCarve=adder23; // the full adder is subtracted from commission (no partial carve); Contract x W is already the all-in price
     const adderResidual=0;
-    let battPriceThis=0,battComm=0,battTxt='$0';
+    let battPriceThis=0,battComm=0,battTxt='$0',battNA=false;
     if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
-      if(cfg.battType==='pw3'&&d===null){battTxt='N/A';notes.push('Bateria PW3 N/A para esta opcion');}
+      // Adder Sheet: the Tesla Program column carries N/A for Powerwall 3 and for the battery
+      // cap — batteries on a Tesla project go through the Tesla Powerwall 3 option instead.
+      // The price typed here is then NOT charged and NOT paid: it drops out of both cash and
+      // commission. That used to be whispered in a note on the card while the comparison table
+      // kept printing "Battery price $36,000" as if it counted, so the quote looked fine and
+      // was silently missing the battery. battNA makes it loud everywhere.
+      if(cfg.battType==='pw3'&&d===null){battNA=true;battTxt='N/A';notes.push('Powerwall 3 N/A for '+o.n+' — quote the battery under Tesla Powerwall 3');}
       else{battPriceThis=cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
         if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
         else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
@@ -854,7 +860,7 @@ function calc(){
     const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
+    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battNA,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
@@ -901,8 +907,8 @@ function renderCmp(res,bestId){
     ]},
     {title:'Non-solar adders',rows:[['Non-solar adders',(inst,r)=>r.cfg.noSolar>0?money(r.cfg.noSolar):'—']]},
     {title:'Battery',rows:[
-      ['Battery',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty):'—'],
-      ['Battery price',(inst,r)=>r.cfg.battQty>0?money(r.cfg.battPrice):'—'],
+      ['Battery',(inst,r)=>r.cfg.battQty>0?(BATT_NAME[r.cfg.battType]+' x'+r.cfg.battQty+(r.battNA?' \u26a0 N/A for '+r.o.n:'')):'—'],
+      ['Battery price',(inst,r)=>r.cfg.battQty>0?(money(r.cfg.battPrice)+(r.battNA?' \u26a0 NOT charged \u2014 excluded from cash and commission':'')):'—'],
       ['Battery comm. (J28)',(inst,r)=>r.cfg.battQty>0?money(r.battComm):'—']
     ]},
     {title:'Stand-alone battery & services',rows:[
@@ -945,6 +951,8 @@ function renderCmp(res,bestId){
       sel.forEach(inst=>{const r=res[inst.id];let v=fn(inst,r);let st='';
         if(opt&&opt.bold){st='font-weight:600;';if(r.comm<0)st+='color:var(--color-text-danger);';else if(inst.id===bestId)st+='color:var(--color-text-info);';}
         // Battery price cap: red background if price per battery > $18,000 (Adder Sheet)
+        if((label==='Battery'||label==='Battery price')&&r.battNA)
+          st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';
         if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% of contract, 12x monthly payment)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
@@ -1272,7 +1280,7 @@ function genPDF(){
         // them inline. Older PDFs without the detail still import; the rep is warned instead.
         trenching:r.gmFixed>0?(money(r.gmFixed)+' (dirt '+c.dirt+' ft, hard '+c.hard+' ft, septic '+money(c.septic)+')'):null,
         sales_rebate:c.rebate>0?money(c.rebate):null,
-        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty):null,
+        bateria:c.battQty>0?(BATT_NAME[c.battType]+' x'+c.battQty+(r.battNA?' ! N/A for '+o.n+' - not charged':'')):null,
         com_bateria:c.battQty>0?Math.round(r.battComm):null,
         adders_no_solares:c.nsItems.join('; ')||null,
         redline:r.redline,contrato:r.contract,
