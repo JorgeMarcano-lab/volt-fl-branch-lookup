@@ -339,7 +339,7 @@ const permitAllowance=k=>(k==='tesla'||k==='teslapw3')?3000:1000;
 const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
 const LEASE_KEYS=['lightreach','skylight','enfin','pch']; // lease + pre-paid lease: Q.Peak base panel
-const FIELD_NAMES=['size','offset','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','si','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
+const FIELD_NAMES=['size','offset','prod','cons','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','si','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
 
 let region='SFL';
 // instances: array of {id, k} — id is unique, k is the option key
@@ -434,6 +434,11 @@ function detailFields(id){
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
     <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
   </div>
+  <div class="vlt-grid">
+    <div class="vlt-fld"><label class="vlt-lbl">Year 1 production (kWh)</label><input class="vlt-num" type="number" id="prod-${id}" step="1" min="0" placeholder="Aurora or manual"></div>
+    <div class="vlt-fld"><label class="vlt-lbl">Annual consumption (kWh)</label><input class="vlt-num" type="number" id="cons-${id}" step="1" min="0" placeholder="Aurora or manual"></div>
+  </div>
+  <div id="pcNote-${id}" style="font-size:11px;margin:-2px 0 8px;color:var(--color-text-secondary)"></div>
   <div id="mixWrap2-${id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:4px;padding-top:12px">
     <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px">Mixed roof — kW on each surface (Shingle $0/W · Tile $0.10/W · Flat $0.12/W). Should add up to the system size.</div>
     <div class="vlt-grid">
@@ -595,7 +600,37 @@ function applyAuroraProjectTo(id){
     const cur=parseFloat(oEl.value);
     if(oEl.value===''||isNaN(cur)||cur===0){ oEl.value=auroraProject.offsetPct;n++; }
   }
+  // Consumption is the house's, so it fits any card. Production belongs to one design
+  // and is only carried here for the primary design's own card count (see applyAuroraPayload).
+  const cEl=$('cons-'+id);
+  if(auroraProject.consumptionKwh!=null&&cEl&&emptyNum(cEl)){ cEl.value=auroraProject.consumptionKwh; n++; }
+  if(n) syncProdCons(id);
   return n;
+}
+
+// Year 1 production and annual consumption, per card. Production ÷ consumption IS the
+// offset, so the card's Offset (%) follows them while the rep has not typed one of his
+// own (dataset.auto marks a value this function wrote). A number the rep typed is never
+// overwritten — a disagreement of more than 1 point is shown under the fields instead.
+const OFFSET_MISMATCH_PP=1;
+function impliedOffset(id){
+  const p=parseFloat($('prod-'+id)?.value), c=parseFloat($('cons-'+id)?.value);
+  return (p>0&&c>0)?Math.round(p/c*10000)/100:null;
+}
+function syncProdCons(id){
+  const oEl=$('offset-'+id), note=$('pcNote-'+id); if(!oEl)return;
+  const imp=impliedOffset(id);
+  if(imp!==null&&(oEl.value===''||oEl.dataset.auto==='1')){ oEl.value=imp; oEl.dataset.auto='1'; }
+  if(!note)return;
+  if(imp===null){ note.textContent=''; return; }
+  const cur=parseFloat(oEl.value);
+  if(oEl.dataset.auto==='1'||(!isNaN(cur)&&Math.abs(cur-imp)<=OFFSET_MISMATCH_PP)){
+    note.textContent='Production ÷ consumption = '+imp.toFixed(2)+'% offset'+(oEl.dataset.auto==='1'?' (filled in Offset)':' ✓');
+    note.style.color=imp>115?'var(--color-text-danger)':'var(--color-text-secondary)';
+  } else {
+    note.textContent='! Production ÷ consumption = '+imp.toFixed(2)+'% but Offset says '+(isNaN(cur)?'—':cur+'%')+'. Clear Offset to use the calculated value.';
+    note.style.color='var(--color-text-danger)';
+  }
 }
 
 function addInst(k){
@@ -620,6 +655,8 @@ function duplicateInst(srcId,targetK){
   buildCard({id,k:targetK});
   FIELD_NAMES.forEach(n=>{const src=$(n+'-'+srcId),dst=$(n+'-'+id);if(src&&dst)dst.value=src.value;});
   if($('mixchk-'+srcId)&&$('mixchk-'+id))$('mixchk-'+id).checked=$('mixchk-'+srcId).checked;
+  if($('offset-'+srcId)&&$('offset-'+id))$('offset-'+id).dataset.auto=$('offset-'+srcId).dataset.auto||'';
+  syncProdCons(id);
   syncOptMount(id);syncOptBatt(id);fillBattRedline(id);
   // place the copy right after the card it came from
   const nc=$('card-'+id),sc=$('card-'+srcId);
@@ -742,7 +779,7 @@ function clearRsRate(id,notify){
 function readOptCfg(id){
   const g=n=>$(n+'-'+id);
   const kw=parseFloat(g('size')?.value)||0;
-  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',mix:readMix(id),
+  const cfg={kw,W:kw*1000,offset:g('offset')?.value||'',prodKwh:parseFloat(g('prod')?.value)||0,consKwh:parseFloat(g('cons')?.value)||0,panel:g('panel')?.value||'base',mount:g('mount')?.value||'rooftop',surface:g('surface')?.value||'shingle',mix:readMix(id),
     dirt:parseFloat(g('dirt')?.value)||0,hard:parseFloat(g('hard')?.value)||0,septic:parseFloat(g('septic')?.value)||0,
     battType:g('battType')?.value||'pw3',battQty:parseInt(g('battQty')?.value)||0,battPrice:parseFloat(g('battPrice')?.value)||0,
     rebate:parseFloat(g('rebate')?.value)||0,
@@ -893,6 +930,7 @@ function calc(){
   lastRes=res;lastBest=bestId;renderCmp(res,bestId);refreshCardOptSel();renderAuroraCheck();
 }
 
+function kwhTxt(v){return v>0?Math.round(v).toLocaleString('en-US')+' kWh':'—';}
 function renderCmp(res,bestId){
   const cmp=$('cmp');
   const sel=instances.filter(inst=>res[inst.id]);
@@ -906,6 +944,8 @@ function renderCmp(res,bestId){
       ['Type',(inst,r)=>optTypeLabel(r.o),{a:1}],
       ['System size (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
       ['Offset',(inst,r)=>r.offTxt],
+      ['Year 1 production (kWh)',(inst,r)=>kwhTxt(r.cfg.prodKwh)],
+      ['Annual consumption (kWh)',(inst,r)=>kwhTxt(r.cfg.consKwh)],
       ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
       ['Mount',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
       ['Surface',(inst,r)=>surfaceLabel(r.cfg)]
@@ -984,6 +1024,8 @@ function renderCmp(res,bestId){
 function onChange(e){const id=e.target.id||'';
   const parts=id.split('-');const suffix=parts.slice(1).join('-');
   if(parts[0]==='dup')return; // duplicate-target picker: no recalculation needed
+  if(parts[0]==='offset'){ e.target.dataset.auto=''; syncProdCons(suffix); }
+  if(parts[0]==='prod'||parts[0]==='cons') syncProdCons(suffix);
   if(parts[0]==='mixchk'){
     if(e.target.checked&&mixTotal(readMix(suffix))===0){
       const sf=$('surface-'+suffix)?.value||'shingle';const el=$('mkw_'+sf+'-'+suffix);
@@ -1157,6 +1199,13 @@ function parsePDFText(text, filename){
 
     // Offset
     const off=get('Offset',col); if(off&&$('offset-'+id)) $('offset-'+id).value=parseFloat(off)||'';
+    // Production and consumption — "25,153 kWh". Restored after Offset, so the Offset the
+    // PDF carries stays as printed and only the check under the fields is refreshed.
+    const kwhNum=t=>{const m=String(t||'').replace(/,/g,'').match(/[\d.]+/);return m?parseFloat(m[0]):null;};
+    const pK=kwhNum(get('Year 1 production (kWh)',col)), cK=kwhNum(get('Annual consumption (kWh)',col));
+    if(pK&&$('prod-'+id)) $('prod-'+id).value=pK;
+    if(cK&&$('cons-'+id)) $('cons-'+id).value=cK;
+    if((pK||cK)&&$('offset-'+id)){ $('offset-'+id).dataset.auto=''; syncProdCons(id); }
 
     // Panel
     const panelTxt=get('Panel',col);
@@ -1283,7 +1332,7 @@ function genPDF(){
     aurora_url:($('projAuroraUrl').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
-      return{opcion:o.n,tipo:optTypeLabel(o),tamano_kw:c.kw,offset:r.offTxt,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
+      return{opcion:o.n,tipo:optTypeLabel(o),tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
         superficie:c.mount==='ground'?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
@@ -1739,6 +1788,23 @@ function applyAuroraPayload(raw){
     if(dz.annualProductionKwh==null&&dz.yieldKwhPerKwp>0&&dz.systemKw>0)
       dz.annualProductionKwh=Math.round(dz.yieldKwhPerKwp*dz.systemKw);
 
+    // Year 1 production is the design's; annual consumption is the house's (project).
+    // Both only fill an empty field — a figure the rep typed is reported, not replaced.
+    const prEl=$('prod-'+id), csEl=$('cons-'+id), lbl=oDefName(k);
+    if(dz.annualProductionKwh!=null&&prEl){
+      const v=Math.round(dz.annualProductionKwh);
+      if(emptyNum(prEl)){ prEl.value=v; n++; }
+      else if(Math.abs(parseFloat(prEl.value)-v)>1)
+        notes.push(lbl+': Aurora production '+v.toLocaleString('en-US')+' kWh vs '+parseFloat(prEl.value).toLocaleString('en-US')+' on the card — left as is.');
+    }
+    if(p.annualConsumptionKwh!=null&&csEl){
+      const v=Math.round(p.annualConsumptionKwh);
+      if(emptyNum(csEl)){ csEl.value=v; n++; }
+      else if(Math.abs(parseFloat(csEl.value)-v)>1)
+        notes.push(lbl+': Aurora consumption '+v.toLocaleString('en-US')+' kWh vs '+parseFloat(csEl.value).toLocaleString('en-US')+' on the card — left as is.');
+    }
+    syncProdCons(id);
+
     // Post-solar figures stay filed per option so the Savings Calculator block can
     // follow whichever one the rep decides to simulate.
     auroraByOption[k]={
@@ -1753,8 +1819,13 @@ function applyAuroraPayload(raw){
   // simulation. It opens on the primary design and follows the option selector.
   if(primaryKey) fillAuroraBlockFrom(primaryKey);
   const pd=designs[pi]||designs[0];
-  if(pd&&(pd.systemKw!=null||pd.offsetPct!=null))
-    auroraProject={systemKw:pd.systemKw, offsetPct:pd.offsetPct};
+  if(pd&&(pd.systemKw!=null||pd.offsetPct!=null||p.annualConsumptionKwh!=null))
+    auroraProject={systemKw:pd?pd.systemKw:null, offsetPct:pd?pd.offsetPct:null,
+                   consumptionKwh:p.annualConsumptionKwh!=null?Math.round(p.annualConsumptionKwh):null};
+  else if(!pd&&p.annualConsumptionKwh!=null)
+    auroraProject={systemKw:null, offsetPct:null, consumptionKwh:Math.round(p.annualConsumptionKwh)};
+  // A paste with no design (consumption only) still reaches the cards already open.
+  if(!designs.length&&auroraProject) instances.forEach(x=>{ n+=applyAuroraProjectTo(x.id); });
   if(auroraProject&&!instances.length)
     notes.push('System size and offset are held — they fill in the moment you add a card.');
   if(designs.length>1)
@@ -1860,7 +1931,11 @@ function buildSavingsHandoff(instId){
   if(auUrl) payload.auroraUrl=auUrl;
   const util=$('projUtility')?.value||'';
   if(util) payload.utility=util;
-  const prod=auroraNum('projAnnualProd');       if(prod!==null) payload.annualProd=String(prod);
+  // Same fallback as Offset below: without an Aurora design, the card's own Year 1
+  // production is what the simulation should run on.
+  const prodA=auroraNum('projAnnualProd'), cardProd=parseFloat($('prod-'+inst.id)?.value);
+  const prod=(prodA!==null)?prodA:(cardProd>0?cardProd:null);
+  if(prod!==null) payload.annualProd=String(prod);
   // Offset: the Aurora block's nameplate figure is the precise one, but it is only filled
   // when a design was loaded. Without that fallback the rep's own Offset (%) on the card —
   // the normal path when there is no Aurora design — never reached the savings calculator
@@ -1932,7 +2007,7 @@ function renderClientPDF(p){
   const empt=v=>v===null||v===undefined||v===''||v==='—'||v==='N/A';
   const clean=s=>String(s).replace(/—/g,'-').replace(/×/g,'x');
   const blocks=[
-    ['Project',[['Type',o=>o.tipo,1],['System size (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Panel',o=>o.panel,1],['Mount',o=>o.montaje,1],['Surface',o=>o.superficie]]],
+    ['Project',[['Type',o=>o.tipo,1],['System size (kW)',o=>(''+o.tamano_kw),1],['Offset',o=>o.offset],['Year 1 production (kWh)',o=>o.produccion_kwh],['Annual consumption (kWh)',o=>o.consumo_kwh],['Panel',o=>o.panel,1],['Mount',o=>o.montaje,1],['Surface',o=>o.superficie]]],
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
