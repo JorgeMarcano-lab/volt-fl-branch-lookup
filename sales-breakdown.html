@@ -871,9 +871,14 @@ function calc(){
     if($('siCost-'+id))$('siCost-'+id).textContent=money(siCost);
     if($('siNote-'+id))$('siNote-'+id).textContent=siTxt;
     const otrosFull=sz.fixed+gmFixed+cfg.noSolar+pOver+siCost;
-    const solarComm=(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
+    // Battery only: no PV (size 0/empty) but a chargeable battery. There is no Contract x W to
+    // carry the battery, so the price IS the total and J27 must not absorb it. Leases keep
+    // their usual math (battery-only is not a lease product).
+    const battOnly=o.t!=='Lease'&&W===0&&cfg.battQty>0&&!battNA;
+    if(battOnly)notes.push('Battery only — no solar');
+    const solarComm=battOnly?-cfg.rebate:(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
     const comm=solarComm+battComm+addonComm;
-    const cash=contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
+    const cash=battOnly?battPriceThis+addonPriceTot+otrosFull:contract*W; // Contract/Lender x W = all-in TOTAL price; adders/battery only affect commission, not the price
     let financed=cash,df=0,term=0,tasa=0,dpp=0;
     if(financedOpt){df=parseFloat($('df-'+id)?.value)||0;if(df>0&&df<100)financed=cash/(1-df/100);if($('fin-'+id))$('fin-'+id).textContent=money(financed);term=parseFloat($('term-'+id)?.value)||0;tasa=parseFloat($('tasa-'+id)?.value)||0;
       // A rate-sheet selection keeps the payment fields live against the current Cash + DF.
@@ -910,7 +915,7 @@ function calc(){
     const rebateCap=pago>0?pago*12:Infinity;
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
-    res[id]={inst,o,cfg,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battNA,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
+    res[id]={inst,o,cfg,battOnly,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battNA,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
       rebateCapExceeded,rebateCap,
@@ -922,7 +927,7 @@ function calc(){
     updateMixNote(id);
     const card=$('card-'+id);
     $('comm-'+id).textContent=money(r.comm);
-    $('cbrk-'+id).textContent='solar '+money(r.solarComm)+' + bat. '+money(r.battComm);
+    $('cbrk-'+id).textContent=r.battOnly?('Battery only · bat. '+money(r.battComm)):('solar '+money(r.solarComm)+' + bat. '+money(r.battComm));
     $('note-'+id).textContent=r.notes.join(' · ');
     card.style.border=(id===bestId)?'2px solid var(--color-border-info)':'0.5px solid var(--color-border-tertiary)';
     $('comm-'+id).style.color=(id===bestId)?'var(--color-text-info)':(r.comm<0?'var(--color-text-danger)':'var(--color-text-primary)');
@@ -941,14 +946,14 @@ function renderCmp(res,bestId){
   const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
     {title:'Project',rows:[
-      ['Type',(inst,r)=>optTypeLabel(r.o),{a:1}],
+      ['Type',(inst,r)=>r.battOnly?'Battery only':optTypeLabel(r.o),{a:1}],
       ['System size (kW)',(inst,r)=>r.cfg.kw.toFixed(2),{a:1}],
       ['Offset',(inst,r)=>r.offTxt],
       ['Year 1 production (kWh)',(inst,r)=>kwhTxt(r.cfg.prodKwh)],
       ['Annual consumption (kWh)',(inst,r)=>kwhTxt(r.cfg.consKwh)],
-      ['Panel',(inst,r)=>panelDisplay(inst.k,r.cfg.panel),{a:1}],
-      ['Mount',(inst,r)=>MOUNT_NAME[r.cfg.mount],{a:1}],
-      ['Surface',(inst,r)=>surfaceLabel(r.cfg)]
+      ['Panel',(inst,r)=>r.battOnly?'—':panelDisplay(inst.k,r.cfg.panel),{a:1}],
+      ['Mount',(inst,r)=>r.battOnly?'—':MOUNT_NAME[r.cfg.mount],{a:1}],
+      ['Surface',(inst,r)=>r.battOnly?'—':surfaceLabel(r.cfg)]
     ]},
     {title:'Solar adders',rows:[
       ['Adder de tamano (auto)',(inst,r)=>sizeCell(r)],
@@ -972,8 +977,8 @@ function renderCmp(res,bestId){
       ['Solar Insure',(inst,r)=>r.siCost>0?({pv:'PV',pveess:'PV + EESS'}[r.cfg.si]+' — '+money(r.siCost)):'—']
     ]},
     {title:'Results',rows:[
-      ['Redline $/W',(inst,r)=>'$'+r.redline.toFixed(2),{a:1}],
-      ['Contract $/W',(inst,r)=>'$'+r.contract.toFixed(2),{a:1}],
+      ['Redline $/W',(inst,r)=>r.battOnly?'—':'$'+r.redline.toFixed(2),{a:1}],
+      ['Contract $/W',(inst,r)=>r.battOnly?'—':'$'+r.contract.toFixed(2),{a:1}],
       ['Solar commission (J27)',(inst,r)=>money(r.solarComm),{a:1}],
       ['Total commission',(inst,r)=>money(r.comm),{a:1,bold:1}],
       ['TOTAL / Cash',(inst,r)=>money(r.cash),{a:1}],
@@ -1332,8 +1337,8 @@ function genPDF(){
     aurora_url:($('projAuroraUrl').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
-      return{opcion:o.n,tipo:optTypeLabel(o),tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:panelDisplay(k,c.panel),montaje:MOUNT_NAME[c.mount],
-        superficie:c.mount==='ground'?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
+      return{opcion:o.n,tipo:r.battOnly?'Battery only':optTypeLabel(o),battery_only:!!r.battOnly,tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:r.battOnly?'N/A':panelDisplay(k,c.panel),montaje:r.battOnly?'N/A':MOUNT_NAME[c.mount],
+        superficie:(r.battOnly||c.mount==='ground')?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
         adder_superficie:r.roofAmt>0?roofAdderLabel(r):null,
@@ -2011,7 +2016,7 @@ function renderClientPDF(p){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Solar Insure',o=>o.solar_insure],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>o.battery_only?null:'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>o.battery_only?null:'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Solar Insure',o=>o.solar_insure],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   blocks.forEach(bk=>{const rows=bk[1].filter(row=>row[2]?true:ops.some(o=>!empt(row[1](o))));
