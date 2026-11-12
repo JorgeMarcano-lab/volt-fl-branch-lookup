@@ -336,7 +336,7 @@ const BATT_WH={pw3:13500,enphase:10000};
 // $3,000 total allowance; every other column is "Up to $1,000 included". Anything above
 // the allowance is treated as a passthrough cost against the commission.
 const permitAllowance=k=>(k==='tesla'||k==='teslapw3')?3000:1000;
-const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY; the total battery price field is compared against CAP x Quantity
+const BATT_PRICE_CAP=18000; // Adder Sheet 08262026 — $18,000 PER BATTERY, PW3 Expansion units included (Jorge 2026-11-11); compared against CAP x (Quantity + Expansion qty)
 const SOLAR_PRICE_CAP=3.50; // Adder Sheet 08262026 — $3.50/W max solar price (excluding adders, battery and DF)
 const LEASE_KEYS=['lightreach','skylight','enfin','pch']; // lease + pre-paid lease: Q.Peak base panel
 const FIELD_NAMES=['size','offset','prod','cons','panel','mount','surface','mkw_shingle','mkw_tile','mkw_flat','dirt','hard','septic','battType','battQty','battPrice','rebate','permit','si','expQty','expPrice','expR1','expRA','enph5pQty','enph5pPrice','enph5pR1','enph5pRA','spanQty','spanPrice','spanR1','spanRA','ns_hvac','ns_fence','ns_gutters','ns_water','ns_doors','ns_roof','ns_otherval','ns_otherlbl'];
@@ -918,7 +918,7 @@ function calc(){
 
     res[id]={inst,o,cfg,battOnly,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battNA,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
       lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
-      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*cfg.battQty),
+      battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*((+cfg.battQty||0)+(+(cfg.addons&&cfg.addons.exp&&cfg.addons.exp.qty)||0))),
       rebateCapExceeded,rebateCap,
       solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
       solarEffectiveWatt:W>0?((cash-adder23-otrosFull-battPriceThis)/W):0};
@@ -1012,7 +1012,7 @@ function renderCmp(res,bestId){
         // Battery price cap: red background if price per battery > $18,000 (Adder Sheet)
         if((label==='Battery'||label==='Battery price')&&r.battNA)
           st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';
-        if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-r.cfg.battQty*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(r.cfg.battQty*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
+        if(label==='Battery price'&&r.battCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';const battExcess=r.cfg.battPrice-((+r.cfg.battQty||0)+(+(r.cfg.addons&&r.cfg.addons.exp&&r.cfg.addons.exp.qty)||0))*BATT_PRICE_CAP;v=v+' ⚠ cap '+money(((+r.cfg.battQty||0)+(+(r.cfg.addons&&r.cfg.addons.exp&&r.cfg.addons.exp.qty)||0))*BATT_PRICE_CAP)+' (+'+money(battExcess)+')';}
         // Sales Rebate cap: MIN(25% of contract, 12x monthly payment)
         if(label==='Sales rebate (SR)'&&r.rebateCapExceeded){st='background:rgba(248,113,113,0.12);color:#fca5a5;font-weight:600;';v=v+' ⚠ cap '+money(r.rebateCap)+' (+'+money(r.cfg.rebate-r.rebateCap)+')';}
         // Mixed roof: kW split does not add up to the system size
@@ -2029,7 +2029,7 @@ function renderClientPDF(p){
         else if(row[0]==='Solar commission (J27)'&&o.comision_solar<0)c.styles.textColor=[192,57,43];
         // Cap warnings: detailed text + red in PDF
         if(row[0]==='Sales rebate (SR)'&&o.rebateCapExceeded){c.content=clean(v)+' ! cap '+clean(money(o.rebateCap))+' (+'+clean(money(o.cfg.rebate-o.rebateCap))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
-        if(row[0]==='Battery price'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-o.cfg.battQty*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(o.cfg.battQty*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
+        if(row[0]==='Battery price'&&o.battCapExceeded&&o.cfg){const bex=o.cfg.battPrice-((+o.cfg.battQty||0)+(+(o.cfg.addons&&o.cfg.addons.exp&&o.cfg.addons.exp.qty)||0))*BATT_PRICE_CAP;c.content=clean(v)+' ! cap '+clean(money(((+o.cfg.battQty||0)+(+(o.cfg.addons&&o.cfg.addons.exp&&o.cfg.addons.exp.qty)||0))*BATT_PRICE_CAP))+' (+'+clean(money(bex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         if(row[0]==='Contract $/W (Lender)'&&o.solarCapExceeded){const sex=(o.solarEffectiveWatt-SOLAR_PRICE_CAP)*o.cfg.W;c.content=clean(v)+' ! cap $'+SOLAR_PRICE_CAP.toFixed(2)+'/W (+'+clean(money(sex))+')';c.styles.fillColor=[253,236,234];c.styles.textColor=[192,57,43];c.styles.fontStyle='bold';}
         cells.push(c);});
       body.push(cells);});
