@@ -873,8 +873,9 @@ function calc(){
     const otrosFull=sz.fixed+gmFixed+cfg.noSolar+pOver+siCost;
     // Battery only: no PV (size 0/empty) but a chargeable battery. There is no Contract x W to
     // carry the battery, so the price IS the total and J27 must not absorb it. Leases keep
-    // their usual math (battery-only is not a lease product).
-    const battOnly=o.t!=='Lease'&&W===0&&cfg.battQty>0&&!battNA;
+    // their usual math (battery-only is not a lease product) — except LightReach, which
+    // sells a battery-only equipment lease (Lease-Storage / Energy Backup).
+    const battOnly=(o.t!=='Lease'||k==='lightreach')&&W===0&&cfg.battQty>0&&!battNA;
     if(battOnly)notes.push('Battery only — no solar');
     const solarComm=battOnly?-cfg.rebate:(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
     const comm=solarComm+battComm+addonComm;
