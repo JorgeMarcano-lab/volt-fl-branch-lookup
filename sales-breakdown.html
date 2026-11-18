@@ -314,7 +314,21 @@ let rateSel={};
 const BATT_PW3={lightreach:[13500,9500],skylight:[13500,9500],enfin:[13500,9500],pch:[13500,9500],tesla:null,teslapw3:[11000,9000],affordable:[13500,9500],cash:[13500,9500]};
 const BATT_NAME={pw3:'Powerwall 3',enphase:'Enphase IQ 10C'};
 // MITRX M405-L3H removed 2026-09-21: gone from the sheet and out of stock.
-const PANEL_NAME={base:'Base',qpeak:'Q.Peak DUO BLK 410',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA'};
+const PANEL_NAME={base:'Base',qpeak:'Q.Peak DUO BLK 410',qtron:'Q.Tron BLK 430',mission:'Mission MSX10-435',rec:'REC 460W AA',
+  silfab:'Silfab SIL 440 QD DCB4 + Tesla Inverter',sirius:'Sirius ELNSM54M-HC-415 + Enphase IQ9N'};
+// Black Friday LightReach promo (Volt Dealer Support, 2026-11-17): contracts SIGNED 11/17-11/30.
+// Only LightReach, only these two combos; both are Domestic Content for 2027. NOT valid with the
+// $550 Amazon Gift Card or a Volt-paid referral -> regular redline. Eminded gets the SAME redline
+// (no extra -$0.05/W). Like REGIONS, this only drives the Redline placeholder + card note; the rep
+// still types the redline. Silfab/Sirius are LightReach-only, $0 panel adder (Jorge, 2026-11-17).
+const PROMO_BF={from:'2026-11-17',to:'2026-11-30',k:'lightreach',
+  redline:{silfab:{SFL:1.75,CFL:1.65},sirius:{SFL:1.80,CFL:1.70}}};
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function promoActive(){const t=todayISO();return t>=PROMO_BF.from&&t<=PROMO_BF.to;}
+function promoRedline(k,p){if(k!==PROMO_BF.k||!promoActive())return null;const v=PROMO_BF.redline[p]?.[region];return v===undefined?null:v;}
+// Tesla inverter count for the Silfab + Tesla combo: design (Aurora) vs HIA use different breaks.
+function teslaInvDesign(W){return W>10560?2:1;}
+function teslaInvHIA(W){return W>=15000?2:1;}
 const MOUNT_NAME={rooftop:'Rooftop',ground:'Ground Mount'};
 const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 // Adder Sheet 08192026, "Stand Alone Battery" and "Additional Services" (rows 41-49 SFL,
@@ -365,10 +379,11 @@ const BASE_PANEL={lightreach:'REC 460W AA PURE-RX',pch:'REC 460W AA PURE-RX',
                   enfin:'Q.Peak DUO BLK ML-G10.C1+/AC 410W',skylight:'MISSION MSX10-435HN0B'};
 function basePanelName(k){return BASE_PANEL[k]||'Hyundai HIS-S400YH (BK)';}
 // Sheet redline for the current region, or null when the sheet has no column for it (Cash).
-function sheetRedline(k){const v=REGIONS[region]?.[k];return (v===undefined)?null:v.toFixed(2);}
+function sheetRedline(k,p){const pr=promoRedline(k,p);if(pr!==null)return pr.toFixed(2);
+  const v=REGIONS[region]?.[k];return (v===undefined)?null:v.toFixed(2);}
 // Region switch has to refresh the hints on the cards already on screen.
 function refreshRedlineHints(){instances.forEach(({id,k})=>{const el=$('rl-'+id);
-  if(el)el.placeholder=sheetRedline(k)??'0.00';});}
+  if(el)el.placeholder=sheetRedline(k,$('panel-'+id)?.value)??'0.00';});}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
 function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
 // Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
@@ -382,11 +397,15 @@ const PANEL_ADDER={
   SFL:{qtron  :{lightreach:null,enfin:0.05,skylight:null,pch:0.05,tesla:null,teslapw3:null,affordable:null,cash:null},
        mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.10,teslapw3:0.10,affordable:0.15,cash:0.15},
        rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
-       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null}},
+       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
+       silfab :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null},
+       sirius :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null}},
   CFL:{qtron  :{lightreach:null,enfin:0.05,skylight:null,pch:0.05,tesla:null,teslapw3:null,affordable:null,cash:null},
        mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
        rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
-       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null}}};
+       qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
+       silfab :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null},
+       sirius :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null}}};
 function panelRate(k,p){
   if(p==='base')return{r:0,ok:true};
   const row=PANEL_ADDER[region]?.[p];
@@ -430,7 +449,7 @@ function detailFields(id){
   <div class="vlt-grid">
     <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qpeak','Q.Peak DUO BLK 410'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qpeak','Q.Peak DUO BLK 410'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA'],['silfab','Silfab 440 + Tesla (LightReach)'],['sirius','Sirius 415 + IQ9N (LightReach)']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
     <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
@@ -813,6 +832,13 @@ function calc(){
     const redline=parseFloat($('rl-'+id)?.value)||0;
     const contract=parseFloat($('ct-'+id)?.value)||0;
     const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A for this option');
+    {const rlEl=$('rl-'+id);if(rlEl)rlEl.placeholder=sheetRedline(k,cfg.panel)??'0.00';}
+    if(k===PROMO_BF.k&&(cfg.panel==='silfab'||cfg.panel==='sirius')){
+      const pv=promoRedline(k,cfg.panel);
+      if(pv!==null)notes.push('Black Friday LightReach: redline $'+pv.toFixed(2)+'/W '+region+' (signed 11/17-11/30, Domestic Content 2027; also Eminded, no extra -$0.05). NOT valid with $550 Amazon Gift Card or Volt-paid referral -> regular redline. Adders charged separately');
+      else notes.push('Black Friday promo not active today (11/17-11/30) — use the regular Adder Sheet redline');
+      if(cfg.panel==='silfab'&&W>0)notes.push('Tesla inverters: design '+teslaInvDesign(W)+' (≤10.56 kW → 1) · HIA '+teslaInvHIA(W)+' (≥15 kW → 2)');
+    }
     let roofAmt0=0;
     if(cfg.mount==='rooftop')roofAmt0=cfg.mix.on?mixRoofAmt(k,cfg.mix):roofRate(k,cfg.surface)*W;
     const rr=W>0?roofAmt0/W:0; // blended $/W so the flat/tile adder only covers its share of the array
