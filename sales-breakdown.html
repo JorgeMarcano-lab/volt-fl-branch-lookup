@@ -228,7 +228,9 @@ const REGIONS={SFL:{lightreach:1.90,enfin:2.00,skylight:2.25,pch:2.20,tesla:2.20
 // termMonths = contract length for the lease options. LightReach, Skylight and Enfin
 // run 25 years.
 //
-// Participate & Credit Human is the PREPAID LEASE program, and the 30% is neither a
+// Participate is the PREPAID LEASE program. Since 2026-11-21 one card covers BOTH lenders
+// behind it (selector "Lender"): Credit Human, and Sungage (Participate Prepaid TPO).
+// Credit Human — the 30% is neither a
 // down payment nor a discount — it is a split of WHO PAYS VOLT:
 //   · Participate prepays 30% of the contract directly to Volt
 //   · Credit Human finances the remaining 70%, which is what the customer repays
@@ -241,12 +243,16 @@ const OPTIONS=[{k:'lightreach',n:'LightReach',t:'Lease',termMonths:300},
   // Column D used to be a hidden second Enfin. In the Adder Sheet 09192026 it is
   // unhidden and relabelled Skylight, with its own redline and Mission as its base panel.
   {k:'enfin',n:'Enfin',t:'Lease',termMonths:300},
-  {k:'pch',n:'Participate & Credit Human',t:'Lease',termMonths:240,prepaid:true,noEscalator:true,prepayPct:30},
+  // Key stays 'pch' so older PDFs (header "Participate & Credit Human") still load into it.
+  {k:'pch',n:'Participate',t:'Lease',termMonths:240,prepaid:true,noEscalator:true,prepayPct:30,
+   aliases:['Participate & Credit Human','Participate & Sungage']},
   {k:'tesla',n:'Tesla Program',t:'Purchase'},
   {k:'teslapw3',n:'Tesla Powerwall 3',t:'Purchase'},
   {k:'affordable',n:'Affordable Solar',t:'Purchase'},
   {k:'cash',n:'Cash',t:'Cash'}];
 const optDef=k=>OPTIONS.find(o=>o.k===k)||{};
+// Exact-name lookup that also accepts an option's aliases (PDF headers carry the lender).
+const optByName=n=>OPTIONS.find(o=>o.n===n||(o.aliases||[]).includes(n))||null;
 // The badge on the card and in the table: a prepaid lease is not the same product.
 const optTypeLabel=o=>o.prepaid?'Prepaid Lease':o.t;
 const FINCO=['Ygrene','Climate First Bank','Sungage Sunrise (2.9% annual escalator)','Sungage Brightstart','Sungage Level Pay','Concert','Almika'];
@@ -307,6 +313,118 @@ const noteAmount=financed=>financed*(1+FL_DOC_STAMP);
 // against the Sungage calculator: 62,484.25 x 0.25 = 15,621.06.
 const DPP_SHARE=0.25;
 const isBrightstart=id=>$('co-'+id)?.value==='Sungage Brightstart';
+// ===================== PARTICIPATE + SUNGAGE (Prepaid TPO) =====================
+// Source: Participate Energy Raceway portal -> Tools -> Sungage Loan Calculator, FL rate card
+// pulled live on 2026-11-21 ("Sungage Prepaid TPO rate card"). NOT the Rack Rate sheets above:
+// the Sellers Points are different (e.g. LevelPay 25y 7.99%: 17.99% here vs 13.99% rack), and
+// the products/rates on offer are fewer. Row = [rate%, sellersPoints%, factor1, factor2]
+//   LevelPay    factor1 = level payment
+//   BrightStart factor1 = months 1-36, factor2 = month 37+ if the 25% DPP is not repaid
+//   Sunrise     factor1 = year-1 payment, then +2.9%/yr
+// Factors were back-solved from Sungage's own quotes on a ~$145k note (8 decimals) and
+// reproduce all 44 FL quotes at $40,635 EPC to within $0.01 — Sungage rounds internally, so
+// a cent of drift is expected. Most match the BS-LP/Sunrise sheets; 7.49% has no sheet row and
+// BrightStart 25y MAX at 9.99%/10.49% differs from the rack sheet, hence a separate table.
+//
+// Pricing (reproduced exactly from the calculator's pricing response):
+//   Volt's price (EPC) = Contract $/W x W = cash, which Volt receives in full:
+//     Adjusted EPC   = EPC / (1 - HO share x Sellers Points)      (points grossed up)
+//     PE discount    = PE share x Adjusted EPC   -> Participate pays Volt (2/3 IC, 1/3 PC)
+//     Loan amount    = HO share x Adjusted EPC   -> Sungage pays Volt this less the points
+//     Note (FL)      = Loan x 1.0035 doc stamp   -> payment = note x factor
+//   HO share = 1 - PE share. PE share comes from the lease factor: 25% with no Domestic
+//   Content / Energy Community, 30% with EC or partial DC, 35% with full DC. At 35% the extra
+//   5% DC bonus goes to the customer (discount 35%) or to the installer (customer discount
+//   stays 30% and PE pays Volt +5% of Adjusted EPC on top of the EPC).
+//   Insurance Option 3 (PE coverage, installer signs the Insurance Rider): the EPC is grossed
+//   up 2.5% before the points, and 2.5% of the EPC (Risk-Based Pool) comes off the Inspection
+//   Complete payment — so Volt still nets the EPC, the customer's loan/payment goes up.
+//
+// VOLT DEFAULTS (Jorge, 2026-11-21): Volt works with Domestic Content -> customer discount
+// 30% + DC bonus 5% to Volt (PE share 35%), and Insurance Option 3. The DC bonus is Volt's,
+// it is NOT added to the rep's commission.
+const PTPO_TERMS={
+  LevelPay:{
+    5:[[7.99,11.49,0.02040656,0]],
+    10:[[7.99,13.99,0.01220822,0]],
+    15:[[7.99,15.74,0.00961437,0]],
+    20:[[10.49,0,0.01006431,0],[9.99,2.99,0.00972389,0],[9.74,4.99,0.00955551,0],[9.49,6.99,0.00938844,0],[8.99,9.99,0.00905822,0],[8.49,13.99,0.00873329,0],[7.99,16.99,0.00841385,0],[7.49,19.49,0.00810006,0],[6.99,21.99,0.0077921,0],[5.99,26.99,0.00719426,0],[4.99,31.99,0.00662144,0]],
+    25:[[10.49,0,0.00951712,0],[9.99,2.99,0.00915553,0],[9.74,4.99,0.00897664,0],[9.49,6.99,0.00879906,0],[8.99,9.99,0.00844794,0],[8.49,14.99,0.00810246,0],[7.99,17.99,0.00776289,0],[7.49,20.49,0.00742951,0],[6.99,22.99,0.00710251,0],[5.99,28.74,0.00646903,0],[4.99,34.49,0.00586436,0]],
+  },
+  BrightStart:{
+    5:[[4.99,18.74,0.01486607,0.02541565]],
+    10:[[5.99,21.24,0.00882183,0.01243822]],
+    15:[[6.99,19.99,0.00720244,0.00976072]],
+    20:[[6.99,21.99,0.00621163,0.00830403]],
+    25:[[10.49,0,0.00777789,0.01020506],[9.99,2.99,0.00745727,0.0097988],[9.74,4.99,0.00729914,0.00959819],[9.49,6.99,0.00714244,0.00939937],[8.99,9.99,0.00683359,0.00900722],[8.49,14.99,0.00653086,0.00862257],[7.99,17.99,0.00623459,0.00824562],[7.49,20.49,0.00594484,0.0078767],[6.99,22.99,0.0056619,0.00751603],[5.99,28.74,0.0051172,0.00682028],[4.99,34.49,0.00460168,0.00616029]],
+  },
+  Sunrise:{
+    20:[[5.99,27.49,0.00572176,0],[4.99,33.49,0.00521821,0]],
+    25:[[5.99,29.49,0.0049038,0],[4.99,35.49,0.00438341,0]],
+  },
+};
+const PTPO_DEFAULT_RATE={LevelPay:{5:7.99,10:7.99,15:7.99,20:7.99,25:7.99},BrightStart:{5:4.99,10:5.99,15:6.99,20:6.99,25:6.99},Sunrise:{20:4.99,25:4.99}};
+const PTPO_PRODUCTS=['LevelPay','BrightStart','Sunrise'];
+const PTPO_ASOF='2026-11-21';
+const PTPO_DC_BONUS=5;
+const PTPO_INS_RATE=0.025;
+const PTPO_DEFAULT_DISC=30;
+const PCH_LENDERS=['Credit Human','Sungage'];
+const pchLender=id=>$('plend-'+id)?.value||'Credit Human';
+const pchSungage=id=>pchLender(id)==='Sungage';
+const optLabel=(o,id)=>o.k==='pch'?('Participate & '+pchLender(id)):o.n;
+const psgManual={};   // id -> true once the rep types a payment by hand
+function ptpoRow(id){
+  const p=$('psgP-'+id)?.value, y=parseInt($('psgT-'+id)?.value)||0, r=parseFloat($('psgR-'+id)?.value);
+  const row=((PTPO_TERMS[p]||{})[y]||[]).find(x=>x[0]===r);
+  return row?{p,y,row}:null;
+}
+// cash = EPC. discPct = Participate % on the card = the CUSTOMER's discount (25/30/35).
+// bonusToVolt adds the 5% DC bonus PE pays Volt (PE share = discount + 5). ins = Option 3.
+function ptpoPrice(cash,discPct,bonusToVolt,ins,sel){
+  const r2=x=>Math.round(x*100)/100;
+  const pts=sel.row[1]/100;
+  const disc=discPct/100, pe=disc+(bonusToVolt?PTPO_DC_BONUS/100:0);
+  const ho=1-disc, adjRaw=cash*(ins?1+PTPO_INS_RATE:1)/(1-ho*pts);
+  const insAmt=ins?r2(cash*PTPO_INS_RATE):0;
+  const adj=r2(adjRaw), loan=r2(ho*adjRaw), discAmt=r2(disc*adjRaw), bonus=r2((pe-disc)*adjRaw);
+  const noteRaw=loan*(1+FL_DOC_STAMP);
+  const bs=sel.p==='BrightStart';
+  return {adj,loan,disc:discAmt,bonus,ins:insAmt,peShare:pe*100,discPct:disc*100,hoPct:ho*100,points:r2(loan*pts),sungagePays:r2(loan-loan*pts),
+    note:r2(noteRaw),pay1:r2(noteRaw*sel.row[2]),pay2:bs?r2(noteRaw*sel.row[3]):0,dpp:bs?r2(noteRaw*DPP_SHARE):0,
+    prod:sel.p,years:sel.y,rate:sel.row[0],ptsPct:sel.row[1]};
+}
+const ptpoDesc=(s,id)=>'Sungage '+s.prod+' '+s.years+' yr '+s.rate.toFixed(2)+'% (pts '+s.ptsPct.toFixed(2)+'%)'+(s.prod==='Sunrise'?' +2.9%/yr':'')
+  +(s.bonus>0?' · DC bonus to Volt':'')+(s.ins>0?' · Insurance Opt. 3':'');
+function pchFillTerms(id){
+  const p=$('psgP-'+id)?.value, ts=$('psgT-'+id); if(!ts)return;
+  const prev=ts.value, ys=Object.keys(PTPO_TERMS[p]||{}).map(Number).sort((a,b)=>b-a);
+  ts.innerHTML=ys.map(y=>`<option value="${y}">${y} years</option>`).join('');
+  ts.value=ys.includes(+prev)?prev:String(ys.includes(25)?25:ys[0]);
+  pchFillRates(id);
+}
+function pchFillRates(id){
+  const p=$('psgP-'+id)?.value, y=parseInt($('psgT-'+id)?.value)||0, rs=$('psgR-'+id); if(!rs)return;
+  const prev=parseFloat(rs.value), rows=(PTPO_TERMS[p]||{})[y]||[], def=(PTPO_DEFAULT_RATE[p]||{})[y];
+  rs.innerHTML=rows.map(r=>`<option value="${r[0]}">${r[0].toFixed(2)}%${r[0]===def?' (default)':''} · pts ${r[1].toFixed(2)}%</option>`).join('');
+  const pick=rows.some(r=>r[0]===prev)?prev:(def!=null?def:rows[0]&&rows[0][0]);
+  if(pick!=null)rs.value=String(pick);
+}
+// Lender switch: shows the Sungage pickers, swaps the default Participate % and labels.
+function pchSyncLender(id,fromUser){
+  if(!$('plend-'+id))return;
+  const sg=pchSungage(id);
+  if($('sgw-'+id))$('sgw-'+id).style.display=sg?'block':'none';
+  if($('ltw-'+id))$('ltw-'+id).style.display=sg?'none':'block';
+  if($('pp2w-'+id))$('pp2w-'+id).style.display='none';
+  if($('pdpw-'+id))$('pdpw-'+id).style.display='none';
+  if(fromUser&&$('prepay-'+id))$('prepay-'+id).value=sg?PTPO_DEFAULT_DISC:(optDef('pch').prepayPct||30);
+  if($('cfal-'+id))$('cfal-'+id).textContent=pchLender(id)+' finances';
+  if($('p1l-'+id))$('p1l-'+id).textContent=sg?'Monthly payment (ref.)':'Fixed monthly payment (ref.)';
+  if($('ttl-'+id))$('ttl-'+id).textContent=optLabel(optDef('pch'),id);
+  if(sg&&$('psgT-'+id)&&!$('psgT-'+id).options.length)pchFillTerms(id);
+  delete psgManual[id];
+}
 
 // rateSel[instanceId] = {f1,f2,years,rate,pts} while a sheet rate is driving the payment fields.
 // Cleared when the user edits a payment by hand or changes the finance company.
@@ -535,7 +653,7 @@ function buildCard(inst){
   card.className='vlt-card';card.id='card-'+id;
   card.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-      <span style="font-weight:500;font-size:14px">${o.n} <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${optTypeLabel(o)}</span></span>
+      <span style="font-weight:500;font-size:14px"><span id="ttl-${id}">${o.n}</span> <span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);margin-left:4px">${optTypeLabel(o)}</span></span>
       <span style="display:flex;align-items:center;gap:8px">
         <span style="text-align:right"><span style="font-size:11px;color:var(--color-text-secondary);display:block">Total commission</span><span id="comm-${id}" style="font-size:22px;font-weight:500">$0</span><span id="cbrk-${id}" style="font-size:11px;color:var(--color-text-tertiary);display:block">solar $0 + bat. $0</span></span>
         <button onclick="removeInst('${id}')" title="Remove" style="border:none;background:transparent;color:var(--color-text-tertiary);font-size:18px;cursor:pointer;padding:4px;line-height:1">&times;</button>
@@ -556,10 +674,22 @@ function buildCard(inst){
               <div id="rsFin-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px"></div>
             </div>`
             :(o.t==='Lease'?
-              `<div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="lterm-${id}" class="vlt-num" value="${o.termMonths||300}"></div>`+
+              (o.prepaid?`<div><label class="vlt-lbl">Lender</label><select id="plend-${id}">${PCH_LENDERS.map(l=>`<option>${l}</option>`).join('')}</select></div>`:'')+
+              `<div id="ltw-${id}"><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="lterm-${id}" class="vlt-num" value="${o.termMonths||300}"></div>`+
               (o.noEscalator
-                ? `<div><label class="vlt-lbl">Participate %</label><input type="number" step="0.01" id="prepay-${id}" class="vlt-num" value="${o.prepayPct||0}"></div>`
-                : `<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`)
+                ? `<div><label class="vlt-lbl" title="Credit Human: share of the contract Participate prepays. Sungage: PE share from the lease factor - 25 no DC/EC, 30 EC or partial DC, 35 full DC.">Participate %</label><input type="number" step="0.01" id="prepay-${id}" class="vlt-num" value="${o.prepayPct||0}"></div>`
+                : `<div><label class="vlt-lbl">Escalator %</label><input type="number" step="0.01" id="esc-${id}" class="vlt-num" value="2.99"></div>`)+
+              (o.prepaid?`<div id="sgw-${id}" style="grid-column:1/-1;display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:10px">
+                <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px"><i class="ti ti-building-bank" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Sungage loan (Participate Prepaid TPO rate card)</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end">
+                  <div><label class="vlt-lbl">Product</label><select id="psgP-${id}">${PTPO_PRODUCTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+                  <div><label class="vlt-lbl">Term</label><select id="psgT-${id}"></select></div>
+                  <div><label class="vlt-lbl">Rate · Sellers Points</label><select id="psgR-${id}"></select></div>
+                  <div id="psgBw-${id}"><label class="vlt-lbl" title="Domestic Content: PE pays a +5% DC bonus. Volt keeps it (customer discount stays at the Participate %).">DC bonus</label><select id="psgB-${id}"><option value="volt">+5% to Volt (Domestic Content)</option><option value="none">None</option></select></div>
+                  <div><label class="vlt-lbl" title="Option 3 - PE coverage, installer executes the Insurance Rider: +2.5% on the EPC, 2.5% of EPC deducted from the Inspection Complete payment">Homeowner's insurance</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:32px"><input type="checkbox" id="psgI-${id}" checked> Option 3 (+2.5%)</label></div>
+                </div>
+                <div id="psgNote-${id}" style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px"></div>
+              </div>`:'')
               :'')}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;align-items:end;margin-bottom:4px">
@@ -569,9 +699,11 @@ function buildCard(inst){
       <div><span class="vlt-lbl">Offset (ref.)</span><span id="off-${id}" style="font-size:14px">—</span></div>
       ${financedOpt?`<div id="p1w-${id}"><label class="vlt-lbl">Monthly payment (ref.)</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div><div id="p2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`
             :(o.t==='Lease'?
-              `<div><label class="vlt-lbl">${o.noEscalator?'Fixed monthly payment (ref.)':'Monthly payment (ref.)'}</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`+
-              (o.prepaid?`<div><span class="vlt-lbl">Participate prepays</span><span id="ppa-${id}" style="font-size:14px;font-weight:500">$0</span></div>`+
-                         `<div><span class="vlt-lbl">Credit Human finances</span><span id="cfa-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:'')
+              `<div><label class="vlt-lbl" id="p1l-${id}">${o.noEscalator?'Fixed monthly payment (ref.)':'Monthly payment (ref.)'}</label><input type="number" step="0.01" id="pay1-${id}" class="vlt-num" value="0"></div>`+
+              (o.prepaid?`<div id="pp2w-${id}" style="display:none"><label class="vlt-lbl">Month 37+ payment (ref.)</label><input type="number" step="0.01" id="pay2-${id}" class="vlt-num" value="0"></div>`+
+                         `<div><span class="vlt-lbl">Participate prepays</span><span id="ppa-${id}" style="font-size:14px;font-weight:500">$0</span></div>`+
+                         `<div><span class="vlt-lbl" id="cfal-${id}">Credit Human finances</span><span id="cfa-${id}" style="font-size:14px;font-weight:500">$0</span></div>`+
+                         `<div id="pdpw-${id}" style="display:none"><span class="vlt-lbl" title="25% of the Sungage note, due before month 37 to avoid the MAX payment">Deferred Payment (25%)</span><span id="pdp-${id}" style="font-size:14px;font-weight:500">$0</span></div>`:'')
               :'')}
     </div>
     <button id="dtbtn-${id}" class="vlt-chip" style="margin:10px 0 4px"><i class="ti ti-chevron-right" aria-hidden="true"></i> Project details</button>
@@ -592,6 +724,7 @@ function buildCard(inst){
     </div>`;
   $('opts').appendChild(card);
   card.querySelector('#dupbtn-'+id).addEventListener('click',function(e){e.stopPropagation();duplicateInst(id,$('dup-'+id).value);});
+  if(card.querySelector('#plend-'+id)){pchFillTerms(id);pchSyncLender(id,false);}
   if(card.querySelector('#rsTerm-'+id)){
     card.querySelector('#rsTerm-'+id).addEventListener('change',function(e){e.stopPropagation();fillRsRates(id);});
     card.querySelector('#rsRate-'+id).addEventListener('change',function(e){e.stopPropagation();applyRsRate(id);});
@@ -926,10 +1059,41 @@ function calc(){
     if($('cash-'+id))$('cash-'+id).textContent=money(cash);
     // Lease contract length. For the Participate prepaid lease, prepayPct is the share
     // Participate collects — the customer never pays it and finances only the rest.
-    const lterm=parseFloat($('lterm-'+id)?.value)||0;
-    const prepayPct=parseFloat($('prepay-'+id)?.value)||0;
-    const prepayAmt=prepayPct>0?cash*prepayPct/100:0;
-    const custFinances=prepayPct>0?cash-prepayAmt:0;
+    let lterm=parseFloat($('lterm-'+id)?.value)||0;
+    let prepayPct=parseFloat($('prepay-'+id)?.value)||0;
+    let prepayAmt=prepayPct>0?cash*prepayPct/100:0;
+    let custFinances=prepayPct>0?cash-prepayAmt:0;
+    let custPct=prepayPct>0?100-prepayPct:0;
+    // Participate + Sungage: the split is on the Adjusted EPC (points grossed up), not on cash.
+    // Volt still receives the full EPC (= cash), so the commission formula is untouched.
+    let sg=null;
+    if(k==='pch'&&pchSungage(id)){
+      const share=prepayPct, bonusVolt=$('psgB-'+id)?.value==='volt', ins=!!$('psgI-'+id)?.checked;
+      const sel=ptpoRow(id);
+      if(sel&&cash>0){
+        sg=ptpoPrice(cash,share,bonusVolt,ins,sel);
+        lterm=sel.y*12; if($('lterm-'+id))$('lterm-'+id).value=lterm;
+        // "Participate prepays" is the customer's discount; a DC bonus paid to Volt is kept apart.
+        prepayAmt=sg.disc; prepayPct=sg.discPct; custFinances=sg.loan; custPct=sg.hoPct;
+        dpp=sg.dpp;
+        if(!psgManual[id]){
+          if($('pay1-'+id))$('pay1-'+id).value=sg.pay1.toFixed(2);
+          if($('pay2-'+id))$('pay2-'+id).value=sg.pay2.toFixed(2);
+        }
+        if([25,30,35].indexOf(share)<0)notes.push('Participate % for Sungage should be 25, 30 or 35 (lease factor)');
+        else if(bonusVolt&&share!==30)notes.push('With the DC bonus to Volt the customer discount is 30% (PE share 35%)');
+        if(sg.bonus>0)notes.push('DC bonus '+money(sg.bonus)+' to Volt on top of the EPC — not in the commission');
+        if($('psgNote-'+id))$('psgNote-'+id).innerHTML='Adjusted EPC '+money(sg.adj)+' = EPC '+money(cash)+' grossed up for '+sg.ptsPct.toFixed(2)+'% points · Participate '+sg.discPct.toFixed(0)+'% '+money(sg.disc)
+          +(sg.bonus>0?' + DC bonus '+money(sg.bonus):'')+' · Sungage loan '+money(sg.loan)+' ('+sg.hoPct.toFixed(0)+'%) + FL doc stamp = note '+money(sg.note)
+          +(sg.ins>0?' · Insurance Opt. 3: EPC +2.5% in the grossed-up price':'')
+          +'<br>Sungage pays Volt '+money(sg.sungagePays)+' + Participate '+money(sg.disc+sg.bonus)+(sg.ins>0?' − Risk Pool '+money(sg.ins):'')+' = '+money(sg.sungagePays+sg.disc+sg.bonus-sg.ins)
+          +' · Prepaid TPO rate card (Raceway) '+PTPO_ASOF+(psgManual[id]?' · <b>payments typed by hand</b>':' · payment = note × factor');
+      } else if($('psgNote-'+id))$('psgNote-'+id).textContent='Enter size and Contract $/W to price the Sungage loan.';
+      if($('pp2w-'+id))$('pp2w-'+id).style.display=(sel&&sel.p==='BrightStart')?'block':'none';
+      if($('pdpw-'+id))$('pdpw-'+id).style.display=dpp>0?'block':'none';
+      if($('pdp-'+id))$('pdp-'+id).textContent=money(dpp);
+      if($('p1l-'+id))$('p1l-'+id).textContent=(sel&&sel.p==='BrightStart')?'Months 1-36 payment (ref.)':(sel&&sel.p==='Sunrise'?'Year 1 monthly payment (ref.)':'Monthly payment (ref.)');
+    }
     if($('ppa-'+id))$('ppa-'+id).textContent=money(prepayAmt);
     if($('cfa-'+id))$('cfa-'+id).textContent=money(custFinances);
     const offTxt=cfg.offset!==''?cfg.offset+'%':'—';
@@ -944,7 +1108,7 @@ function calc(){
     const rebateCapExceeded=cfg.rebate>0&&cfg.rebate>rebateCap;
 
     res[id]={inst,o,cfg,battOnly,redline,contract,solarComm,battComm,comm,cash,financed,df,term,tasa,dpp,battNA,addonComm,addonWarn,pAllow,pOver,siCost,siTxt,battTxt,offTxt,notes,
-      lterm,prepayPct,prepayAmt,custFinances,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
+      lterm,prepayPct,prepayAmt,custFinances,custPct,sg,lender:k==='pch'?pchLender(id):null,sizeLabel:szI.label,sizeAmt:szI.amt,sizeIncl:szI.incl,panelAmt,roofAmt,gmAmt,gmFixed,loan:financedOpt,
       battCapExceeded:cfg.battQty>0&&k!=='tesla'&&cfg.battPrice>(BATT_PRICE_CAP*((+cfg.battQty||0)+(+(cfg.addons&&cfg.addons.exp&&cfg.addons.exp.qty)||0))),
       rebateCapExceeded,rebateCap,
       solarCapExceeded:W>0&&((cash-adder23-otrosFull-battPriceThis)/W)>SOLAR_PRICE_CAP,
@@ -971,7 +1135,7 @@ function renderCmp(res,bestId){
   const fin=id=>$('co-'+id)?$('co-'+id).value:'';
   const esc=id=>$('esc-'+id)?($('esc-'+id).value+'%'):'';
   const pay=id=>{const p=$('pay1-'+id);return p&&parseFloat(p.value)?'$'+parseFloat(p.value).toFixed(2):'—';};
-  const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart';const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
+  const pay2=id=>{const bs=$('co-'+id)?.value==='Sungage Brightstart'||(lastRes[id]&&lastRes[id].sg&&lastRes[id].sg.prod==='BrightStart');const p=$('pay2-'+id);return (bs&&p&&parseFloat(p.value))?'$'+parseFloat(p.value).toFixed(2):'—';};
   const blocks=[
     {title:'Project',rows:[
       ['Type',(inst,r)=>r.battOnly?'Battery only':optTypeLabel(r.o),{a:1}],
@@ -1015,18 +1179,20 @@ function renderCmp(res,bestId){
       ['Term (months)',(inst,r)=>r.loan&&r.term>0?(r.term+'m'):(r.lterm>0?(r.lterm+'m ('+Math.round(r.lterm/12)+' yr)'):'—')],
       ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
       ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id)
-        :(r.o.t==='Lease'?(r.o.noEscalator?'Credit Human · fixed, no escalator':esc(inst.id)):'—')],
-      ['Participate prepays',(inst,r)=>r.prepayAmt>0?(money(r.prepayAmt)+' · '+r.prepayPct.toFixed(0)+'%'):'—'],
-      ['Credit Human finances',(inst,r)=>r.custFinances>0?(money(r.custFinances)+' · '+(100-r.prepayPct).toFixed(0)+'%'):'—'],
+        :(r.o.t==='Lease'?(r.sg?ptpoDesc(r.sg):(r.o.noEscalator?'Credit Human · fixed, no escalator':esc(inst.id))):'—')],
+      ['Participate prepays',(inst,r)=>r.prepayAmt>0?(money(r.prepayAmt)+' · '+r.prepayPct.toFixed(0)+'%'+(r.sg?' of adj. EPC':'')):'—'],
+      ['DC bonus to Volt',(inst,r)=>r.sg&&r.sg.bonus>0?money(r.sg.bonus):'—'],
+      ['Insurance Opt. 3 (Risk Pool)',(inst,r)=>r.sg&&r.sg.ins>0?money(r.sg.ins):'—'],
+      ['Lender finances',(inst,r)=>r.custFinances>0?((r.lender?r.lender+' ':'')+money(r.custFinances)+' · '+r.custPct.toFixed(0)+'%'):'—'],
       ['Year 1 monthly payment',(inst,r)=>pay(inst.id)],
       ['Month 37+ monthly payment',(inst,r)=>pay2(inst.id)]
     ]}
   ];
   const ncol=1+sel.length;
   let html='<table class="vlt-tbl"><thead><tr><th></th>';
-  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+r.o.n+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id)
+  sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+optLabel(r.o,inst.id)+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id)
   :(r.o.t==='Lease'
-     ?(r.o.noEscalator?('Prepaid · '+Math.round((r.lterm||240)/12)+' yr fixed'):('Escalator '+esc(inst.id)))
+     ?(r.sg?('Prepaid · Sungage '+r.sg.prod+' '+r.sg.years+' yr'):r.o.noEscalator?('Prepaid · '+Math.round((r.lterm||240)/12)+' yr fixed'):('Escalator '+esc(inst.id)))
      :'One-time payment'))+'</span></th>';});
   html+='</tr></thead><tbody>';
   blocks.forEach(bk=>{
@@ -1070,8 +1236,12 @@ function onChange(e){const id=e.target.id||'';
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
   else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';delete rateSel[k];syncRateSheet(k);}
-  // Typing a payment by hand takes it back from the rate sheet.
-  else if(parts[0]==='pay1'||parts[0]==='pay2'){clearRsRate(suffix,true);}
+  else if(parts[0]==='plend'){pchSyncLender(suffix,true);}
+  else if(parts[0]==='psgP'){pchFillTerms(suffix);delete psgManual[suffix];}
+  else if(parts[0]==='psgT'){pchFillRates(suffix);delete psgManual[suffix];}
+  else if(parts[0]==='psgR'||parts[0]==='psgB'||parts[0]==='psgI'){delete psgManual[suffix];}
+  // Typing a payment by hand takes it back from the rate sheet (or the Sungage rate card).
+  else if(parts[0]==='pay1'||parts[0]==='pay2'){clearRsRate(suffix,true);if(pchSungage(suffix))psgManual[suffix]=true;}
   else if(parts[0]==='rsTerm'||parts[0]==='rsRate')return;
   calc();
 }
@@ -1144,7 +1314,7 @@ function parsePDFText(text, filename){
   // two strings as the option names, matched neither, and built ZERO cards while still showing
   // "Project loaded from PDF". Matching on "every cell is an option name" fixes both halves:
   // it finds a one-cell header, and it can never mistake a data row for the header.
-  const headerOpt=s=>{const n=String(s).replace(/\s*\*\s*$/,'').trim();return OPTIONS.find(o=>o.n===n)||null;};
+  const headerOpt=s=>{const n=String(s).replace(/\s*\*\s*$/,'').trim();return optByName(n);};
   const headerIdx=lines.findIndex((l,i)=>{
     if(i===0)return false;                       // line 0 is the address
     const cells=l.split('\t').map(c=>c.trim()).filter(Boolean);
@@ -1186,7 +1356,7 @@ function parsePDFText(text, filename){
   $('opts').innerHTML=''; instances=[];
   optNames.forEach((rawName,col)=>{
     const name=rawName.replace(/\s*\*\s*$/,'').trim();
-    const optDef=OPTIONS.find(o=>o.n===name)||OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
+    const optDef=optByName(name)||OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
     if(!optDef){console.warn('Unrecognized option:',name);return;}
     const k=optDef.k; const id=k+'-'+(++instCounter);
     instances.push({id,k}); buildCard({id,k});
@@ -1202,11 +1372,28 @@ function parsePDFText(text, filename){
       if(match) $('co-'+id).value=match;
     }
     if(optDef.t==='Lease'&&finEsc&&$('esc-'+id)) $('esc-'+id).value=parseFloat(finEsc)||2.99;
+    // Participate: the lender is in the header ("Participate & Sungage") and the Sungage
+    // product/term/rate in "Finance Co. / Escalator" ("Sungage LevelPay 25 yr 7.99% (pts ...)").
+    if(k==='pch'&&$('plend-'+id)){
+      const sgm=finEsc&&finEsc.match(/Sungage\s+(LevelPay|BrightStart|Sunrise)/i);
+      if(/Sungage/i.test(name)||sgm){
+        $('plend-'+id).value='Sungage';pchSyncLender(id,false);
+        if(sgm){$('psgP-'+id).value=PTPO_PRODUCTS.find(p=>p.toLowerCase()===sgm[1].toLowerCase());pchFillTerms(id);
+          const yrs=Math.round((parseFloat(get(['Term (months)','Term (meses)'],col))||0)/12);
+          if(yrs&&[...$('psgT-'+id).options].some(o=>+o.value===yrs)){$('psgT-'+id).value=String(yrs);pchFillRates(id);}
+          const rt=parseFloat(get(['Rate %','Tasa %'],col));
+          if(rt&&[...$('psgR-'+id).options].some(o=>+o.value===rt))$('psgR-'+id).value=String(rt);}
+        if($('psgB-'+id))$('psgB-'+id).value=parseMoney(get(['DC bonus to Volt'],col))>0?'volt':'none';
+        if($('psgI-'+id))$('psgI-'+id).checked=parseMoney(get(['Insurance Opt. 3 (Risk Pool)'],col))>0;
+      }
+    }
 
     // Monthly payment
     const pago=get(['Year 1 monthly payment (ref.)','Pago Mensual Año 1 (ref.)','Monthly payment (ref.)','Pago mensual (ref.)','Pago mensual'],col);
     if(pago&&$('pay1-'+id)) $('pay1-'+id).value=parseFloat(pago.replace(/[$,]/g,''))||0;
     const bsFin=$('co-'+id)?.value==='Sungage Brightstart';
+    // A Sungage-priced Participate card recomputes its payments, so the PDF figures are ignored.
+    if(k==='pch'&&pchSungage(id))psgManual[id]=false;
     if($('p2w-'+id))$('p2w-'+id).style.display=bsFin?'block':'none';
     if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bsFin?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';
     const pago37=get(['Month 37+ monthly payment (ref.)','Pago Mensual Mes 37+ (ref.)'],col);
@@ -1370,7 +1557,7 @@ function genPDF(mode){
     aurora_url:($('projAuroraUrl').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
-      return{opcion:o.n,tipo:r.battOnly?'Battery only':optTypeLabel(o),battery_only:!!r.battOnly,tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:r.battOnly?'N/A':panelDisplay(k,c.panel),montaje:r.battOnly?'N/A':MOUNT_NAME[c.mount],
+      return{opcion:optLabel(o,id),tipo:r.battOnly?'Battery only':optTypeLabel(o),battery_only:!!r.battOnly,tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:r.battOnly?'N/A':panelDisplay(k,c.panel),montaje:r.battOnly?'N/A':MOUNT_NAME[c.mount],
         superficie:(r.battOnly||c.mount==='ground')?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
@@ -1390,20 +1577,24 @@ function genPDF(mode){
         // What the homeowner's loan agreement will show. Sungage adds the FL doc stamp on top of
         // Cash + DF (same base the payment and the BrightStart 25% use); other lenders aren't
         // modelled with it, so they get Cash + DF as is.
-        monto_financiado:(()=>{if(!r.loan)return null;const co=$('co-'+id)?$('co-'+id).value:'';const sg=/^Sungage/.test(co);
+        monto_financiado:(()=>{if(r.sg)return Math.round(r.sg.note);if(!r.loan)return null;const co=$('co-'+id)?$('co-'+id).value:'';const sg=/^Sungage/.test(co);
           if(!(r.df>0)&&!sg)return null;return Math.round(sg?noteAmount(r.financed):r.financed);})(),
-        financiado_doc_stamp:r.loan&&/^Sungage/.test($('co-'+id)?$('co-'+id).value:''),
+        financiado_doc_stamp:!!r.sg||r.loan&&/^Sungage/.test($('co-'+id)?$('co-'+id).value:''),
         term:(r.loan&&r.term>0)?r.term:null,
-        tasa:(r.loan&&r.tasa>0)?r.tasa:null,
+        tasa:r.sg?r.sg.rate:((r.loan&&r.tasa>0)?r.tasa:null),
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
         escalator:(!r.loan&&r.o.t==='Lease')
-          ?(r.o.noEscalator?'Credit Human - fixed, no escalator':($('esc-'+id)?$('esc-'+id).value+'%':'')):null,
+          ?(r.sg?('Sungage '+r.sg.prod+(r.sg.prod==='Sunrise'?' +2.9%/yr':'')):(r.o.noEscalator?'Credit Human - fixed, no escalator':($('esc-'+id)?$('esc-'+id).value+'%':''))):null,
         term_lease:(!r.loan&&r.lterm>0)?r.lterm:null,
         prepago:(r.prepayAmt>0)?Math.round(r.prepayAmt):null,
         prepago_pct:(r.prepayPct>0)?r.prepayPct:null,
         cliente_financia:(r.custFinances>0)?Math.round(r.custFinances):null,
+        cliente_financia_pct:(r.custFinances>0)?Math.round(r.custPct):null,
+        prestamista:r.lender,
+        bono_dc:(r.sg&&r.sg.bonus>0)?Math.round(r.sg.bonus):null,
+        seguro_op3:(r.sg&&r.sg.ins>0)?Math.round(r.sg.ins):null,
         pago_mensual:$('pay1-'+id)&&parseFloat($('pay1-'+id).value)?$('pay1-'+id).value:null,
-        pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart')&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
+        pago_mensual_37:(($('co-'+id)?.value==='Sungage Brightstart'||(r.sg&&r.sg.prod==='BrightStart'))&&$('pay2-'+id)&&parseFloat($('pay2-'+id).value))?$('pay2-'+id).value:null,
         pago_diferido:r.dpp>0?Math.round(r.dpp):null,
         addons:ADDON_KEYS.filter(a=>r.cfg.addons[a].qty>0).map(a=>ADDON[a].label+' x'+r.cfg.addons[a].qty+' '+money(r.cfg.addons[a].price)).join(' + ')||null,
         comision_addons:r.addonComm!==0?Math.round(r.addonComm):null,
@@ -2002,7 +2193,15 @@ function buildSavingsHandoff(instId){
   // Only claim Aurora mode when the figure that actually drives it is present.
   payload.postBillMode = (grid!==null) ? 'aurora' : 'derive';
 
-  if(o.t==='Lease'){
+  const sgR=r.sg;
+  if(sgR){
+    // Participate + Sungage: the customer repays a Sungage loan, so the payment shape is the
+    // loan's (BrightStart two tiers, Sunrise +2.9%/yr, LevelPay flat). No upfront cost, no ITC.
+    payload.optType='loan';
+    payload.loanFinco=sgR.prod==='BrightStart'?'Sungage Brightstart':(sgR.prod==='Sunrise'?'Sungage Sunrise':'Sungage Level Pay');
+    if(sgR.prod==='BrightStart'){payload.loanPay1=pago;payload.loanPay2=$('pay2-'+inst.id)?.value||pago;}
+    else{payload.loanPay=pago;if(sgR.prod==='Sunrise')payload.loanEsc='2.90';}
+  } else if(o.t==='Lease'){
     payload.optType='lease';
     payload.leaseProvider=o.n;
     payload.leasePay=pago;
@@ -2066,7 +2265,7 @@ const INTERNAL_TERM_RE=/commission|\bcomm\.|redline|margin|volt\s*take|\bJ2[78]\
 // Rows whose money the homeowner may see, with the label they get in the client copy.
 const CLIENT_MONEY_ROWS={'TOTAL / Cash Price':'Total contract price','Year 1 monthly payment (ref.)':'Year 1 monthly payment (ref.)',
   'Month 37+ monthly payment (ref.)':'Month 37+ monthly payment (ref.)','Deferred Payment (25%)':'Deferred Payment (25%)',
-  'Sales rebate (SR)':'Sales rebate','Financed amount':'Financed amount','Participate prepays':'Participate prepays','Credit Human finances':'Credit Human finances'};
+  'Sales rebate (SR)':'Sales rebate','Financed amount':'Financed amount','Participate prepays':'Participate prepays','Credit Human finances':'Credit Human finances','Lender finances':'Lender finances'};
 function scrubForClient(s){
   let t=String(s==null?'':s);
   t=t.replace(/\s+!\s.*$/,'');            // internal warning tails: "! cap ...", "! N/A ... not charged", "! 7 kW vs 8 kW"
@@ -2108,7 +2307,7 @@ function renderClientPDF(p,client){
     ['Solar adders',[['Size adder (auto)',o=>o.adder_tamano],['Panel adder',o=>o.adder_panel],['Surface adder',o=>o.adder_superficie],['Ground mount',o=>o.ground_mount],['Trenching / septic',o=>o.trenching],['Sales rebate (SR)',o=>o.sales_rebate]]],
     ['Non-solar adders',[['Non-solar adders',o=>o.adders_no_solares]]],
     ['Battery',[['Battery',o=>o.bateria],['Battery price',o=>(o.cfg&&o.cfg.battQty>0)?money(o.cfg.battPrice):null],['Battery comm. (J28)',o=>M(o.com_bateria)]]],
-    ['Results',[['Redline $/W',o=>o.battery_only?null:'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>o.battery_only?null:'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Financed amount',o=>o.monto_financiado?(M(o.monto_financiado)+(o.financiado_doc_stamp?' (incl. FL doc stamp)':'')):null],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Solar Insure',o=>o.solar_insure],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['Credit Human finances',o=>o.cliente_financia?(M(o.cliente_financia)+' - '+(100-o.prepago_pct)+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
+    ['Results',[['Redline $/W',o=>o.battery_only?null:'$'+Number(o.redline).toFixed(2),1],['Contract $/W (Lender)',o=>o.battery_only?null:'$'+Number(o.contrato).toFixed(2),1],['Solar commission (J27)',o=>M(o.comision_solar),1],['Total commission',o=>M(o.comision_total),1,1],['TOTAL / Cash Price',o=>M(o.total_cash),1],['Financed amount',o=>o.monto_financiado?(M(o.monto_financiado)+(o.financiado_doc_stamp?' (incl. FL doc stamp)':'')):null],['Cash + DF',o=>M(o.cash_df)],['Deferred Payment (25%)',o=>M(o.pago_diferido)],['Stand-alone battery / services',o=>o.addons],['Add-ons commission',o=>M(o.comision_addons)],['Permit fee',o=>M(o.permit_fee)],['Permit over allowance',o=>M(o.permit_excedente)],['Solar Insure',o=>o.solar_insure],['Term (months)',o=>o.term?(o.term+'m'):(o.term_lease?(o.term_lease+'m ('+Math.round(o.term_lease/12)+' yr)'):null)],['Rate %',o=>o.tasa?o.tasa.toFixed(2)+'%':null],['Finance Co. / Escalator',o=>o.financiera||o.escalator],['Participate prepays',o=>o.prepago?(M(o.prepago)+' - '+o.prepago_pct+'%'):null],['DC bonus to Volt',o=>o.bono_dc?M(o.bono_dc):null],['Insurance Opt. 3 (Risk Pool)',o=>o.seguro_op3?M(o.seguro_op3):null],['Lender finances',o=>o.cliente_financia?((o.prestamista?o.prestamista+' ':'')+M(o.cliente_financia)+' - '+(o.cliente_financia_pct!=null?o.cliente_financia_pct:(100-o.prepago_pct))+'%'):null],['Year 1 monthly payment (ref.)',o=>o.pago_mensual?('$'+o.pago_mensual):null],['Month 37+ monthly payment (ref.)',o=>o.pago_mensual_37?('$'+o.pago_mensual_37):null]]]
   ];
   const ncol=n+1;const body=[];
   const allowedMoney=new Set();   // exact figures the client copy is allowed to carry
