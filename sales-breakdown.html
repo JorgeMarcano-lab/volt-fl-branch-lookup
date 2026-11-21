@@ -373,7 +373,9 @@ const PCH_LENDERS=['Credit Human','Sungage'];
 const pchLender=id=>$('plend-'+id)?.value||'Credit Human';
 const pchSungage=id=>pchLender(id)==='Sungage';
 const optLabel=(o,id)=>o.k==='pch'?('Participate & '+pchLender(id)):o.n;
-const psgManual={};   // id -> true once the rep types a payment by hand
+const psgManual={};
+// What the card has picked, even before there is a price to run it on.
+const psgPick=id=>'Sungage '+($('psgP-'+id)?.value||'')+' '+($('psgT-'+id)?.value||'')+' yr'+($('psgR-'+id)?.value?' '+parseFloat($('psgR-'+id).value).toFixed(2)+'%':'');   // id -> true once the rep types a payment by hand
 function ptpoRow(id){
   const p=$('psgP-'+id)?.value, y=parseInt($('psgT-'+id)?.value)||0, r=parseFloat($('psgR-'+id)?.value);
   const row=((PTPO_TERMS[p]||{})[y]||[]).find(x=>x[0]===r);
@@ -398,8 +400,10 @@ const ptpoDesc=(s,id)=>'Sungage '+s.prod+' '+s.years+' yr '+s.rate.toFixed(2)+'%
   +(s.bonus>0?' · DC bonus to Volt':'')+(s.ins>0?' · Insurance Opt. 3':'');
 function pchFillTerms(id){
   const p=$('psgP-'+id)?.value, ts=$('psgT-'+id); if(!ts)return;
-  const prev=ts.value, ys=Object.keys(PTPO_TERMS[p]||{}).map(Number).sort((a,b)=>b-a);
+  const so=ts.dataset.so==='1';
+  const prev=ts.value, ys=Object.keys(PTPO_TERMS[p]||{}).map(Number).filter(y=>!so||y<=20).sort((a,b)=>b-a);
   ts.innerHTML=ys.map(y=>`<option value="${y}">${y} years</option>`).join('');
+  if(!ys.length){ts.innerHTML='';pchFillRates(id);return;}
   ts.value=ys.includes(+prev)?prev:String(ys.includes(25)?25:ys[0]);
   pchFillRates(id);
 }
@@ -1034,8 +1038,9 @@ function calc(){
     // Battery only: no PV (size 0/empty) but a chargeable battery. There is no Contract x W to
     // carry the battery, so the price IS the total and J27 must not absorb it. Leases keep
     // their usual math (battery-only is not a lease product) — except LightReach, which
-    // sells a battery-only equipment lease (Lease-Storage / Energy Backup).
-    const battOnly=(o.t!=='Lease'||k==='lightreach')&&W===0&&cfg.battQty>0&&!battNA;
+    // sells a battery-only equipment lease (Lease-Storage / Energy Backup), and Participate,
+    // whose Prepaid TPO program prices "Storage Only" (Sungage terms capped at 20 years).
+    const battOnly=(o.t!=='Lease'||k==='lightreach'||k==='pch')&&W===0&&cfg.battQty>0&&!battNA;
     if(battOnly)notes.push('Battery only — no solar');
     const solarComm=battOnly?-cfg.rebate:(contract-redline)*W-adderCarve-(otrosFull+battPriceThis+addonPriceTot);
     const comm=solarComm+battComm+addonComm;
@@ -1069,7 +1074,11 @@ function calc(){
     let sg=null;
     if(k==='pch'&&pchSungage(id)){
       const share=prepayPct, bonusVolt=$('psgB-'+id)?.value==='volt', ins=!!$('psgI-'+id)?.checked;
+      // Storage Only: Sungage offers no term above 20 years (Raceway calculator rule).
+      const tsEl=$('psgT-'+id), so=battOnly?'1':'0';
+      if(tsEl&&tsEl.dataset.so!==so){tsEl.dataset.so=so;pchFillTerms(id);}
       const sel=ptpoRow(id);
+      if(sel&&cash<=0&&$('psgNote-'+id))$('psgNote-'+id).textContent='Enter size and Contract $/W (or a battery) to price the Sungage loan.';
       if(sel&&cash>0){
         sg=ptpoPrice(cash,share,bonusVolt,ins,sel);
         lterm=sel.y*12; if($('lterm-'+id))$('lterm-'+id).value=lterm;
@@ -1088,7 +1097,7 @@ function calc(){
           +(sg.ins>0?' · Insurance Opt. 3: EPC +2.5% in the grossed-up price':'')
           +'<br>Sungage pays Volt '+money(sg.sungagePays)+' + Participate '+money(sg.disc+sg.bonus)+(sg.ins>0?' − Risk Pool '+money(sg.ins):'')+' = '+money(sg.sungagePays+sg.disc+sg.bonus-sg.ins)
           +' · Prepaid TPO rate card (Raceway) '+PTPO_ASOF+(psgManual[id]?' · <b>payments typed by hand</b>':' · payment = note × factor');
-      } else if($('psgNote-'+id))$('psgNote-'+id).textContent='Enter size and Contract $/W to price the Sungage loan.';
+      }
       if($('pp2w-'+id))$('pp2w-'+id).style.display=(sel&&sel.p==='BrightStart')?'block':'none';
       if($('pdpw-'+id))$('pdpw-'+id).style.display=dpp>0?'block':'none';
       if($('pdp-'+id))$('pdp-'+id).textContent=money(dpp);
@@ -1179,7 +1188,7 @@ function renderCmp(res,bestId){
       ['Term (months)',(inst,r)=>r.loan&&r.term>0?(r.term+'m'):(r.lterm>0?(r.lterm+'m ('+Math.round(r.lterm/12)+' yr)'):'—')],
       ['Rate %',(inst,r)=>r.loan&&r.tasa>0?r.tasa.toFixed(2)+'%':'—'],
       ['Finance Co. / Escalator',(inst,r)=>r.loan?fin(inst.id)
-        :(r.o.t==='Lease'?(r.sg?ptpoDesc(r.sg):(r.o.noEscalator?'Credit Human · fixed, no escalator':esc(inst.id))):'—')],
+        :(r.o.t==='Lease'?(r.sg?ptpoDesc(r.sg):r.lender==='Sungage'?psgPick(inst.id):(r.o.noEscalator?'Credit Human · fixed, no escalator':esc(inst.id))):'—')],
       ['Participate prepays',(inst,r)=>r.prepayAmt>0?(money(r.prepayAmt)+' · '+r.prepayPct.toFixed(0)+'%'+(r.sg?' of adj. EPC':'')):'—'],
       ['DC bonus to Volt',(inst,r)=>r.sg&&r.sg.bonus>0?money(r.sg.bonus):'—'],
       ['Insurance Opt. 3 (Risk Pool)',(inst,r)=>r.sg&&r.sg.ins>0?money(r.sg.ins):'—'],
@@ -1192,7 +1201,7 @@ function renderCmp(res,bestId){
   let html='<table class="vlt-tbl"><thead><tr><th></th>';
   sel.forEach(inst=>{const hi=inst.id===bestId;const r=res[inst.id];html+='<th style="'+(hi?'color:var(--color-text-info);border-color:var(--color-border-info)':'')+'">'+optLabel(r.o,inst.id)+(hi?' ★':'')+'<br><span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary)">'+(r.loan?fin(inst.id)
   :(r.o.t==='Lease'
-     ?(r.sg?('Prepaid · Sungage '+r.sg.prod+' '+r.sg.years+' yr'):r.o.noEscalator?('Prepaid · '+Math.round((r.lterm||240)/12)+' yr fixed'):('Escalator '+esc(inst.id)))
+     ?(r.sg?('Prepaid · Sungage '+r.sg.prod+' '+r.sg.years+' yr'):r.lender==='Sungage'?('Prepaid · '+psgPick(inst.id)):r.o.noEscalator?('Prepaid · '+Math.round((r.lterm||240)/12)+' yr fixed'):('Escalator '+esc(inst.id)))
      :'One-time payment'))+'</span></th>';});
   html+='</tr></thead><tbody>';
   blocks.forEach(bk=>{
@@ -1277,13 +1286,67 @@ document.getElementById('pdfUpload').addEventListener('change', async function()
       if(cur.length)rows.push(cur);
       fullText+=rows.map(r=>r.map(i=>i.str).join('\t')).join('\n')+'\n';
     }
-    parsePDFText(fullText, file.name);
+    // Internal PDFs since 2026-11-21 carry an exact snapshot of every card in the PDF's
+    // Keywords. When it is there, the cards are rebuilt from it instead of from the table text.
+    let state=null;
+    try{const md=await pdf.getMetadata();state=decodeCardState(md&&md.info&&md.info.Keywords);}catch(e){}
+    parsePDFText(fullText, file.name, state);
     status.textContent='';
     this.value='';
   }catch(e){status.textContent='⚠ Error reading the PDF: '+e.message;console.error(e);}
 });
 
-function parsePDFText(text, filename){
+// ===================== CARD SNAPSHOT (internal PDF) =====================
+// Reading the cards back from the drawn table is lossy: a long cell ("Sungage Sunrise (2.9%
+// annual escalator)", "Participate & Sungage") wraps onto two lines once there are 4-5 options,
+// pdf.js then splits the row, and the importer silently drops or shifts columns. So the internal
+// PDF also stores every input of every card, verbatim, in its Keywords. Never on the client copy.
+const STATE_TAG='VOLT-SB-STATE1:';
+// Fields whose options depend on another field: set after their parent has rebuilt the list.
+const STATE_DEFERRED=['rsTerm','rsRate','psgT','psgR','pay1','pay2'];
+function cardSnapshot(id,k){
+  const card=$('card-'+id); const f={}; const suf='-'+id;
+  if(card)card.querySelectorAll('input[id],select[id],textarea[id]').forEach(e=>{
+    if(!e.id.endsWith(suf))return; const n=e.id.slice(0,-suf.length);
+    if(n==='dup')return; f[n]=e.type==='checkbox'?!!e.checked:e.value;});
+  return {k,f,rs:!!rateSel[id],man:!!psgManual[id],offAuto:$('offset-'+id)?.dataset.auto||''};
+}
+function encodeCardState(){
+  const s={v:1,region,cards:instances.map(({id,k})=>cardSnapshot(id,k))};
+  return STATE_TAG+btoa(unescape(encodeURIComponent(JSON.stringify(s))));
+}
+function decodeCardState(kw){
+  if(!kw||typeof kw!=='string')return null; const i=kw.indexOf(STATE_TAG); if(i<0)return null;
+  try{const s=JSON.parse(decodeURIComponent(escape(atob(kw.slice(i+STATE_TAG.length).trim()))));return (s&&Array.isArray(s.cards))?s:null;}catch(e){console.warn('Bad card state',e);return null;}
+}
+function restoreCardState(s){
+  if(!s||!OPTIONS.some(o=>o.k===s.k))return null;
+  const id=s.k+'-'+(++instCounter); instances.push({id,k:s.k}); buildCard({id,k:s.k});
+  const f=s.f||{}; const put=n=>{const e=$(n+'-'+id); if(!e||!(n in f))return false;
+    if(e.type==='checkbox')e.checked=!!f[n]; else e.value=f[n]; return true;};
+  Object.keys(f).forEach(n=>{if(STATE_DEFERRED.indexOf(n)<0)put(n);});
+  if($('offset-'+id))$('offset-'+id).dataset.auto=s.offAuto||'';
+  syncOptMount(id); syncOptBatt(id);
+  // Finance Co. -> payment labels + rate sheet list, then the picked row.
+  if($('co-'+id)){
+    const bs=$('co-'+id).value==='Sungage Brightstart';
+    if($('p2w-'+id))$('p2w-'+id).style.display=bs?'block':'none';
+    if($('p1w-'+id))$('p1w-'+id).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';
+    syncRateSheet(id);
+    if(put('rsTerm'))fillRsRates(id);
+    if(s.rs&&put('rsRate')&&$('rsRate-'+id).value!=='')applyRsRate(id);
+  }
+  // Participate: lender, then product -> terms -> rates.
+  if($('plend-'+id)){
+    pchSyncLender(id,false); pchFillTerms(id);
+    if(put('psgT'))pchFillRates(id); put('psgR');
+    if(s.man)psgManual[id]=true;
+  }
+  put('pay1'); put('pay2');
+  syncProdCons(id);
+  return id;
+}
+function parsePDFText(text, filename, state){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.slice(0,8).some(l=>/Client copy/.test(l))){
     alert('This is a CLIENT PDF: it does not carry redline, commission or adder amounts, so it cannot rebuild the cards. Load the internal PDF instead.');return;}
@@ -1315,15 +1378,15 @@ function parsePDFText(text, filename){
   // "Project loaded from PDF". Matching on "every cell is an option name" fixes both halves:
   // it finds a one-cell header, and it can never mistake a data row for the header.
   const headerOpt=s=>{const n=String(s).replace(/\s*\*\s*$/,'').trim();return optByName(n);};
-  const headerIdx=lines.findIndex((l,i)=>{
+  const headerIdx=state?-1:lines.findIndex((l,i)=>{
     if(i===0)return false;                       // line 0 is the address
     const cells=l.split('\t').map(c=>c.trim()).filter(Boolean);
     return cells.length>0&&cells.every(headerOpt);});
-  if(headerIdx<0){alert('Could not identify the options in the PDF. Is this a PDF generated by this widget?');return;}
+  if(!state&&headerIdx<0){alert('Could not identify the options in the PDF. Is this a PDF generated by this widget?');return;}
 
-  const optNames=lines[headerIdx].split('\t').map(c=>c.trim()).filter(Boolean);
-  const tableLines=lines.slice(headerIdx+1).filter(l=>l.includes('\t'));
-  if(!tableLines.length){alert('Could not find the data table in the PDF. Is this a PDF generated by this widget?');return;}
+  const optNames=state?[]:lines[headerIdx].split('\t').map(c=>c.trim()).filter(Boolean);
+  const tableLines=state?[]:lines.slice(headerIdx+1).filter(l=>l.includes('\t'));
+  if(!state&&!tableLines.length){alert('Could not find the data table in the PDF. Is this a PDF generated by this widget?');return;}
 
   // Build key→value map per option column
   const numOpts=optNames.length;
@@ -1354,6 +1417,7 @@ function parsePDFText(text, filename){
   // Rebuild instances
   const manual=[];   // fields the PDF cannot carry back; surfaced to the rep at the end
   $('opts').innerHTML=''; instances=[];
+  if(state)state.cards.forEach(restoreCardState);
   optNames.forEach((rawName,col)=>{
     const name=rawName.replace(/\s*\*\s*$/,'').trim();
     const optDef=optByName(name)||OPTIONS.find(o=>name.includes(o.n)||o.n.includes(name))||OPTIONS.find(o=>name.toLowerCase().includes(o.k));
@@ -1417,7 +1481,10 @@ function parsePDFText(text, filename){
 
     // Size
     const kw=parseFloat(get(['System size (kW)','Tamano (kW)','Tamaño (kW)'],col));
-    if(kw&&$('size-'+id)) $('size-'+id).value=kw;
+    // 0 kW is a real value (battery only): `if(kw)` skipped it and left the 11.61 default,
+    // so every battery-only PDF came back as a solar system. Type "Battery only" also forces it.
+    const battOnlyPdf=/battery\s*only/i.test(get(['Type','Tipo'],col)||'');
+    if($('size-'+id)&&(battOnlyPdf||(!isNaN(kw)&&kw>=0))) $('size-'+id).value=battOnlyPdf?0:kw;
 
     // Offset
     const off=get('Offset',col); if(off&&$('offset-'+id)) $('offset-'+id).value=parseFloat(off)||'';
@@ -1530,15 +1597,34 @@ function parsePDFText(text, filename){
 
   updateEmptyState();
   calc();
+  // Sungage purchase cards: the PDF carries Term / Rate % / Cash + DF but not the rate-sheet
+  // pick, so the payment used to come back frozen (or had to be retyped). Re-pick the sheet row
+  // that matches; keep it only if it reproduces the payment in the PDF, so a hand-typed payment
+  // is never overwritten.
+  if(!state)instances.forEach(({id})=>{
+    if(!$('co-'+id))return; syncRateSheet(id);
+    const sh=sheetFor(id); if(!sh)return;
+    const y=Math.round((parseFloat($('term-'+id)?.value)||0)/12), rt=parseFloat($('tasa-'+id)?.value), df=parseFloat($('df-'+id)?.value)||0;
+    const rows=sh.terms[y]; if(!rows||!$('rsTerm-'+id))return;
+    let best=-1,bd=1e9; rows.forEach((r,i)=>{if(r[0]===rt&&Math.abs(r[1]-df)<bd){bd=Math.abs(r[1]-df);best=i;}});
+    if(best<0||bd>0.1)return;
+    const p1=$('pay1-'+id).value, p2=$('pay2-'+id)?.value;
+    $('rsTerm-'+id).value=String(y); fillRsRates(id); $('rsRate-'+id).value=String(best); applyRsRate(id);
+    if(parseFloat(p1)>0&&Math.abs((parseFloat($('pay1-'+id).value)||0)-parseFloat(p1))>0.02){
+      clearRsRate(id,false); $('pay1-'+id).value=p1; if(p2!=null&&$('pay2-'+id))$('pay2-'+id).value=p2;
+      if($('rsRate-'+id))$('rsRate-'+id).value='';
+    }
+  });
+  calc();
   window.scrollTo({top:0,behavior:'smooth'});
   $('handoffBanner').textContent='Project loaded from PDF: '+addr;
   $('handoffBanner').style.display='block';
   if(manual.length){
     $('handoffBanner').textContent+='  —  re-enter by hand: '+manual.join(' · ');
-    $('loadStatus').textContent='✓ '+optNames.length+' option(s) loaded, '+manual.length+' field(s) need re-entry';
+    $('loadStatus').textContent='✓ '+instances.length+' option(s) loaded, '+manual.length+' field(s) need re-entry';
     setTimeout(()=>$('loadStatus').textContent='',8000);
   } else {
-    $('loadStatus').textContent='✓ '+optNames.length+' option(s) loaded';
+    $('loadStatus').textContent='✓ '+instances.length+' option(s) loaded';
     setTimeout(()=>$('loadStatus').textContent='',4000);
   }
 }
@@ -1557,7 +1643,10 @@ function genPDF(mode){
     aurora_url:($('projAuroraUrl').value||'').trim()||null,
     generado:new Date().toISOString().slice(0,10),
     opciones:instances.map(inst=>{const {id,k}=inst;const r=lastRes[id];if(!r)return null;const c=r.cfg;const o=r.o;
-      return{opcion:optLabel(o,id),tipo:r.battOnly?'Battery only':optTypeLabel(o),battery_only:!!r.battOnly,tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:r.battOnly?'N/A':panelDisplay(k,c.panel),montaje:r.battOnly?'N/A':MOUNT_NAME[c.mount],
+      // PDF header stays the short option name: "Participate & Sungage" wraps onto two lines
+      // once there are 4-5 columns, and a wrapped header cell made the importer drop the whole
+      // column. The lender travels in "Finance Co. / Escalator" and "Lender finances".
+      return{opcion:o.n,tipo:r.battOnly?'Battery only':optTypeLabel(o),battery_only:!!r.battOnly,tamano_kw:c.kw,offset:r.offTxt,produccion_kwh:c.prodKwh>0?kwhTxt(c.prodKwh):null,consumo_kwh:c.consKwh>0?kwhTxt(c.consKwh):null,panel:r.battOnly?'N/A':panelDisplay(k,c.panel),montaje:r.battOnly?'N/A':MOUNT_NAME[c.mount],
         superficie:(r.battOnly||c.mount==='ground')?'N/A':(surfaceLabel(c)+(c.mixMismatch?(' ! '+c.mixTotal.toFixed(2)+' kW vs '+c.kw.toFixed(2)+' kW'):'')),
         adder_tamano:sizeCell(r),
         adder_panel:r.panelAmt>0?(PANEL_NAME[c.panel]+' '+money(r.panelAmt)):null,
@@ -1584,7 +1673,7 @@ function genPDF(mode){
         tasa:r.sg?r.sg.rate:((r.loan&&r.tasa>0)?r.tasa:null),
         financiera:r.loan?($('co-'+id)?$('co-'+id).value:''):null,
         escalator:(!r.loan&&r.o.t==='Lease')
-          ?(r.sg?('Sungage '+r.sg.prod+(r.sg.prod==='Sunrise'?' +2.9%/yr':'')):(r.o.noEscalator?'Credit Human - fixed, no escalator':($('esc-'+id)?$('esc-'+id).value+'%':''))):null,
+          ?(r.sg?('Sungage '+r.sg.prod+(r.sg.prod==='Sunrise'?' +2.9%/yr':'')):r.lender==='Sungage'?('Sungage '+($('psgP-'+id)?.value||'')):(r.o.noEscalator?'Credit Human - fixed, no escalator':($('esc-'+id)?$('esc-'+id).value+'%':''))):null,
         term_lease:(!r.loan&&r.lterm>0)?r.lterm:null,
         prepago:(r.prepayAmt>0)?Math.round(r.prepayAmt):null,
         prepago_pct:(r.prepayPct>0)?r.prepayPct:null,
@@ -2147,7 +2236,7 @@ function refreshCardOptSel(){
   const sel=$('cardOptSel'); if(!sel) return;
   const prev=sel.value;
   const eligible=instances.filter(inst=>$('pay1-'+inst.id));
-  sel.innerHTML=eligible.map(inst=>{const o=OPTIONS.find(x=>x.k===inst.k);return `<option value="${inst.id}">${o.n}</option>`;}).join('');
+  sel.innerHTML=eligible.map(inst=>{const o=OPTIONS.find(x=>x.k===inst.k);return `<option value="${inst.id}">${optLabel(o,inst.id)}</option>`;}).join('');
   if(eligible.some(inst=>inst.id===prev)) sel.value=prev;
 }
 function buildSavingsHandoff(instId){
@@ -2203,7 +2292,7 @@ function buildSavingsHandoff(instId){
     else{payload.loanPay=pago;if(sgR.prod==='Sunrise')payload.loanEsc='2.90';}
   } else if(o.t==='Lease'){
     payload.optType='lease';
-    payload.leaseProvider=o.n;
+    payload.leaseProvider=optLabel(o,inst.id);
     payload.leasePay=pago;
     // A prepaid lease has no escalator: the payment is flat for the whole term.
     payload.leaseEsc=o.noEscalator?'0':($('esc-'+inst.id)?.value||'2.99');
@@ -2294,6 +2383,8 @@ function renderClientPDF(p,client){
   client=client!==false;   // default to the safe copy
   const {jsPDF}=window.jspdf;const ops=p.opciones;const n=ops.length;
   const doc=new jsPDF({orientation:n>=3?'landscape':'portrait',unit:'pt',format:'letter'});
+  // Internal copy only: exact card snapshot for Load PDF (the client copy must not carry it).
+  if(!client){try{doc.setProperties({title:'Commission Comparison',keywords:encodeCardState()});}catch(e){console.warn(e);}}
   const regionName={SFL:'South Florida',CFL:'Central Florida',NFL:'North Florida'}[p.region]||p.region||'';
   const title=(p.direccion&&p.direccion.trim())?p.direccion.trim():(client?'Solar Proposal Comparison':'Commission Comparison');
   const today=p.generado;
