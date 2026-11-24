@@ -218,7 +218,8 @@ const LOGO_H=26,LOGO_W=Math.round(26*440/108);
 // field is typed by hand because it varies by partner group. Kept only as a written
 // record of the sheet; wiring it up would change every commission, so do that
 // deliberately or not at all. Skylight is not in the sheet.
-// Redlines — Adder Sheet 09192026. Skylight is now its own visible column (it used to be
+// Redlines — Adder Sheet 09192026, unchanged through 10/16/2026 and 11/17/2026 (the 11/17
+// promo redlines live in PROMO_BF). Skylight is now its own visible column (it used to be
 // the hidden second Enfin); LightReach and Participate each dropped $0.10/W in both regions.
 // NOTE: REGIONS is a reference table only. calc() reads the Redline $/W the rep types into
 // the card; nothing derives the redline automatically. It is surfaced as the field's
@@ -443,11 +444,17 @@ const PANEL_NAME={base:'Base',qpeak:'Q.Peak DUO BLK 410',qtron:'Q.Tron BLK 430',
 // $550 Amazon Gift Card or a Volt-paid referral -> regular redline. Eminded gets the SAME redline
 // (no extra -$0.05/W). Like REGIONS, this only drives the Redline placeholder + card note; the rep
 // still types the redline. Silfab/Sirius are LightReach-only, $0 panel adder (Jorge, 2026-11-17).
-const PROMO_BF={from:'2026-11-17',to:'2026-11-30',k:'lightreach',
-  redline:{silfab:{SFL:1.75,CFL:1.65},sirius:{SFL:1.80,CFL:1.70}}};
+// Adder Sheet 11/17/2026 puts the SAME disclaimer (11/17-11/30, not with the gift card or a
+// Volt-paid referral) on the Participate & Credit Human & Sungage column, now Silfab + Tesla
+// inverter at $2.15 SFL / $2.05 CFL. Modelled as part of this window: outside it, or with any
+// other panel, Participate stays on its regular 2.20 / 2.10 (REGIONS).
+const PROMO_BF={from:'2026-11-17',to:'2026-11-30',
+  redline:{lightreach:{silfab:{SFL:1.75,CFL:1.65},sirius:{SFL:1.80,CFL:1.70}},
+           pch:{silfab:{SFL:2.15,CFL:2.05}}}};
+const promoCombo=(k,p)=>!!PROMO_BF.redline[k]?.[p];
 function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function promoActive(){const t=todayISO();return t>=PROMO_BF.from&&t<=PROMO_BF.to;}
-function promoRedline(k,p){if(k!==PROMO_BF.k||!promoActive())return null;const v=PROMO_BF.redline[p]?.[region];return v===undefined?null:v;}
+function promoRedline(k,p){if(!promoCombo(k,p)||!promoActive())return null;const v=PROMO_BF.redline[k][p][region];return v===undefined?null:v;}
 // Tesla inverter count for the Silfab + Tesla combo: design (Aurora) vs HIA use different breaks.
 function teslaInvDesign(W){return W>10560?2:1;}
 function teslaInvHIA(W){return W>=15000?2:1;}
@@ -458,7 +465,7 @@ const SURF_NAME={shingle:'Shingle',tile:'Tile',flat:'Flat'};
 // inside Contract x W like the battery, so each one nets its redline out of the commission.
 const ADDON={
   exp   :{label:'Powerwall 3 Expansion Pack', first:8500, addl:8500, cap:null},   // cap TBC in the sheet
-  enph5p:{label:'Enphase IQ 5P',              first:9350, addl:6850, cap:18000},  // $18,000 PER BATTERY
+  enph5p:{label:'Enphase IQ 5P',              first:10000,addl:5000, cap:18000},  // Adder Sheet 10/16 & 11/17/2026 (was 9,350/6,850); $18,000 PER BATTERY
   span  :{label:'Span Panel',                 first:8000, addl:8000, cap:15000}   // $15,000 PER SPAN
 };
 const ADDON_KEYS=Object.keys(ADDON);
@@ -497,7 +504,9 @@ function emptyV(v){return v==='—'||v===''||v==='$0'||v==='-$0';}
 // Mission, Enfin keeps the Q.Peak. Purchase stays on the Hyundai in both regions.
 // Participate: row 5 says REC while its adder rows still read like the old Q.Peak column —
 // Jorge confirmed 2026-09-21 that row 5 governs, so REC is the base and carries no adder.
-const BASE_PANEL={lightreach:'REC 460W AA PURE-RX',pch:'REC 460W AA PURE-RX',
+// Adder Sheet 10/16/2026: LightReach's included panel moved to the Mission MSX10-435HN0B with
+// Enphase IQ9N (REC and Mission both stay "No adder" in that column).
+const BASE_PANEL={lightreach:'MISSION MSX10-435HN0B',pch:'REC 460W AA PURE-RX',
                   enfin:'Q.Peak DUO BLK ML-G10.C1+/AC 410W',skylight:'MISSION MSX10-435HN0B'};
 function basePanelName(k){return BASE_PANEL[k]||'Hyundai HIS-S400YH (BK)';}
 // Sheet redline for the current region, or null when the sheet has no column for it (Cash).
@@ -507,7 +516,13 @@ function sheetRedline(k,p){const pr=promoRedline(k,p);if(pr!==null)return pr.toF
 function refreshRedlineHints(){instances.forEach(({id,k})=>{const el=$('rl-'+id);
   if(el)el.placeholder=sheetRedline(k,$('panel-'+id)?.value)??'0.00';});}
 function panelDisplay(k,p){return p==='base'?basePanelName(k):PANEL_NAME[p];}
-function battDefault(k,type){if(type==='enphase')return[null,null];return BATT_PW3[k];}
+// Adder Sheet 11/17/2026: the Silfab + Tesla inverter columns (LightReach, Participate) price
+// the Powerwall 3 like the Tesla PW3 column (11,000 / 9,000) and mark the Enphase 10C N/A.
+const BATT_TESLA_INV=[11000,9000];
+const teslaInvPanel=p=>p==='silfab';
+function battDefault(k,type,p){
+  if(teslaInvPanel(p)&&BATT_PW3[k]){return type==='enphase'?null:BATT_TESLA_INV;}
+  if(type==='enphase')return[null,null];return BATT_PW3[k];}
 // Solar panel adders per Adder Sheet 08262026. NA = {ok:false}. Skylight is not in the
 // sheet; it is treated like LightReach. Cash is treated like Affordable Solar (purchase).
 // Panel adders — Adder Sheet 09192026 rows 9-13 (SFL) and 62-66 (CFL).
@@ -520,13 +535,13 @@ const PANEL_ADDER={
        mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.10,teslapw3:0.10,affordable:0.15,cash:0.15},
        rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
        qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
-       silfab :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null},
+       silfab :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
        sirius :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null}},
   CFL:{qtron  :{lightreach:null,enfin:0.05,skylight:null,pch:0.05,tesla:null,teslapw3:null,affordable:null,cash:null},
        mission:{lightreach:0,   enfin:null,skylight:0,   pch:null,tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
        rec    :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:0.20,teslapw3:0.20,affordable:0.20,cash:0.20},
        qpeak  :{lightreach:null,enfin:0,   skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
-       silfab :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null},
+       silfab :{lightreach:0,   enfin:null,skylight:null,pch:0,   tesla:null,teslapw3:null,affordable:null,cash:null},
        sirius :{lightreach:0,   enfin:null,skylight:null,pch:null,tesla:null,teslapw3:null,affordable:null,cash:null}}};
 function panelRate(k,p){
   if(p==='base')return{r:0,ok:true};
@@ -571,7 +586,7 @@ function detailFields(id){
   <div class="vlt-grid">
     <div class="vlt-fld"><label class="vlt-lbl">System size (kW)</label><input class="vlt-num" type="number" id="size-${id}" value="11.61" step="0.01" min="0"></div>
     <div class="vlt-fld"><label class="vlt-lbl">Offset (%)</label><input class="vlt-num" type="number" id="offset-${id}" step="1" placeholder="e.g. 95"></div>
-    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qpeak','Q.Peak DUO BLK 410'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA'],['silfab','Silfab 440 + Tesla (LightReach)'],['sirius','Sirius 415 + IQ9N (LightReach)']],'base')}</div>
+    <div class="vlt-fld"><label class="vlt-lbl">Panel</label>${sel('panel',[['base','Base included'],['qpeak','Q.Peak DUO BLK 410'],['qtron','Q.Tron BLK 430'],['mission','Mission MSX10-435'],['rec','REC 460W AA'],['silfab','Silfab 440 + Tesla (LightReach / Participate)'],['sirius','Sirius 415 + IQ9N (LightReach)']],'base')}</div>
     <div class="vlt-fld"><label class="vlt-lbl">Mount</label>${sel('mount',[['rooftop','Rooftop'],['ground','Ground Mount']],'rooftop')}</div>
     <div class="vlt-fld" id="surfWrap-${id}"><label class="vlt-lbl">Surface</label>${sel('surface',[['shingle','Shingle'],['tile','Tile'],['flat','Flat']],'shingle')}</div>
     <div class="vlt-fld" id="mixWrap-${id}"><label class="vlt-lbl">Mixed roof</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;height:30px;cursor:pointer"><input type="checkbox" id="mixchk-${id}"> kW per surface</label></div>
@@ -664,7 +679,7 @@ function buildCard(inst){
       </span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;align-items:end;margin-bottom:10px">
-      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="${sheetRedline(k)??'0.00'}" title="Adder Sheet 09192026 redline for this option and region. Shown as a hint only — type the value you are actually using."></div>
+      <div><label class="vlt-lbl">Redline $/W</label><input type="number" step="0.01" id="rl-${id}" class="vlt-num" placeholder="${sheetRedline(k)??'0.00'}" title="Adder Sheet 11/17/2026 redline for this option and region. Shown as a hint only — type the value you are actually using."></div>
       <div><label class="vlt-lbl">Contract $/W (Lender)</label><input type="number" step="0.01" id="ct-${id}" class="vlt-num" value="3.50"></div>
       ${financedOpt?`<div style="grid-column:span 2"><label class="vlt-lbl">Finance Co.</label><select id="co-${id}">${FINCO.map(f=>`<option>${f}</option>`).join('')}</select></div><div><label class="vlt-lbl">DF %</label><input type="number" step="0.01" id="df-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Term (months)</label><input type="number" step="1" id="term-${id}" class="vlt-num" value="0"></div><div><label class="vlt-lbl">Rate %</label><input type="number" step="0.01" id="tasa-${id}" class="vlt-num" value="0"></div>`
             +`<div id="rsWrap-${id}" style="grid-column:1/-1;display:none;border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:10px">
@@ -859,7 +874,7 @@ function buildChips(){
 
 function fillBattRedline(id){
   const k=instances.find(x=>x.id===id)?.k;if(!k)return;
-  const t=$('battType-'+id)?.value;const d=battDefault(k,t);
+  const t=$('battType-'+id)?.value;const d=battDefault(k,t,$('panel-'+id)?.value);
   const r1=$('br1-'+id),rA=$('brA-'+id);if(!r1)return;
   $('bname-'+id).textContent=BATT_NAME[t];
   if(d===null){r1.value='';rA.value='';}
@@ -970,9 +985,9 @@ function calc(){
     const contract=parseFloat($('ct-'+id)?.value)||0;
     const notes=[];const pr=panelRate(k,cfg.panel);if(!pr.ok)notes.push('Panel N/A for this option');
     {const rlEl=$('rl-'+id);if(rlEl)rlEl.placeholder=sheetRedline(k,cfg.panel)??'0.00';}
-    if(k===PROMO_BF.k&&(cfg.panel==='silfab'||cfg.panel==='sirius')){
+    if(promoCombo(k,cfg.panel)){
       const pv=promoRedline(k,cfg.panel);
-      if(pv!==null)notes.push('Black Friday LightReach: redline $'+pv.toFixed(2)+'/W '+region+' (signed 11/17-11/30, Domestic Content 2027; also Eminded, no extra -$0.05). NOT valid with $550 Amazon Gift Card or Volt-paid referral -> regular redline. Adders charged separately');
+      if(pv!==null)notes.push('Black Friday '+o.n+': redline $'+pv.toFixed(2)+'/W '+region+' (signed 11/17-11/30, Domestic Content 2027'+(k==='lightreach'?'; also Eminded, no extra -$0.05':'')+'). NOT valid with the gift card promo or a Volt-paid referral -> regular redline. Adders charged separately');
       else notes.push('Black Friday promo not active today (11/17-11/30) — use the regular Adder Sheet redline');
       if(cfg.panel==='silfab'&&W>0)notes.push('Tesla inverters: design '+teslaInvDesign(W)+' (≤10.56 kW → 1) · HIA '+teslaInvHIA(W)+' (≥15 kW → 2)');
     }
@@ -987,7 +1002,7 @@ function calc(){
     const adderCarve=adder23; // the full adder is subtracted from commission (no partial carve); Contract x W is already the all-in price
     const adderResidual=0;
     let battPriceThis=0,battComm=0,battTxt='$0',battNA=false;
-    if(cfg.battQty>0){const d=battDefault(k,cfg.battType);
+    if(cfg.battQty>0){const d=battDefault(k,cfg.battType,cfg.panel);
       // Adder Sheet: the Tesla Program column carries N/A for Powerwall 3 and for the battery
       // cap — batteries on a Tesla project go through the Tesla Powerwall 3 option instead.
       // The price typed here is then NOT charged and NOT paid: it drops out of both cash and
@@ -995,6 +1010,7 @@ function calc(){
       // kept printing "Battery price $36,000" as if it counted, so the quote looked fine and
       // was silently missing the battery. battNA makes it loud everywhere.
       if(cfg.battType==='pw3'&&d===null){battNA=true;battTxt='N/A';notes.push('Powerwall 3 N/A for '+o.n+' — quote the battery under Tesla Powerwall 3');}
+      else if(cfg.battType==='enphase'&&d===null){battNA=true;battTxt='N/A';notes.push('Enphase 10C N/A with Silfab + Tesla inverter — use Powerwall 3');}
       else{battPriceThis=cfg.battPrice;const r1=parseFloat($('br1-'+id)?.value),rA=parseFloat($('brA-'+id)?.value);
         if(isNaN(r1)){battTxt='—';notes.push('Ingresa redline de bateria');}
         else{const rAv=isNaN(rA)?r1:rA;const redlineTot=r1+(cfg.battQty-1)*rAv;battComm=battPriceThis-redlineTot;battTxt=money(battComm);}}}
@@ -1244,6 +1260,8 @@ function onChange(e){const id=e.target.id||'';
   else if(parts[0]==='mount'){syncOptMount(suffix);}
   else if(parts[0]==='battQty'){syncOptBatt(suffix);}
   else if(parts[0]==='battType'){fillBattRedline(suffix);}
+  else if(parts[0]==='panel'){const r1=$('br1-'+suffix)?.value,rA=$('brA-'+suffix)?.value;
+    const pair=r1+'/'+rA;if(['/','13500/9500','11000/9000'].includes(pair))fillBattRedline(suffix);}
   else if(parts[0]==='co'){const k=suffix;const bs=$('co-'+k)?.value==='Sungage Brightstart';if($('p2w-'+k))$('p2w-'+k).style.display=bs?'block':'none';if($('p1w-'+k))$('p1w-'+k).querySelector('label').textContent=bs?'Months 1-36 payment (ref.)':'Monthly payment (ref.)';delete rateSel[k];syncRateSheet(k);}
   else if(parts[0]==='plend'){pchSyncLender(suffix,true);}
   else if(parts[0]==='psgP'){pchFillTerms(suffix);delete psgManual[suffix];}
